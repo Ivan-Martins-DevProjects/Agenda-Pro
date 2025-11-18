@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* 1. Defina a animação de fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.editar-contato {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(14.5px);
+    -webkit-backdrop-filter: blur(14.5px);
+    border: 1px solid rgba(0, 131, 248, 0.4);
+    max-width: 550px;
+    max-height: 90vh;
+    width: 90%;
+    padding: 2rem;
+    box-sizing: border-box;
+    z-index: 1000;
+
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.editar-contato::backdrop {
+    background: linear-gradient(0deg,rgba(255, 255, 255, 1) 0%, rgba(45, 141, 196, 0.51) 50%, rgba(14, 144, 217, 1) 100%);
+    animation: fadeInBackdrop 0.3s ease-out forwards;
+}
+
+@keyframes fadeInBackdrop {
+  to {
+    background: linear-gradient(0deg,rgba(255, 255, 255, 0.01) 0%, rgba(45, 141, 196, 0.51) 50%, rgba(14, 144, 217, 1) 100%);  }
+}
+
+.edit-modal-header {
+    color: white;
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    border-top-right-radius: 20px;
+    border-top-left-radius: 20px;
+}
+
+.edit-modal-title {
+    margin-left: 8rem;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    color: #fff;
+}
+
+.edit-modal-body {
+    padding: 25px;
+    color: white;
+}
+
+.edit-contact-row {
+    display: flex;
+    gap: 50px;
+    margin: 20px 10px;
+}
+
+.form-obs input,
+.form-obs select{
+    border-radius: 20px;
+    width: 400px;
+    height: 150px;
+}
+
+.edit-contact-group label {
+    display: block;
+    color: #fff;
+    font-weight: 600;
+}
+
+.edit-contact-group input,
+.edit-contact-group select {
+    width: 100%;
+    height: 35px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    box-sizing: border-box;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.edit-contact-group input:focus,
+.edit-contact-group select:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.edit-contact-group input:hover{
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 1rem 0.6rem;
+    width: 120%;
+}
+
+.button button {
+    border: 1px solid #CCCCCC;
+    border-radius: 20px;
+    color: #fff;
+    width: 100px;
+    height: 50px;
+    margin-top: 1rem;
+    margin-left: 6rem;
+    margin-right: -40px;
+        transition: all 0.3s ease;
+}
+
+.btn-edit-register {
+    background-color: #1f6083;
+    font-weight: bold;
+}
+
+.btn-edit-register:hover {
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.5);
+    width: 120px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.btn-exit-register {
+    background-color: #af4343;
+    font-weight: bold;
+}
+
+.btn-exit-register:hover {
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.5);
+    width: 120px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.fa-pencil-square {
+    color: #fff;
+}
+
+    </style>
+</head>
+<body>
+
+    <header>
+    </header>
+
+    <main>
+    <dialog class="editar-contato" id="editar-contato">
+        <div class="edit-modal-header"></div>
+        <div>
+            <i class="fa fa-pencil-square fa-7x" style="margin-left: 12rem; margin-top: 2rem;"></i>
+        </div>
+        <div class="edit-modal-title">
+            <h2>Editar Contato</h2>
+        </div>
+
+        <div class="edit-modal-body">
+            <form id="EditContactForm">
+                <div class="edit-contact-group-section">
+                    <h4>Informações Pessoais</h4>
+                    <div class="edit-contact-row">
+                        <div class="edit-contact-group">
+                            <input placeholder="Nome Completo" type="text" id="nome">
+                        </div>
+                        <div class="edit-contact-group">
+                            <input placeholder="E-mail" type="email" id="email" name="email">
+                        </div>
+                    </div>
+                    <div class="edit-contact-row">
+                        <div class="edit-contact-group">
+                            <input placeholder="Telefone" type="tel" id="telefone">
+                        </div>
+                        <div class="edit-contact-group">
+                            <input placeholder="CPF" type="text" id="cpf">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="edit-contact-group-section">
+                    <h4>Endereço</h4>
+                    <div class="edit-contact-row">
+                        <div class="edit-contact-group">
+                            <input placeholder="Rua" type="text" id="rua">
+                        </div>
+                        <div class="edit-contact-group">
+                            <input placeholder="Número" type="text" id="numero">
+                        </div>
+                    </div>
+                    <div class="edit-contact-row">
+                        <div class="edit-contact-group">
+                            <input placeholder="Bairro" type="text" id="bairro">
+                        </div>
+                        <div class="edit-contact-group">
+                            <input placeholder="Cidade" type="text" id="cidade">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="edit-contact-group-section">
+                    <h4>Observações</h4>
+                    <div class="edit-contact-row">
+                        <div class="form-obs">
+                            <input type="text" id="obs">
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="button">
+                    <button class="btn-edit-register">Registrar</button>
+                    <button class="btn-exit-register">Sair</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+    </main>
+</body>
+<script charset="utf-8">
+    const modal = document.querySelector('.editar-contato')
+    const nome = document.getElementById('nome').value = 'teste'
+    modal.showModal()
+</script>
+</html>

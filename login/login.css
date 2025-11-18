@@ -1,0 +1,155 @@
+body {
+    margin: 0;
+    background-color: #0E90D9;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#login-container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0, 4px, 10px, rgba(0, 0, 0, 1);
+    width: 30vh;
+}
+
+h1 {
+    color: #046094;
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: bold;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+}
+
+input[type="checkbox"]{
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+    transform: scale(1.5);
+}
+
+form div:last-of-type {
+    display: flex;
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: normal;
+}
+
+button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #046094;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+button:hover {
+    background-color: #003b5c;
+    transform: scale(1.05);
+}
+
+.links-auxiliares a {
+    color: #046094;
+    text-decoration: none;
+    cursor: pointer;
+    display: flex;
+    margin-bottom: 0.5rem;
+}
+
+.links-auxiliares a:hover{
+    text-decoration: underline;
+}
+
+/* Modal de Erro */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+    position: relative; /* Necessário para posicionar o botão de fechar */
+    max-width: 400px;
+    width: 90%;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 1px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #aaa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-modal-btn:hover {
+    color: #fff;
+}
+
+.modal-icon {
+    font-size: 48px;
+    margin-bottom: 1rem;
+}
+
+.modal-message p,
+.modal-title p{
+    margin: 0;
+    margin-bottom: 0.5rem;
+    color: #555;
+    font-size: 18px;
+    font-weight: bold;
+}

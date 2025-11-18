@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "name": "Maria Oliveira",
+    "email": "maria.oliveira@email.com",
+    "phone": "(11) 99999-1234",
+    "status": "active",
+    "last_contact": "2025-11-05"
+  },
+  {
+    "id": 2,
+    "name": "João Ferreira",
+    "email": "joao.ferreira@email.com",
+    "phone": "(21) 98888-4567",
+    "status": "potencial",
+    "last_contact": "2025-11-01"
+  }
+]
+
