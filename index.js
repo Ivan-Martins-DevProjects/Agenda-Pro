@@ -1,9 +1,7 @@
+const btnDashboard = document.getElementById('page-dashboard')
+const api_url = 'http://localhost:8181'
+
 window.addEventListener('DOMContentLoaded', () => {
-    const api_url = 'http://localhost:8181'
-
-    const btnDashboard = document.getElementById('page-dashboard')
-    const menuLinks = document.querySelectorAll('.menu-link')
-
     try {
         menuLinks.forEach(l => l.classList.remove('active'))
         btnDashboard.classList.add('active')
@@ -12,8 +10,22 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log(data)
 
     } catch (error) {
-        console.log('Erro ao carregar dashboard')
+        console.log('Erro ao carregar dashboard' + error)
     }
+})
+
+btnDashboard.addEventListener('click', () => {
+    try {
+        menuLinks.forEach(l => l.classList.remove('active'))
+        btnDashboard.classList.add('active')
+
+        const data = LoadDashboard(api_url)
+        console.log(data)
+
+    } catch (error) {
+        console.log('Erro ao carregar dashboard' + error)
+    }
+
 })
 
 async function LoadDashboard(api_url) {
@@ -30,7 +42,7 @@ async function LoadDashboard(api_url) {
         if (!response.ok) {
             console.error('Erro com a requisição')
         }
-        return data.Nome
+        return data
     } catch (error) {
         console.error(error)
         throw error
