@@ -11,6 +11,3 @@ def CreateError(code, message):
     
     return response
 
-# Função para criação de logs padronizados
-def PrintError(archive, line, message):
-   return print(f'Error:{message}\nArchive:{archive} | Line:{line}')
