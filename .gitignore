@@ -1,6 +1,7 @@
 # Pastas:
 __pycache__/
 venv/
+logs/
 
 # Arquivos
 .env

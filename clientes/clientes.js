@@ -10,8 +10,14 @@ async function carregarClientes() {
         menuLinks.forEach(l => l.classList.remove('active'))
         btnClientes.classList.add('active')
 
-        const resposta = await fetch('./clientes.json')
-        if (!resposta.ok) throw new Error('Erro ao buscar clientes')
+        const response = await fetch(`{api_url}/api/clients`, {
+            method: 'GET'
+        })
+
+        if (!resposta.ok) {
+            console.log(resposta)
+            throw new Error('Erro ao buscar clientes')
+        }
         const clientes = await resposta.json()
 
         todosClientes = clientes
@@ -62,31 +68,58 @@ function renderClients(clientes) {
     }
 
     tbody.appendChild(clone);
+
   });
 }
 
-
+// Abrir modal de adicionar clientes
 document.addEventListener('click', function (e) {
     switch (true) {
-        case e.target.matches('.btn-new'):
+        case e.target.matches('.btn-new-contact'):
             const modal = document.getElementById('modal-cliente')
+            document.querySelector('.modal-title').textContent = 'Cadastro de Clientes';
 
             modal.showModal()
             break;
 
         case e.target.matches('.btn-exit'):
+            e.preventDefault()
             const modalClose = document.getElementById('modal-cliente')
 
             modalClose.close()
             break
-
-        case e.target.matches('.btn-exit'):
-
 
         default:
             break;
     }
 });
 
+// Função para abrir o modal de edição de contato
+document.addEventListener('click', function (editModal) {
+    switch (true) {
+        case editModal.target.matches('.edit-contact'):
+            const modal = document.getElementById('modal-cliente')
 
+           // Encontra a linha <tr> mais próxima do botão clicado
+            const row = editModal.target.closest('tr');
+
+            // Extrai os dados da linha
+            const nome = row.querySelector('.cliente-nome').textContent;
+            const email = row.querySelector('.cliente-email').textContent;
+            const telefone = row.querySelector('.cliente-numero').textContent;
+
+            // Preenche os campos do modal (supondo que você já os tenha)
+            document.getElementById('nome').value = nome;
+            document.getElementById('email').value = email;
+            document.getElementById('telefone').value = telefone;
+
+            document.querySelector('.modal-title').textContent = 'Editar Cliente';
+
+            modal.showModal()
+            break;
+
+        default:
+            break;
+    }
+})
 

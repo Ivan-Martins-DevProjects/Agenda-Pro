@@ -260,6 +260,7 @@ body {
 
 .side-menu ul {
     list-style: none;
+    margin-top: 1rem;
     margin: 0;
     padding: 0;
 }
@@ -267,7 +268,7 @@ body {
 .side-menu li a {
     display: flex;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     color: #9D9FA0;
     font-weight: bold;
     text-decoration: none;
@@ -286,7 +287,8 @@ body {
 .side-menu li a:hover {
     background-color: #E4E5E9;
     height: 5px;
-    padding: 1.8rem 2.5rem;
+    transform: scale(1.2);
+    padding: 1.5rem;
     font-weight: bolder;
     color: #22252A;
 }
