@@ -1,19 +1,23 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_cors import CORS
 
 
+from src.internal import database
+from src.security import auth
 from src.validation import *
 from src.handlers import dashboard, clients
-from src.security import jwt
 
 # Setup para mensagens de Logs
 SetupLogging()
+
+# Criação do pool de conexões
+database.CreatePool()
 
 app = Flask(__name__)
 
 # Configuração de cors da aplicação
 CORS(app, resources={
-    r"/api/*": {"origins": ["http://0.0.0.0:7000"]}
+    r"/api/*": {"origins": ["http://0.0.0.0:7000", "http://localhost:7000", "http://127.0.0.1:7000"]}
 })
 
 logger = logging.getLogger(__name__)
@@ -24,42 +28,28 @@ def data():
 
     return jsonify(resultado)
 
-@app.route('api/clients', methods='GET')
+@app.route('/api/clients', methods=['GET'])
 def GetClients():
-
-    # Verifica se há um token junto aos cookies
-    token = request.cookies.get('Access_Key')
-    if not token:
-        # Gera Log de erro caso não encontre o token 
-        logger.error("Requisição bloqueada por cookie inexistente!")
-
-        # Gera resposta de erro e a envia de volta ao FrontEnd
-        error = CreateError(401, "Requisição não autorizada")
-        return error
-    
-    # Decodifica o token quando o encontra
-    payload: Any = jwt.DecodeJWT(token)
-
-    # Caso haja algum erro gera o log e retorna a resposta de erro já definida na função de decodificação
-    if not isinstance(payload, dict):
-        logger.error("Erro ao decodificar payload")
-        return payload
+    # Valida e decodifica o token recebido
+    payload = auth.ValidateJWT()
+    if not payload or not isinstance(payload, dict):
+        return CreateError(500, 'Erro interno do servidor')
 
     # Verificação extra para garantir a conformidade dos valores
-    keys = payload.get('data')
+    data = payload['data']
+    keys = data['ID']
     if not keys:
-        logger.error('Erro com a extração de valores do jwt')
+        logger.error('Erro com a extração de valores do jwt', exc_info=True)
         error = CreateError(500, "Erro interno do servidor")
         return error
 
-    # Captura o ID contido no token
-    ID = clients.GetClients(keys.get('ID'))
+    # Utiliza o id do token para verificar os clientes associados ao usuário
+    response = clients.GetListClients(keys)
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
 
-    # Envia o ID do cliente para a função GetClients
-    response = clients.GetClients(ID)
-
-    # Retorna a resposta já tratada ba função
-    return jsonify(response)
+    # Retorna a resposta já codificada como json
+    return response
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8585, debug=True)

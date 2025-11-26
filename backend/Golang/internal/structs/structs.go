@@ -10,6 +10,7 @@ type Login struct {
 
 type Usuario struct {
 	Status string `json:"Status"`
+	Token string `json:"Token"`
 	Nome string `json:"Nome"`
 	Idade int `json:"Idade"`
 

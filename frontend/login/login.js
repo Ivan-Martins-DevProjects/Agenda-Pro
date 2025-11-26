@@ -1,4 +1,4 @@
-    const api_url = "http://localhost:8181"
+    const apiUrl = "http://localhost:8181"
     // Login
      document.getElementById('login-form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -8,7 +8,8 @@
 
     try {
 
-        const response = await fetch(`${api_url}/api/login`, {
+
+        const response = await fetch(`${apiUrl}/api/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -26,8 +27,9 @@
             return ErrorModal(data.message, data.code)
         }
 
+        sessionStorage.setItem('access-token', data.Token)
         console.log(`Login bem-sucedido! Redirecionando`)
-        window.location.href = '/#'
+        window.location.href = '/index.html'
 
     } catch (error) {
         console.error("Erro no Login:", error);

@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 
-formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)s |%(message)s")
+formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)s | %(message)s")
 
 def SetupLogging():
     logger = logging.getLogger()
@@ -18,6 +18,7 @@ def SetupLogging():
         encoding="utf-8"
     )
 
+    handler.setLevel(logging.DEBUG)
     handler.setFormatter(formatter)
 
     console = logging.StreamHandler()

@@ -10,26 +10,37 @@ async function carregarClientes() {
         menuLinks.forEach(l => l.classList.remove('active'))
         btnClientes.classList.add('active')
 
-        const response = await fetch(`{api_url}/api/clients`, {
-            method: 'GET'
+        const token = sessionStorage.getItem('access-token')
+
+        const resposta = await fetch(`${api_url}/api/clients`, {
+            method: 'GET',
+            headers: {
+                'Authorization': token
+            }
         })
 
         if (!resposta.ok) {
             console.log(resposta)
             throw new Error('Erro ao buscar clientes')
         }
-        const clientes = await resposta.json()
 
-        todosClientes = clientes
-        renderClients(clientes)
+        const clientes = await resposta.json()
+        if (clientes.status === 'error') {
+            console.log(clientes)
+            throw new Error('Error: ' + error.message)
+        }
+
+        todosClientes = clientes.data
+        renderClients(clientes.data)
     } catch (erro) {
         console.log('Erro carregarClientes:' + erro)
+        return
     }
 }
 
 function renderClients(clientes) {
   if (clientes.length === 0) {
-    console.log('Documento clientes.json vazio');
+    console.log('Lista de clientes vazia');
     return;
   }
 
@@ -56,13 +67,13 @@ function renderClients(clientes) {
     clone.querySelector('.cliente-contato').textContent = cliente.last_contact
 
     const status = clone.querySelector('.status')
-    if (cliente.status === 'active') {
+    if (cliente.status === 'ativo') {
         status.classList.add('active')
         status.textContent = 'Ativo'
     } else if (cliente.status == 'potencial') {
         status.classList.add('pending')
         status.textContent = 'Potencial'
-    } else if (cliente.status == 'inactive') {
+    } else if (cliente.status == 'inativo') {
         status.classList.add('inactive')
         status.textContent = 'Inativo'
     }

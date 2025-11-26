@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste de Cookie</title>
+</head>
+<body>
+    <h1>Teste de Login e Cookie</h1>
+    <button onclick="fazerLogin()">Fazer Login</button>
+    <p>Abra o F12 (Network) e clique no botão para testar.</p>
+
+    <script>
+        async function fazerLogin() {
+            console.log("Tentando fazer login...");
+
+            try {
+                // IMPORTANTE: Use a porta do seu backend Go
+                const response = await fetch('http://localhost:8181/api/login', {
+                    method: 'POST',
+                    // ESTA É A LINHA MAIS IMPORTANTE
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        // Coloque aqui os dados de login que sua API espera para ter sucesso
+                        email: "ivan@email.com",
+                        senha: "123456"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Resposta do servidor:", data);
+                alert("Login realizado! Agora verifique os cookies em F12 > Application > Cookies.");
+
+            } catch (error) {
+                console.error("Erro no login:", error);
+                alert("Falha no login. Veja o console para detalhes.");
+            }
+        }
+    </script>
+</body>
+</html>

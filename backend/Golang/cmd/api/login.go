@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/Agenda-Pro/internal/repository"
 	"github.com/Agenda-Pro/internal/security"
@@ -71,19 +70,11 @@ func UserLogin(w http.ResponseWriter, r *http.Request)  {
 
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name: "Access_Key",
-		Value: token,
-		Path: "/",
-		Expires: time.Now().Add(24 *time.Hour),
-		HttpOnly: true,
-		//SameSite: http.SameSiteLaxMode,
-	})
-
 	w.Header().Set("Content-Type", "application/json")
 
 	data := structs.Usuario {
 		Status: "success",
+		Token: token,
 		Nome: "Ivan",
 		Idade: 25,
 	}

@@ -71,7 +71,7 @@ func (r *Repository) CheckLogin(ctx context.Context ,email, password string) (*s
 		erro := structs.CreateError(500, "Erro interno de servidor")
 		return nil, erro
 	}
-	
+
 	data := structs.TokenJwt {
 		ID: id,
 		Role: role,
