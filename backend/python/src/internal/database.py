@@ -40,8 +40,51 @@ def CreatePool():
         # em caso de erro retorna o pool como None
         connectionPool = None
 
+# Função responsável por checar as permissões do usuário
+def CheckPermission(id, permission):
+    # Valida se o Pool de Conexões foi criado
+    if not connectionPool:
+        logger.error("Pool de Conexões não inicializado", exc_info=True)
+        return CreateError(500, "Erro interno do servidor")
+
+    # Valida se o id recebido é uma string
+    if not isinstance(id, str):
+        logger.error("Valor id em GetClients precisa ser uma string")
+        return CreateError(400, "Formato inválido")
+
+    conn = None
+    cursor = None
+
+    try:
+        # Obtém a conexão do pool de conexões
+        conn = connectionPool.getconn()
+        logger.debug('Conexão obtida do pool')
+        
+        cursor = conn.cursor()
+
+        # Define a query e a executa
+        query = f"SELECT {permission} FROM roles WHERE user_id = %s"
+        cursor.execute(query, (id,))
+
+        # Retorna o resultado da query
+        result = cursor.fetchone()
+        return result
+
+    # Registra qualquer erro com a consulta
+    except Exception:
+        logger.exception('Erro ao checar permissão do usuário')
+        return None
+
+    # Garante que o cursor foi fechado e a conexão devolvida ao pool
+    finally:
+        if conn:
+            if cursor:
+                cursor.close()
+            connectionPool.putconn(conn)
+            logger.debug("Conexão devolvida ao pool")
+
 # Função para listar todos os clientes
-def GetClients(id):
+def GetClients(id, role):
     # Valida se existe um pool criado
     if not connectionPool:
         logger.error("Pool de Conexões não inicializado", exc_info=True)
@@ -62,7 +105,11 @@ def GetClients(id):
 
         cursor = conn.cursor()
 
-        query = "SELECT clientId, nome, email, telefone, last_contact, status FROM contacts WHERE userId = %s"
+        query = "SELECT clientId, nome, email, telefone, last_contact, status, resp_name FROM contacts WHERE userId = %s"
+
+        if role == 'admin':
+            query = "SELECT clientId, nome, email, telefone, last_contact, status, resp_name FROM contacts WHERE bussines_id = %s"
+
         cursor.execute(query, (id,))
 
         results = cursor.fetchall()
@@ -83,6 +130,7 @@ def GetClients(id):
                 "email": result[2],
                 "phone": result[3],
                 "status": result[5],
+                "resp": result[6],
                 "last_contact": dateFrmt
             }
 

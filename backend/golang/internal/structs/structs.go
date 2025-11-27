@@ -17,7 +17,8 @@ type Usuario struct {
 }
 
 type TokenJwt struct {
-	ID int
+	ID string
+	BussinesID string
 	Nome string
 	Email string
 	Instance string

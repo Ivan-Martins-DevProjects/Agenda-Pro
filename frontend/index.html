@@ -69,23 +69,21 @@
             <template id="cliente-template">
                 <header class="page-header">
                     <h1 class="page-title">Meus Clientes</h1>
-                </header>
+                                    </header>
 
                 <section class="search-container">
-                    <input
-                        type="text"
-                        class="search-input"
-                        placeholder="Pesquisar cliente..."
-                        id="search-input"
-                    >
-                    <button class="btn-synchronize" id="synchronize-contacts">
-                        <i class="fas fa-refresh"></i>
-                        Sincronizar contatos
-                    </button>
                     <button class="btn-new-contact" id="add-client">
                         <i class="fas fa-plus"></i>
                         Adicionar Cliente
                     </button>
+                    <input
+                        type="text"
+                        class="search-input"
+                        placeholder="Pesquisar cliente..."
+                        id="search-input">
+                    <select class="clients-filter-dropdown">
+
+                    </select>
                 </section>
 
                 <table id="client-table" class="client-table">
@@ -96,20 +94,22 @@
                             <th>Telefone</th>
                             <th>Status</th>
                             <th>Último contato</th>
+                            <th>Responsável</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
-                                <div class="client-info">
-                                    <span class="cliente-nome"></span>
+                                <div class="client-info", style="z-index: 1000;">
+                                    <span class="cliente-nome" data-client-id=""></span>
                                 </div>
                             </td>
                             <td class="cliente-email"></td>
                             <td class="cliente-numero"></td>
                             <td><span class="status active"></span></td>
                             <td class="cliente-contato"></td>
+                            <td class="cliente-responsavel"></td>
                             <td class="actions">
                                 <button class="edit-contact" id="edit-contact">Editar</button>
                                 <button class="exclude-contact">Excluir</button>
@@ -117,7 +117,33 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <nav class="pagination-clients">
+                    <button class="pagination-button">teste</button>
+                </nav>
             </template>
+
+
+            <!-- Modal de mensagem de erro -->
+            <template id="error-modal-template">
+                    <div class="modal-overlay">
+                        <div class="modal-box">
+                            <button class="close-modal-btn">&times;</button>
+                            <div class="modal-icon"><i class="fa fa-exclamation-circle" style="color: red;"></i></div>
+                            <div class="modal-title">
+                                <p id="modal-code">Erro ao Autenticar</p>
+                            </div>
+                            <div class="modal-message">
+                                <p id="modal-message"></p>
+                            </div>
+                            <div class="error-buttons">
+                                <button class="btn-confirm-exclude">Confirmar</button>
+                                <button class="btn-cancel-exclude">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+            </template>
+
 
     <!-- Modal de Cadastro de clientes -->
     <dialog class="modal-cliente" id="modal-cliente">
@@ -172,6 +198,19 @@
                 </div>
 
                 <div class="form-group-section">
+                    <h4 style="color: #1582bd;">Atividade</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input placeholder="Valor gasto" type="text" id="gasto">
+                        </div>
+                        <div class="form-group">
+                            <input placeholder="Visitas" type="text" id="visitas">
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="form-group-section">
                     <h4 style="color: #1582bd;">Observações</h4>
                     <div class="form-row">
                         <div class="form-group" style="width: 100%;">
@@ -187,6 +226,7 @@
             </form>
         </div>
     </dialog>
+
 
     <script src="index.js"></script>
     <script src="clientes/clientes.js"></script>

@@ -153,3 +153,8 @@ button:hover {
     font-size: 18px;
     font-weight: bold;
 }
+
+.error-buttons {
+    display: flex;
+    justify-content: space-between;
+}

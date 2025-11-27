@@ -1,47 +1,94 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Teste de Cookie</title>
-</head>
-<body>
-    <h1>Teste de Login e Cookie</h1>
-    <button onclick="fazerLogin()">Fazer Login</button>
-    <p>Abra o F12 (Network) e clique no botão para testar.</p>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Testes de modal</title>
+        <link rel="stylesheet" href="clientes/css/cadastroCliente.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    </head>
+    <body>
+        <!-- Modal de Cadastro de Clientes -->
+<div class="modal-cliente" id="modal-cliente">
+    <div class="modal-header"></div>
+    <div>
+        <i class="fa fa-users fa-6x" style="margin-left: 12rem; margin-top: 2rem;"></i>
+    </div>
+    <div class="modal-title">
+        <h2 id="modal-title">Cadastro de clientes</h2>
+    </div>
 
-    <script>
-        async function fazerLogin() {
-            console.log("Tentando fazer login...");
+    <div class="modal-body">
+        <form id="customerForm">
+            <div class="form-group-section">
+                <h4 style="color: #1582bd;">Informações Pessoais</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input placeholder="Nome Completo" type="text" id="nome">
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="E-mail" type="email" id="email" name="email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input placeholder="Telefone" type="tel" id="telefone">
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="CPF" type="text" id="cpf">
+                    </div>
+                </div>
+            </div>
 
-            try {
-                // IMPORTANTE: Use a porta do seu backend Go
-                const response = await fetch('http://localhost:8181/api/login', {
-                    method: 'POST',
-                    // ESTA É A LINHA MAIS IMPORTANTE
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        // Coloque aqui os dados de login que sua API espera para ter sucesso
-                        email: "ivan@email.com",
-                        senha: "123456"
-                    })
-                });
+            <div class="form-group-section">
+                <h4 style="color: #1582bd;">Endereço</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input placeholder="Rua" type="text" id="rua">
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="Número" type="text" id="numero">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input placeholder="Bairro" type="text" id="bairro">
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="Cidade" type="text" id="cidade">
+                    </div>
+                </div>
+            </div>
 
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP! Status: ${response.status}`);
-                }
+            <div class="form-group-section">
+                <h4 style="color: #1582bd;">Atividade</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input placeholder="Valor gasto" type="text" id="gasto">
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="Visitas" type="text" id="visitas">
+                    </div>
+                </div>
+            </div>
 
-                const data = await response.json();
-                console.log("Resposta do servidor:", data);
-                alert("Login realizado! Agora verifique os cookies em F12 > Application > Cookies.");
+            <div class="form-group-section">
+                <h4 style="color: #1582bd;">Observações</h4>
+                <div class="form-row">
+                    <div class="form-group" style="width: 100%;">
+                        <input placeholder="Observações" type="text" id="Observações">
+                    </div>
+                </div>
+            </div>
 
-            } catch (error) {
-                console.error("Erro no login:", error);
-                alert("Falha no login. Veja o console para detalhes.");
-            }
-        }
-    </script>
-</body>
+            <div class="button">
+                <button class="btn-register">Registrar</button>
+                <button class="btn-exit">Sair</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    </body>
 </html>

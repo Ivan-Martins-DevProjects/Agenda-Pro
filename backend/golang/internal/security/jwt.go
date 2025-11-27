@@ -21,6 +21,7 @@ func CreateToken(s *structs.TokenJwt) (string, error) {
 	key := os.Getenv("JWT_KEY")
 	claims := structs.TokenJwt {
 		ID: s.ID,
+		BussinesID: s.BussinesID,
 		Nome: s.Nome,
 		Email: s.Email,
 		Instance: s.Instance,

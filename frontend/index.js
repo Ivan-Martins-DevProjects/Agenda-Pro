@@ -80,3 +80,22 @@ document.addEventListener('DOMContentLoaded', function(){
             })
         })
 
+    // Modal de Erro
+    function ErrorModal(message, title) {
+        const errorModal = document.getElementById('error-modal-template')
+        const errorClone = errorModal.content.cloneNode(true)
+        errorClone.querySelector('#modal-code').textContent = title
+        errorClone.querySelector('#modal-message').textContent = message
+        document.body.appendChild(errorClone)
+
+    }
+
+    // Fechar modal de Erro
+    document.body.addEventListener('click', function(event) {
+            if (event.target.matches('.close-modal-btn') || event.target.matches('.modal-overlay') || event.target.matches('.btn-cancel-exclude')) {
+                const modalOverlay = event.target.closest('.modal-overlay');
+                if (modalOverlay) {
+                    modalOverlay.remove();
+                }
+            }
+        });

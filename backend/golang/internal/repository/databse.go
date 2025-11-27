@@ -53,13 +53,12 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (r *Repository) CheckLogin(ctx context.Context ,email, password string) (*structs.TokenJwt, error) {
-	query := "SELECT id, role, instance, isConnected FROM users WHERE email = $1 AND password = $2"
+	query := "SELECT id, role, instance, isConnected, bussiness FROM users WHERE email = $1 AND password = $2"
 
-	var id int
-	var role, instance string
+	var id, role, instance, bussiness string
 	var isConnected bool
 
-	err := r.DB.QueryRowContext(ctx, query, email, password).Scan(&id, &role, &instance, &isConnected)
+	err := r.DB.QueryRowContext(ctx, query, email, password).Scan(&id, &role, &instance, &isConnected, &bussiness)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			erro := structs.CreateError(401, "Email ou senha inválidos")
@@ -74,6 +73,7 @@ func (r *Repository) CheckLogin(ctx context.Context ,email, password string) (*s
 
 	data := structs.TokenJwt {
 		ID: id,
+		BussinesID: bussiness,
 		Role: role,
 		Instance: instance,
 		IsConnected: isConnected,
