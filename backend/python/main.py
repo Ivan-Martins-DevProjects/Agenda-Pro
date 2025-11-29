@@ -29,7 +29,7 @@ def data():
 
     return jsonify(resultado)
 
-@app.route('/api/clients', methods=['GET'])
+@app.route('/api/clients', methods=['GET', 'POST'])
 def GetClients():
     contactId = request.args.get('id')
     if contactId:
@@ -41,6 +41,13 @@ def GetClients():
 
     if request.method == 'GET':
         response = clients.ListClients()
+        if response['status'] == 'error':
+            return jsonify(response), response['code']
+
+        return jsonify(response)
+
+    if request.method == 'POST':
+        response = clients.InsertContact()
         if response['status'] == 'error':
             return jsonify(response), response['code']
 

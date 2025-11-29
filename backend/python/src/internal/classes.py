@@ -8,7 +8,11 @@ logger = logging.getLogger(__name__)
 # Classe responsável por criar e validar permissões do usuário
 class User:
     def __init__(self, ID, BussinesID = "", Nome = "", Email = "", Instance = "", IsConnected = "", Role = ""):
-        self.ID = ID
+        if Role == 'admin':
+            self.ID = BussinesID
+        else:
+            self.ID = ID
+
         self.BussinesID = BussinesID
         self.Nome = Nome
         self.Email = Email
@@ -29,13 +33,7 @@ class User:
 
     def GetAllClients(self):
         # Busca os clientes referentes a role do usuário no banco de dados
-        if self.Role == 'admin':
-            clientes = database.GetClients(self.BussinesID, self.Role)
-        elif self.Role == 'user':
-            clientes = database.GetClients(self.ID, self.Role)
-        else:
-            logger.error('Role do cliente não definida')
-            return errors.CreateError(401, 'Requisição não autorizada')
+        clientes = database.GetClients(self.ID, self.Role)
 
         # Caso não tenha nenhum cliente informa ao FrontEnd
         if not clientes:
@@ -57,13 +55,7 @@ class User:
             return check
 
         # Executa a função para buscar as informações do contato
-        if self.Role == 'admin':
-            response = database.GetUniqueContact(contactId, self.BussinesID, self.Role)
-        elif self.Role == 'user':
-            response = database.GetUniqueContact(contactId, self.ID, self.Role)
-        else:
-            logger.error('Role do cliente não definida')
-            return errors.CreateError(401, 'Requisição não autorizada')
+        response = database.GetUniqueContact(contactId, self.ID, self.Role)
 
         # Em caso de erro interno registra o log
         if response['status'] == 'error' and response['status'] == 500:
@@ -72,3 +64,18 @@ class User:
 
         # Retorna a resposta da função que pode ser um dict ou uma mensagem de erro
         return response
+
+    def InsertNewContact(self, data):
+        check = self.Allowed('write_contacts')
+
+        if check is False:
+            return errors.CreateError(401, 'Usuário não autorizado')
+        elif check['status'] == 'error':
+            return check
+
+        response = database.InsertNewContactDB(data)
+        if response['status'] == 'error':
+            return response
+
+        return response
+        

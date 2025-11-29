@@ -250,3 +250,104 @@ def GetUniqueContact(contactId, id, role):
             logger.debug('Conexão devolvida ao pool')
 
         
+def InsertNewContactDB(data):
+     # Valida se o Pool de Conexões foi criado
+    if not connectionPool:
+        logger.error('Pool de Conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    # Valida se o id recebido é uma string
+    if not isinstance(id, str):
+        logger.error('Valor id em InsertNewContactDB precisa ser uma string')
+        return CreateError(400, 'Formato inválido')
+
+    conn = None
+    cursor = None
+
+    try:
+        # Obtém a conexão do pool de conexões
+        conn = connectionPool.getconn()
+        logger.debug('Conexão obtida do pool')
+        
+        cursor = conn.cursor()
+
+        userid = data['userid']
+        clientId = data['clientId']
+        nome = data['nome']
+        email = data['email']
+        telefone = data['telefone']
+        obs = data['obs']
+        respName = data['respName']
+        bussinesId = data['bussinesId']
+        cpf = data['cpf']
+        rua = data['rua']
+        bairro = data['bairro']
+        cidade = data['cidade']
+        numero = data['numero']
+
+        
+        # Define a query e a executa
+        queryContacts = """INSERT INTO contacts (
+            userid,
+            clientid,
+            nome,
+            email,
+            status,
+            telefone,
+            visitas,
+            gasto,
+            obs,
+            resp_name,
+            bussines_id,
+            cpf
+        )
+        VALUES (
+            %s, %s, %s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s
+        )
+        RETURNING ID;"""
+
+        queryAdress = """
+        INSERT INTO contacts_address (
+            clientid,
+            rua,
+            bairro,
+            cidade,
+            numero
+        )
+        VALUES (
+            %s, %s, %s, %s, %s
+        );"""
+
+        cursor.execute(queryContacts, (
+            userid, clientId, nome, email, 'ativo', telefone, 0, 0, obs, respName, bussinesId, cpf,)
+        )
+        resultContacts = cursor.fetchone[0]
+        if not resultContacts:
+            return CreateError(500, 'Erro interno do servidor')
+
+        cursor.execute(queryAdress, (
+            clientId, rua, bairro, cidade, numero,)
+        )
+
+        data = {
+            "id" : clientId
+        }
+
+        response = CreateResponse(data)
+
+        return response
+
+    # Registra qualquer erro com a consulta
+    except Exception as e:
+        logger.exception('Erro com a função GetUniqueContact')
+        return HandleExceptions(e)
+
+    # Garante que o cursor foi fechado e a conexão devolvida ao pool
+    finally:
+        if conn:
+            if cursor:
+                cursor.close()
+            connectionPool.putconn(conn)
+            logger.debug('Conexão devolvida ao pool')
+
+   

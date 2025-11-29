@@ -1,4 +1,8 @@
 import logging
+import uuid
+
+from flask import request
+from werkzeug.wrappers import response
 
 from src.security import auth
 from src.validation import errors
@@ -79,4 +83,45 @@ def GetContact(contactId):
     response = user.GetUniqueContact(contactId)
 
     return response
+
+
+def InsertContact():
+    response = TokenValidate()
+    if response['status'] == 'error':
+        return response
+
+    data = response['data']
+    id = data['ID']
+    BussinesID = data['BussinesID']
+    nome = data['Nome']
+    role = data['Role']
+
+    # Cria o usuário com base no payload recebido
+    user = classes.User(ID=id, BussinesID=BussinesID, Role=role)
+
+    body = request.get_json()
+
+    clientId = uuid.uuid4()
+
+    data = {
+        "userid" : id,
+        "bussinesId" : BussinesID,
+        "clientID" : clientId,
+        "nome" : body.get('nome'),
+        "email" : body.get('email'),
+        "telefone" : body.get('telefone'),
+        "obs" : body.get('obs'),
+        "cpf" : body.get('cpf'),
+        "rua" : body.get('rua'),
+        "numero" : body.get('numero'),
+        "bairro" : body.get('bairro'),
+        "cidade" : body.get('cidade'),
+        "respName" : nome,
+    }
+
+    insert = user.InsertNewContact(data)
+    if insert['status'] == 'error':
+        return insert
+
+    return insert
 
