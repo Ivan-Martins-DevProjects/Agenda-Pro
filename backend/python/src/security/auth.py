@@ -22,9 +22,23 @@ def ValidateJWT() :
 
     # Caso haja algum erro gera o log e retorna a resposta de erro já definida na função de decodificação
     if not isinstance(payload, dict):
-        logger.error("Erro ao decodificar payload", exc_info=True)
+        data = json.loads(payload)
+        logger.error(f"Erro ao decodificar payload: {data['message']}")
         response = CreateResponse(payload)
         return response
+
+    if payload['status'] == 'error':
+        # Valida se o payload recebido foi inválido
+        if payload['code'] == 401:
+            return CreateError(401, 'Requisição não autorizada')
+        
+        # Registra um erro diferente para caso tenha recebido um token adulterado
+        elif payload['code'] == 409:
+            return CreateError(401,'Requisição não autorizada')
+
+        # Resposta em caso de erro interno
+        elif payload['code'] == 500:
+            return payload
 
     return payload
 

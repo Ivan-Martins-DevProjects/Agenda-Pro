@@ -1,5 +1,6 @@
 const btnClientes = document.getElementById('page-clientes');
 const menuLinks = document.querySelectorAll('.menu-link')
+const container = document.getElementById('content-container');
 
 // Cria lista para Renderizar a tabela de clientes
 let todosClientes = []
@@ -26,10 +27,10 @@ async function carregarClientes() {
         })
 
         const clientes = await resposta.json()
-        // Validando o erro para exibição de acordo com o payload recebido
-        if (clientes.status === 'error') {
-            console.log(clientes)
-            throw new Error('Error: ' + error.message)
+
+        if (!resposta.ok) {
+            ErrorModal(clientes.message, 'Erro ao carregar clientes')
+            throw new Error(clientes.message)
         }
 
         // Adicona a lista recebida a lista vazia criada antes
@@ -38,14 +39,14 @@ async function carregarClientes() {
         renderClients(clientes.data)
 
     } catch (erro) {
-        console.log('Erro carregarClientes:' + erro)
+        console.log(erro.message)
         return
     }
 }
 
 function renderClients(clientes) {
   if (clientes.length === 0) {
-    console.log('Lista de clientes vazia');
+    ;
     return;
   }
 
@@ -53,7 +54,6 @@ function renderClients(clientes) {
   const template = document.getElementById('cliente-template').content.cloneNode(true);
 
   // 2️⃣ Insere o template no container visível
-  const container = document.getElementById('content-container');
   container.innerHTML = ''; // limpa conteúdo anterior
   container.appendChild(template);
 
@@ -94,7 +94,7 @@ function renderClients(clientes) {
   });
 }
 
-async function GetEditContact(id) {
+async function RequestUniqueContact(id) {
     try {
         const token = sessionStorage.getItem('access-token')
 
@@ -106,20 +106,19 @@ async function GetEditContact(id) {
             }
         })
 
-        if (!response.ok){
-            throw new Error(response)
-        }
-
         const content = await response.json()
-        if(content.status === 'error') {
+
+        if (!response.ok){
+            ErrorModal(content.message, 'Erro ao coletar informações do usuário')
             throw new Error(content.message)
         }
 
-        alert(content.message)
+
+        RenderEditContact(content.data)
         return
 
     } catch (error) {
-        ErrorModal(error, 'Erro ao atualizar usuário')
+        console.error(error)
         return
     }
 }
@@ -138,6 +137,7 @@ function RenderEditContact(data) {
     document.getElementById('cidade').value = data.cidade;
     document.getElementById('gasto').value = data.gasto;
     document.getElementById('visitas').value = data.visitas;
+    document.getElementById('obs').value = data.obs;
 
     const title = document.querySelector('.modal-title');
     title.textContent = 'Editar Informações do Cliente';
@@ -145,11 +145,24 @@ function RenderEditContact(data) {
     modal.showModal();
 
 }
+
 // Abrir modal de adicionar clientes (Método utilizado para evitar problemas com elemento não criado)
 document.addEventListener('click', function (e) {
     switch (true) {
         case e.target.matches('.btn-new-contact'):
             const modal = document.getElementById('modal-cliente')
+            document.getElementById('nome').value = ''
+            document.getElementById('email').value = ''
+            document.getElementById('telefone').value = ''
+            document.getElementById('cpf').value = ''
+            document.getElementById('rua').value = ''
+            document.getElementById('numero').value = ''
+            document.getElementById('bairro').value = ''
+            document.getElementById('cidade').value = ''
+            document.getElementById('gasto').value = ''
+            document.getElementById('visitas').value = ''
+            document.getElementById('obs').value = ''
+
             document.querySelector('.modal-title').textContent = 'Cadastro de Clientes';
 
             modal.showModal()
@@ -173,10 +186,12 @@ document.addEventListener('click', async function (event) {
     if (event.target && event.target.matches('.edit-contact')) {
         event.stopPropagation()
 
-        const info = document.querySelector('.cliente-nome')
-            const id = info.getAttribute('data-client-id')
+        const row = event.target.closest('tr')
 
-        const data = await GetEditContact(id)
+        const info = row.querySelector('.cliente-nome')
+        const id = info.getAttribute('data-client-id')
+
+        const data = await RequestUniqueContact(id)
 
         RenderEditContact(data)
 

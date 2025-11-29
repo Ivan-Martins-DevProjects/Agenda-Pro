@@ -1,4 +1,3 @@
-import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,9 +17,7 @@ def CreateError(code, message):
         "message": message
     }
 
-    response = json.dumps(dict)
-    
-    return response
+    return dict
 
 
 def CreateResponse(message):
@@ -30,6 +27,5 @@ def CreateResponse(message):
         "data": message
     }
 
-    response = json.dumps(dict)
 
-    return response
+    return dict

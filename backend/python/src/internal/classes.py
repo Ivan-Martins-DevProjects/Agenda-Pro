@@ -1,6 +1,6 @@
 import logging
 
-from src.validation import CreateResponse, CreateError
+from src.validation import errors
 from src.internal import database
 
 logger = logging.getLogger(__name__)
@@ -22,12 +22,10 @@ class User:
         # Caso a função retorne None, isso significa que houve um erro
         if not check:
             logger.error('Erro ao checar permissões do usuário')
-            return CreateError(500, 'Internal server error')
-        elif check is False:
-            return False
+            return errors.CreateError(500, 'Internal server error')
 
-        # Caso o usuário esteja autorizado retorna True como validação
-        return True
+        # Retorna se o usuário está autorizado ou não
+        return check
 
     def GetAllClients(self):
         # Busca os clientes referentes a role do usuário no banco de dados
@@ -37,15 +35,40 @@ class User:
             clientes = database.GetClients(self.ID, self.Role)
         else:
             logger.error('Role do cliente não definida')
-            return CreateError(400, 'Role não encontrada')
+            return errors.CreateError(401, 'Requisição não autorizada')
 
         # Caso não tenha nenhum cliente informa ao FrontEnd
         if not clientes:
-            response = CreateResponse('No clients')
+            response = errors.CreateResponse('No clients')
             return response
 
         # Caso haja formata a resposta de forma que o FrontEnd possa processar
-        response = CreateResponse(clientes)
+        response = errors.CreateResponse(clientes)
         return response
 
+    def GetUniqueContact(self, contactId):
+        # Checa se o usuário tem permissão para essa operação
+        check = self.Allowed('read_contacts')
 
+        # Se check for False o usuário não tem permissão
+        if check is False:
+            return errors.CreateError(401, 'Usuário não autorizado')
+        elif check['status'] == 'error':
+            return check
+
+        # Executa a função para buscar as informações do contato
+        if self.Role == 'admin':
+            response = database.GetUniqueContact(contactId, self.BussinesID, self.Role)
+        elif self.Role == 'user':
+            response = database.GetUniqueContact(contactId, self.ID, self.Role)
+        else:
+            logger.error('Role do cliente não definida')
+            return errors.CreateError(401, 'Requisição não autorizada')
+
+        # Em caso de erro interno registra o log
+        if response['status'] == 'error' and response['status'] == 500:
+            logger.error(f'Erro ao buscar contato: {response['message']}')
+            return response
+
+        # Retorna a resposta da função que pode ser um dict ou uma mensagem de erro
+        return response

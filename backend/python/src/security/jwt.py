@@ -13,13 +13,27 @@ def DecodeJWT(token):
        error = CreateError(500, "JWT Secret não encontrado") 
        return error
 
-    payload = jwt.decode(token, secret, algorithms=['HS256'])
+    try:
+        payload = jwt.decode(
+            token,
+            secret,
+            algorithms=['HS256']
+        )
 
-    if not payload:
-        error = CreateError(500, "Erro ao decodificar JWT")
-        return error
+        if not payload:
+            error = CreateError(500, "Erro ao decodificar JWT")
+            return error
 
-    return {
-        'status': 'success',
-        'data': payload
-    }
+        return {
+            'status': 'success',
+            'data': payload
+        }
+
+    except jwt.ExpiredSignatureError as e:
+        return CreateError(401, str(e))
+
+    except jwt.InvalidSignatureError as e:
+        return CreateError(409, str(e))
+
+    except jwt.InvalidTokenError as e:
+        return CreateError(409, str(e))

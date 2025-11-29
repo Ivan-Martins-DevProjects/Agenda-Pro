@@ -1,5 +1,7 @@
+import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from werkzeug.wrappers import ResponseStream
 
 
 from src.internal import database
@@ -31,11 +33,18 @@ def data():
 def GetClients():
     contactId = request.args.get('id')
     if contactId:
-        print('oi')
+        response = clients.GetContact(contactId)
+        if response['status'] == 'error':
+            return jsonify(response), response['code']
+
+        return jsonify(response)
 
     if request.method == 'GET':
         response = clients.ListClients()
-        return response
+        if response['status'] == 'error':
+            return jsonify(response), response['code']
+
+        return jsonify(response)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)
