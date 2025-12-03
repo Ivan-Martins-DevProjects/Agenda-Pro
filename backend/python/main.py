@@ -1,7 +1,8 @@
 import json
+from logging import Logger
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from werkzeug.wrappers import ResponseStream
+from werkzeug.wrappers import ResponseStream, response
 
 
 from src.internal import database
@@ -10,6 +11,7 @@ from src.handlers import dashboard, clients
 
 # Setup para mensagens de Logs
 SetupLogging()
+logger = logging.getLogger(__name__)
 
 # Criação do pool de conexões
 database.CreatePool()
@@ -29,29 +31,43 @@ def data():
 
     return jsonify(resultado)
 
-@app.route('/api/clients', methods=['GET', 'POST'])
-def GetClients():
-    contactId = request.args.get('id')
-    if contactId:
-        response = clients.GetContact(contactId)
+@app.route('/api/clients', methods=['GET'])
+def GetContactsAPI():
+    response = clients.ListClients()
+
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
+
+    if response['status'] == 'error':
+        return jsonify(response), response['code']
+
+    return jsonify(response)
+
+# Rota responsável por coletar informações de um único contato
+@app.route('api/clients/<id>', methods=['GET'])
+def GetContactAPI():
+    clientID = request.args.get('id')
+    if clientID:
+        response = clients.GetContact(clientID)
+        if not response:
+            return CreateError(500, 'Erro interno do servidor')
         if response['status'] == 'error':
             return jsonify(response), response['code']
 
-        return jsonify(response)
+        return jsonify(response), response['code']
+    
+    logger.error('ID do contato, recebido na query, vazio')
+    return CreateError(401, 'ID do contato não enviado')
 
-    if request.method == 'GET':
-        response = clients.ListClients()
-        if response['status'] == 'error':
-            return jsonify(response), response['code']
+@app.route('ap/clients/create', methods=['POST'])
+def CreateContactAPI():
+    response = clients.InsertContact()
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
+    if response['status'] == 'error':
+        return jsonify(response), response['code']
 
-        return jsonify(response)
-
-    if request.method == 'POST':
-        response = clients.InsertContact()
-        if response['status'] == 'error':
-            return jsonify(response), response['code']
-
-        return jsonify(response)
+    return jsonify(response), response['code']
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)

@@ -136,19 +136,19 @@ def GetClients(id, role):
 
         cursor.execute(query, (id,))
 
-        results = cursor.fetchall()
+        results:list = cursor.fetchall()
         # Validação em caso de não existência de contatos
         if not results:
-            return CreateError(404, 'Contato não encontrado')
+            return CreateError(404, 'Lista de contatos vazia')
 
         # Cria uma lista com os clientes registrados e retorna como resposta
         # Lista já no formato aceito pelo frontend
-        clientes = []
+        clientes: list[dict] = []
 
         for result in results:
-            dateFrmt = result[4].strftime('%d-%m-%Y')
+            dateFrmt:str = result[4].strftime('%d-%m-%Y')
 
-            data = {
+            data:dict[str, str] = {
                 'id': result[0],
                 'name': result[1],
                 'email': result[2],

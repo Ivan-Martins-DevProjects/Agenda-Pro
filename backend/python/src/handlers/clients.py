@@ -2,7 +2,6 @@ import logging
 import uuid
 
 from flask import request
-from werkzeug.wrappers import response
 
 from src.security import auth
 from src.validation import errors
