@@ -69,22 +69,21 @@
             <template id="cliente-template">
                 <header class="page-header">
                     <h1 class="page-title">Meus Clientes</h1>
-                                    </header>
+                </header>
 
-                <section class="search-container">
+                <div class="autocomplete-container">
+                        <input
+                        type="text"
+                        class="search-input"
+                        placeholder="Pesquisar cliente..."
+                        id="input-client-field">
+                <div class="input-client-dropdown" id="input-client-dropdown"></div>
                     <button class="btn-new-contact">
                         <i class="fas fa-plus"></i>
                         Adicionar Cliente
                     </button>
-                    <input
-                        type="text"
-                        class="search-input"
-                        placeholder="Pesquisar cliente..."
-                        id="search-input">
-                    <select class="clients-filter-dropdown">
 
-                    </select>
-                </section>
+                </div>
 
                 <table id="client-table" class="client-table">
                     <thead>

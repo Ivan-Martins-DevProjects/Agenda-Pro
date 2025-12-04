@@ -2,10 +2,18 @@ const btnClientes = document.getElementById('page-clientes');
 const menuLinks = document.querySelectorAll('.menu-link')
 const container = document.getElementById('content-container');
 
+
 const token = sessionStorage.getItem('access-token')
 
 // Cria lista para Renderizar a tabela de clientes
 let todosClientes = []
+
+
+// Variável para armazenar o timer
+let debounceTimer
+
+// Variável para verificar estado do dropbox de pesquisar cliente
+let searchClient
 
 // Adiciona a função carregar clientes ao botão "Clientes" no menu lateral
 btnClientes.addEventListener('click', carregarClientes)
@@ -253,6 +261,7 @@ document.addEventListener('click', async function (event) {
 
         RenderModalContact(response)
 
+    // Função para deletar contatos
     } else if (event.target.matches('.exclude-contact')) {
         const row = event.target.closest('tr')
         const info = row.querySelector('.cliente-nome')
@@ -263,3 +272,122 @@ document.addEventListener('click', async function (event) {
     }
 });
 
+// Requisição para pesquisar clientes
+async function SearchClient(input) {
+    try {
+        const response = await fetch(`${api_url}/api/clients?search=${input}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type':'application/json',
+                'Authorization': token
+            }
+        })
+
+        if (!response.ok) {
+            alert('Erro ao buscar contato')
+        }
+
+        return response
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+container.addEventListener('input', function(e){
+    // Evento para pesquisar contatos
+    if (e.target.matches('#input-client-field')) {
+        clearTimeout(debounceTimer)
+            debounceTimer = setTimeout(async() => {
+                const texto = e.target.value
+                
+                const response = SearchClient(texto)
+
+                RenderSearchClients(response)
+                searchClient = true
+
+            }, 500);
+    }
+})
+
+function RenderSearchClients(data){
+    const dropdown = document.getElementById('input-client-dropdown')
+    dropdown.innerHTML = ''
+    if (data.length === 0) {
+        dropdown.style.display = 'none'
+        return
+    }
+
+    const lista = document.createElement('ul')
+
+    data.forEach(item => {
+        const li = document.createElement('li')
+        const span = document.createElement('span')
+        span.textContent = item.nome
+
+        const acoesContainer = document.createElement('div')
+        acoesContainer.className = 'input-client-actions'
+
+                // 1. Botão CHAT
+        const btnVisualizar = document.createElement('button');
+        btnVisualizar.className = 'input-client-button-chat';
+        btnVisualizar.dataset.id = item.id;
+        btnVisualizar.title = 'Visualizar Item'; // Tooltip para acessibilidade
+        const iconVisualizar = document.createElement('i');
+        iconVisualizar.className = 'fas fa-comments';
+        btnVisualizar.appendChild(iconVisualizar);
+
+        // 2. Botão EDITAR
+        const btnEditar = document.createElement('button');
+        btnEditar.className = 'input-client-button--edit';
+        btnEditar.dataset.id = item.id;
+        btnEditar.title = 'Editar Item';
+        const iconEditar = document.createElement('i');
+        iconEditar.className = 'fas fa-pen-to-square'; // Ícone de caneta
+        btnEditar.appendChild(iconEditar);
+
+        // 3. Botão DELETAR
+        const btnDeletar = document.createElement('button');
+        btnDeletar.className = 'input-client-button--delete';
+        btnDeletar.dataset.id = item.id;
+        btnDeletar.title = 'Deletar Item';
+        const iconDeletar = document.createElement('i');
+        iconDeletar.className = 'fas fa-trash-can'; // Ícone de lixeira
+        btnDeletar.appendChild(iconDeletar);
+
+        // Adiciona os três botões ao container
+        acoesContainer.appendChild(btnVisualizar);
+        acoesContainer.appendChild(btnEditar);
+        acoesContainer.appendChild(btnDeletar);
+
+        // --- FIM DAS MUDANÇAS ---
+
+        li.appendChild(span);
+        li.appendChild(acoesContainer);
+        lista.appendChild(li);
+    });
+
+    dropdown.appendChild(lista);
+    dropdown.style.display = 'block';
+
+};
+
+// Fecha o dropdown com a tecla Escape
+document.addEventListener('keydown', function(event) {
+    if (!searchClient) {
+        return
+    }
+    if (event.key === 'Escape') {
+        const clientDropdown = document.getElementById('input-client-dropdown');
+        clientDropdown.style.display = 'none';
+        searchClient = false
+        }
+    }
+);
+
+document.body.addEventListener('click', function(event){
+    if (searchClient) {
+        const clientDropdown = document.getElementById('input-client-dropdown');
+        clientDropdown.style.display = 'none'
+        searchClient = false
+    }
+})

@@ -65,6 +65,7 @@ body {
   margin-left: 25rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  width: 300px;
   outline: none;
   transition: border 0.2s;
 }
@@ -195,4 +196,97 @@ body {
 
 .actions button:hover {
   transform: scale(1);
+}
+
+/* ===== Input Cliente ===== */
+.autocomplete-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 20rem;
+    margin-left: 8rem;
+    margin-bottom: 1rem;
+}
+
+.input-client-dropdown {
+    position: absolute;
+    margin-left: 25rem;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border: 1px solid #ccc;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-top: none;
+    background-color: white;
+    width: 300px;
+    overflow-y: none;
+    z-index: 1000;
+    display: none;
+    transition: all 0.2s ease;
+}
+
+.input-client-dropdown ul {
+    list-style-type: none;
+    cursor: default;
+    margin: 0;
+    padding: 0;
+}
+
+.input-client-dropdown li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.input-client-dropdown li:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #f0f8ff;
+    border-color: #b0d4f1;
+    border-radius: 12px;
+    z-index: 1;
+    position: relative;
+}
+
+.input-client-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.input-client-dropdown button {
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.7rem;
+    transition: all 0.2s ease;
+}
+
+.input-client-dropdown button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.input-client-button-chat {
+    border-color: #1ca23a;
+    background-color: #1ca23a;
+    color:  #fff;
+}
+
+.input-client-button--edit {
+    border-color: #2196F3;
+    background-color: #2196F3;
+    color:  #fff;
+}
+
+.input-client-button--delete {
+    border-color: #f44336;
+    background-color: #f44336;
+    color:  #fff;
 }
