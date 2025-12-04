@@ -85,4 +85,6 @@ class User:
             return errors.CreateError(401, 'Usuário não autorizado')
         elif check['status'] == 'error':
             return check
-        
+
+        response = database.DeleteContactDB(id)
+        return response

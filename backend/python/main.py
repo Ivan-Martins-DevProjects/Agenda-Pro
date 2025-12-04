@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, jsonify
+from flask import Flask, json, jsonify
 from flask_cors import CORS
 
 from src.internal import database
@@ -71,7 +71,10 @@ def EditContactAPI(id):
     if not response:
         return CreateError(500, 'Erro interno do servidor')
     
-    return response
+    if response['status'] == 'error':
+        return jsonify(response), response['code']
+
+    return jsonify(response), 200
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)

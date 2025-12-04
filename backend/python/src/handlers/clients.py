@@ -159,7 +159,7 @@ def DeleteContact(id):
     user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
     response = user.DeleteContact(id)
     if not response:
-        logger.error('Função DeleteContact nãoo retornou nada')
+        logger.error('Função DeleteContact não retornou nada')
         return errors.CreateError(500, 'Erro interno do servidor')
 
     return response

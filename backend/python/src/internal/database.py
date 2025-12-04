@@ -301,31 +301,35 @@ def InsertNewContactDB(data):
         return HandleExceptions(e)
 
 
-def DeleteContactDB(id)  :
-    if not connectionPool:
-            logger.error('Pool de Conexões não inicializado', exc_info=True)
-            return CreateError(500, 'Erro interno do servidor')
 
-    # Valida se o id recebido é uma string
-    if not isinstance(id['userid'], str):
+def DeleteContactDB(id):
+    if not connectionPool:
+        logger.error('Pool de Conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    if not isinstance(id, str):
         logger.error('Valor id em InsertNewContactDB precisa ser uma string')
         return CreateError(400, 'Formato inválido')
-
-    conn = None
-    cursor = None
 
     try:
         with connectionPool.connection() as conn:
             with conn.cursor() as cursor:
-               query = 'DELETE FROM contacts WHERE clientid = %s' 
+                query_1 = 'DELETE FROM contacts_address WHERE clientid = %s'
+                query_2 = 'DELETE FROM contacts WHERE clientid = %s'
 
-               cursor.execute(query, (id,))
-               conn.commit()
-               if cursor.rowcount <= 0:
-                   logger.error('Erro ao deletar contato')
-                   return CreateError(500, 'Erro interno do servidor')
+                cursor.execute(query_1, (id,))
+                conn.commit()
+                if cursor.rowcount <= 0:
+                    logger.error('Erro ao deletar contato da tabela contacts_address')
+                    return CreateError(500, 'Erro interno do servidor')
 
-               return CreateResponse('Usuário excluído com sucesso')
+                cursor.execute(query_2, (id,))
+                conn.commit()
+                if cursor.rowcount <=0:
+                    logger.error('Erro ao deletar contato da tabela contatos')
+                    return CreateError(500, 'Erro interno do servidor')
+
+                return CreateResponse('Usuário excluído com sucesso')
 
     except Exception as e:
         logger.exception('Erro com a função DeleteContactDB')

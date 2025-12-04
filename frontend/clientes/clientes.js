@@ -2,7 +2,7 @@ const btnClientes = document.getElementById('page-clientes');
 const menuLinks = document.querySelectorAll('.menu-link')
 const container = document.getElementById('content-container');
 
-const token = sessionStorage.getItem('access-key')
+const token = sessionStorage.getItem('access-token')
 
 // Cria lista para Renderizar a tabela de clientes
 let todosClientes = []
@@ -254,13 +254,12 @@ document.addEventListener('click', async function (event) {
         RenderModalContact(response)
 
     } else if (event.target.matches('.exclude-contact')) {
-        event.stopPropagation()
-
         const row = event.target.closest('tr')
         const info = row.querySelector('.cliente-nome')
         const id = info.getAttribute('data-client-id')
 
         await DeleteContact(id)
+        carregarClientes()
     }
 });
 
