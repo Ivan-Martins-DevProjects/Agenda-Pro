@@ -2,6 +2,8 @@ const btnClientes = document.getElementById('page-clientes');
 const menuLinks = document.querySelectorAll('.menu-link')
 const container = document.getElementById('content-container');
 
+const token = sessionStorage.getItem('access-key')
+
 // Cria lista para Renderizar a tabela de clientes
 let todosClientes = []
 
@@ -123,6 +125,29 @@ async function RequestUniqueContact(id) {
     }
 }
 
+async function DeleteContact(id) {
+    try {
+        const response = await fetch(`${api_url}/api/clients/delete/${id}`,{
+            method: 'DELETE',
+            headers: {
+                'Content-Type':'application/json',
+                'Authorization':token
+            }
+        })
+        const content = await response.json()
+
+        if (!response.ok){
+            ErrorModal(content.message, 'Erro ao deletar usuário')
+            throw new Error(content.message)
+        }
+
+        alert('Contato excluído com sucesso')
+    } catch (error) {
+        console.error(error)
+        return
+    }
+}
+
 function RenderModalContact(data, message) {
     const modal = document.getElementById('modal-cliente');
 
@@ -195,9 +220,9 @@ document.addEventListener('click', function (e) {
                     modal.close()
                     alert('Contato criado com sucesso')
                     return
-                }  
+                }
             }
-            
+
             modal.showModal()
             break;
 
@@ -229,8 +254,13 @@ document.addEventListener('click', async function (event) {
         RenderModalContact(response)
 
     } else if (event.target.matches('.exclude-contact')) {
-        ErrorModal('Deseja continuar?', 'Excluindo contato')
+        event.stopPropagation()
 
+        const row = event.target.closest('tr')
+        const info = row.querySelector('.cliente-nome')
+        const id = info.getAttribute('data-client-id')
+
+        await DeleteContact(id)
     }
 });
 
