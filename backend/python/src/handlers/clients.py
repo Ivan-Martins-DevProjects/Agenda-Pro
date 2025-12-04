@@ -6,6 +6,7 @@ from flask import request
 from src.security import auth
 from src.validation import errors
 from src.internal import classes
+from src.validation.checkTypes import isEmail, isName, isNumber
 
 logger = logging.getLogger(__name__)
 
@@ -101,22 +102,40 @@ def InsertContact():
     body = request.get_json()
 
     clientId = uuid.uuid4()
+    chaves = [
+        'userid', 'bussinesId', 'clientId', 'nome', 'email', 'telefone',
+        'obs', 'cpf', 'rua', 'numero', 'bairro', 'cidade', 'respName'
+    ]
 
     data = {
         "userid" : id,
         "bussinesId" : BussinesID,
-        "clientID" : clientId,
-        "nome" : body.get('nome'),
-        "email" : body.get('email'),
-        "telefone" : body.get('telefone'),
-        "obs" : body.get('obs'),
-        "cpf" : body.get('cpf'),
-        "rua" : body.get('rua'),
-        "numero" : body.get('numero'),
-        "bairro" : body.get('bairro'),
-        "cidade" : body.get('cidade'),
-        "respName" : nome,
+        "clientID" : str(clientId),
     }
+
+    for chave in chaves:
+        valor = body.get(chave) or ''
+        if chave == 'numero':
+            valor = body.get(chave) or 0
+
+        elif chave == 'email':
+            resp = isEmail(body.get(chave))
+            if resp is False:
+                return errors.CreateError(401, 'Email Inválido')
+            valor = body.get(chave)
+
+        elif chave == 'nome':
+            resp = isName(body.get(chave))
+            if resp is False:
+                return errors.CreateError(401, 'Formato de Nome inválido')
+            valor = body.get(chave)
+
+        elif chave == 'telefone':
+            resp = isNumber(body.get(chave))
+            if resp is False:
+                return errors.CreateError(401, 'Número de telefone inválido')
+            valor = body.get(chave)
+        data[chave] = valor
 
     insert = user.InsertNewContact(data)
     if insert['status'] == 'error':

@@ -41,25 +41,25 @@ def GetContactsAPI():
     if response['status'] == 'error':
         return jsonify(response), response['code']
 
-    return jsonify(response)
+    return jsonify(response), 200
 
 # Rota responsável por coletar informações de um único contato
-@app.route('api/clients/<id>', methods=['GET'])
-def GetContactAPI():
-    clientID = request.args.get('id')
-    if clientID:
-        response = clients.GetContact(clientID)
+@app.route('/api/client/<id>/info', methods=['GET'])
+def GetContactAPI(id):
+    if id:
+        response = clients.GetContact(id)
         if not response:
             return CreateError(500, 'Erro interno do servidor')
         if response['status'] == 'error':
             return jsonify(response), response['code']
 
-        return jsonify(response), response['code']
+        return jsonify(response), 200
     
     logger.error('ID do contato, recebido na query, vazio')
     return CreateError(401, 'ID do contato não enviado')
 
-@app.route('ap/clients/create', methods=['POST'])
+# Rota responsável pela criação de novos clientes
+@app.route('/api/clients/create', methods=['POST'])
 def CreateContactAPI():
     response = clients.InsertContact()
     if not response:
@@ -67,7 +67,7 @@ def CreateContactAPI():
     if response['status'] == 'error':
         return jsonify(response), response['code']
 
-    return jsonify(response), response['code']
+    return jsonify(response), 200
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)

@@ -73,7 +73,7 @@ class User:
         elif check['status'] == 'error':
             return check
 
-        response = database.InsertNewContactDB(data)
+        response = database.InsertNewContactDB(data, self.Nome)
         if response['status'] == 'error':
             return response
 
