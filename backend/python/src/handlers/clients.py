@@ -135,6 +135,9 @@ def InsertContact():
             if resp is False:
                 return errors.CreateError(401, 'Número de telefone inválido')
             valor = body.get(chave)
+
+        elif chave == 'respName':
+            valor = nome
         data[chave] = valor
 
     insert = user.InsertNewContact(data)
@@ -142,4 +145,22 @@ def InsertContact():
         return insert
 
     return insert
+
+def DeleteContact(id):
+    response = TokenValidate()
+    if response['status'] == 'error':
+        return response
+
+    data = response['data']
+    userId = data['ID']
+    BussinesID = data['BussinesID']
+    role = data['Role']
+
+    user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
+    response = user.DeleteContact(id)
+    if not response:
+        logger.error('Função DeleteContact nãoo retornou nada')
+        return errors.CreateError(500, 'Erro interno do servidor')
+
+    return response
 

@@ -206,7 +206,7 @@ def GetUniqueContact(contactId, id, role):
         return HandleExceptions(e)
 
         
-def InsertNewContactDB(data, respName):
+def InsertNewContactDB(data):
      # Valida se o Pool de Conexões foi criado
     if not connectionPool:
         logger.error('Pool de Conexões não inicializado', exc_info=True)
@@ -231,7 +231,7 @@ def InsertNewContactDB(data, respName):
                 email = data['email']
                 telefone = data['telefone']
                 obs = data['obs']
-                respName = respName
+                respName = data['respName']
                 bussinesId = data['bussinesId']
                 cpf = data['cpf']
                 rua = data['rua']
@@ -277,8 +277,9 @@ def InsertNewContactDB(data, respName):
                     userid, clientId, nome, email, 'ativo', telefone, 0, 0, obs, respName, bussinesId, cpf,)
                 )
                 conn.commit()
-                resultContacts = cursor.fetchone
+                resultContacts = cursor.fetchone()
                 if not resultContacts:
+                    logger.error('Erro ao buscar informações do usuário')
                     return CreateError(500, 'Erro interno do servidor')
 
                 cursor.execute(queryAdress, (
@@ -300,4 +301,33 @@ def InsertNewContactDB(data, respName):
         return HandleExceptions(e)
 
 
-   
+def DeleteContactDB(id)  :
+    if not connectionPool:
+            logger.error('Pool de Conexões não inicializado', exc_info=True)
+            return CreateError(500, 'Erro interno do servidor')
+
+    # Valida se o id recebido é uma string
+    if not isinstance(id['userid'], str):
+        logger.error('Valor id em InsertNewContactDB precisa ser uma string')
+        return CreateError(400, 'Formato inválido')
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+               query = 'DELETE FROM contacts WHERE clientid = %s' 
+
+               cursor.execute(query, (id,))
+               conn.commit()
+               if cursor.rowcount <= 0:
+                   logger.error('Erro ao deletar contato')
+                   return CreateError(500, 'Erro interno do servidor')
+
+               return CreateResponse('Usuário excluído com sucesso')
+
+    except Exception as e:
+        logger.exception('Erro com a função DeleteContactDB')
+        return HandleExceptions(e)
+

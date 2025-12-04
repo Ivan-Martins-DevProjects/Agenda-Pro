@@ -73,9 +73,16 @@ class User:
         elif check['status'] == 'error':
             return check
 
-        response = database.InsertNewContactDB(data, self.Nome)
+        response = database.InsertNewContactDB(data)
         if response['status'] == 'error':
             return response
 
         return response
+
+    def DeleteContact(self, id):
+        check = self.Allowed('write_contacts')
+        if check is False:
+            return errors.CreateError(401, 'Usuário não autorizado')
+        elif check['status'] == 'error':
+            return check
         

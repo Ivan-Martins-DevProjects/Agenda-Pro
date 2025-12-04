@@ -1,9 +1,6 @@
-import json
-from logging import Logger
-from flask import Flask, jsonify, request
+import logging
+from flask import Flask, jsonify
 from flask_cors import CORS
-from werkzeug.wrappers import ResponseStream, response
-
 
 from src.internal import database
 from src.validation import *
@@ -34,7 +31,6 @@ def data():
 @app.route('/api/clients', methods=['GET'])
 def GetContactsAPI():
     response = clients.ListClients()
-
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
@@ -68,6 +64,14 @@ def CreateContactAPI():
         return jsonify(response), response['code']
 
     return jsonify(response), 200
+
+@app.route('/api/clients/delete/<id>', methods=['DELETE'])
+def EditContactAPI(id):
+    response = clients.DeleteContact(id)
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
+    
+    return response
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)
