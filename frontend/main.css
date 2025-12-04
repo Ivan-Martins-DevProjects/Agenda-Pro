@@ -304,7 +304,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1200;
 }
 
 .modal-box {
@@ -316,6 +316,7 @@ body {
     position: relative; /* Necessário para posicionar o botão de fechar */
     max-width: 400px;
     width: 90%;
+    z-index: 1200;
     animation: fadeIn 0.3s ease-out;
 }
 

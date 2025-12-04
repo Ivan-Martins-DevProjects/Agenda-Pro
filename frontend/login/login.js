@@ -38,7 +38,7 @@
 });
 
     // Modal de Erro
-    function ErrorModal(message, code) {
+    function ErrorModal(message) {
         const errorModal = document.getElementById('error-modal-template')
         const errorClone = errorModal.content.cloneNode(true)
         errorClone.querySelector('#modal-message').textContent = message

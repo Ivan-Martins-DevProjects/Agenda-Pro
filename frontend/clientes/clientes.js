@@ -98,7 +98,7 @@ async function RequestUniqueContact(id) {
     try {
         const token = sessionStorage.getItem('access-token')
 
-        const response = await fetch(`${api_url}/api/clients?id=${id}`, {
+        const response = await fetch(`${api_url}/api/client/${id}/info`, {
             method: 'GET',
             headers: {
                 'Content-Type':'application/json',
@@ -114,7 +114,7 @@ async function RequestUniqueContact(id) {
         }
 
 
-        RenderEditContact(content.data)
+        RenderModalContact(content.data)
         return
 
     } catch (error) {
@@ -123,7 +123,7 @@ async function RequestUniqueContact(id) {
     }
 }
 
-function RenderEditContact(data) {
+function RenderModalContact(data, message) {
     const modal = document.getElementById('modal-cliente');
 
     // Preenche os campos do modal
@@ -140,7 +140,7 @@ function RenderEditContact(data) {
     document.getElementById('obs').value = data.obs;
 
     const title = document.querySelector('.modal-title');
-    title.textContent = 'Editar Informações do Cliente';
+    title.textContent = message;
 
     modal.showModal();
 
@@ -151,20 +151,53 @@ document.addEventListener('click', function (e) {
     switch (true) {
         case e.target.matches('.btn-new-contact'):
             const modal = document.getElementById('modal-cliente')
-            document.getElementById('nome').value = ''
-            document.getElementById('email').value = ''
-            document.getElementById('telefone').value = ''
-            document.getElementById('cpf').value = ''
-            document.getElementById('rua').value = ''
-            document.getElementById('numero').value = ''
-            document.getElementById('bairro').value = ''
-            document.getElementById('cidade').value = ''
-            document.getElementById('gasto').value = ''
-            document.getElementById('visitas').value = ''
-            document.getElementById('obs').value = ''
+            inputs = [
+                'nome', 'email', 'telefone', 'cpf', 'rua', 'numero', 'bairro', 'cidade',
+                'gasto', 'visitas', 'obs'
+            ]
+            inputs.forEach(id => {
+                document.getElementById(id).value = ''
+            })
 
             document.querySelector('.modal-title').textContent = 'Cadastro de Clientes';
 
+            register = document.querySelector('.btn-register')
+            register.onclick = async (e) => {
+                e.preventDefault()
+                const token = sessionStorage.getItem('access-token')
+
+                body = {}
+                inputs.forEach(id => {
+                    body[id] = document.getElementById(id).value
+                })
+
+                const response = await fetch(`${api_url}/api/clients/create`,{
+                    method : 'POST',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify(body)
+                })
+
+                const content = await response.json()
+
+                document.addEventListener('error-closed', () => {
+                        console.log('sucesso')
+                        // RenderModalContact(data, 'Cadastro de Clientes')
+                    })
+
+                if (!response.ok){
+                    modal.close()
+                    ErrorModal(content.message, 'Erro ao registrar usuário')
+                    return
+                } else {
+                    modal.close()
+                    alert('Contato criado com sucesso')
+                    return
+                }  
+            }
+            
             modal.showModal()
             break;
 
@@ -191,9 +224,9 @@ document.addEventListener('click', async function (event) {
         const info = row.querySelector('.cliente-nome')
         const id = info.getAttribute('data-client-id')
 
-        const data = await RequestUniqueContact(id)
+        const response = await RequestUniqueContact(id)
 
-        RenderEditContact(data)
+        RenderModalContact(response)
 
     } else if (event.target.matches('.exclude-contact')) {
         ErrorModal('Deseja continuar?', 'Excluindo contato')
