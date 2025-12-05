@@ -301,7 +301,6 @@ def InsertNewContactDB(data):
         return HandleExceptions(e)
 
 
-
 def DeleteContactDB(id):
     if not connectionPool:
         logger.error('Pool de Conexões não inicializado', exc_info=True)
@@ -335,3 +334,42 @@ def DeleteContactDB(id):
         logger.exception('Erro com a função DeleteContactDB')
         return HandleExceptions(e)
 
+
+
+def SearchContactDB(id):
+    if not connectionPool:
+        logger.error('Pool de Conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    if not isinstance(id, str):
+        logger.error('Valor id em InsertNewContactDB precisa ser uma string')
+        return CreateError(400, 'Formato inválido')
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                query = """
+                SELECT 
+                    c.clientid,
+                    c.nome
+                FROM contacts c
+                LEFT JOIN contacts_address a ON a.clientid = c.clientid
+                WHERE 
+                    c.nome ILIKE '%%' || %s || '%%'
+                    OR a.rua ILIKE '%%' || %s || '%%'
+                    OR a.bairro ILIKE '%%' || %s || '%%'
+                    OR a.cidade ILIKE '%%' || %s || '%%'
+                    OR a.numero::text ILIKE '%%' || %s || '%%';
+                """
+
+                cursor.execute(query, (id, id, id, id, id))
+                result = cursor.fetchall()
+
+                if not result:
+                    return CreateResponse([])
+
+                return CreateResponse(result)
+
+    except Exception as e:
+        logger.exception('Erro ao buscar termo de pesquisa na função SearchContactDB')
+        return HandleExceptions(e)

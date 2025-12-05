@@ -76,5 +76,16 @@ def EditContactAPI(id):
 
     return jsonify(response), 200
 
+@app.route('/api/clients/search/<id>')
+def SearchContactAPI(id):
+    response = clients.SearchContact(id)
+    if not response:
+        CreateError(500, 'Erro interno do servidor')
+
+    if response['status'] == 'error':
+        return jsonify(response), response['code']
+
+    return jsonify(response), 200
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)

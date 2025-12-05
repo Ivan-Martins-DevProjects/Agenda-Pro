@@ -88,3 +88,13 @@ class User:
 
         response = database.DeleteContactDB(id)
         return response
+
+    def SearchContact(self, id):
+        check = self.Allowed('read_contacts')
+        if check is False:
+            return errors.CreateError(401, 'Usuário não autorizado')
+        elif check['status'] == 'error':
+            return check
+
+        response = database.SearchContactDB(id)
+        return response

@@ -164,3 +164,17 @@ def DeleteContact(id):
 
     return response
 
+def SearchContact(id):
+    response = TokenValidate()
+    if response['status'] == 'error':
+        return response
+
+    data = response['data']
+    userId = data['ID']
+    BussinesID = data['BussinesID']
+    role = data['Role']
+
+    user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
+    response = user.SearchContact(id)
+    return response
+

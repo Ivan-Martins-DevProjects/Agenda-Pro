@@ -16,7 +16,9 @@ let debounceTimer
 let searchClient
 
 // Adiciona a função carregar clientes ao botão "Clientes" no menu lateral
-btnClientes.addEventListener('click', carregarClientes)
+btnClientes.addEventListener('click', () => {
+    carregarClientes()
+})
 
 async function carregarClientes() {
     try {
@@ -25,34 +27,123 @@ async function carregarClientes() {
         // Adicona o estilo de opção ativa ao item Clientes
         btnClientes.classList.add('active')
 
-        // Coleta o token armazenado pela requisição de login
-        const token = sessionStorage.getItem('access-token')
 
         // Requisição para o endpoint que retorna a lista de clientes
-        const resposta = await fetch(`${api_url}/api/clients`, {
-            method: 'GET',
-            headers: {
-                'Authorization': token
-            }
-        })
+        const resposta = await GetAllClients(1)
 
-        const clientes = await resposta.json()
-
-        if (!resposta.ok) {
-            ErrorModal(clientes.message, 'Erro ao carregar clientes')
-            throw new Error(clientes.message)
-        }
 
         // Adicona a lista recebida a lista vazia criada antes
-        todosClientes = clientes.data
+        todosClientes = resposta.data
+
         // Renderiza a tabela com as informações recebidas
-        renderClients(clientes.data)
+        renderClients(resposta.data)
+        CreatePagination(1, 22)
+        return
 
     } catch (erro) {
         console.log(erro.message)
-        return
+        return false
     }
 }
+
+async function ListNextPageClients(start, maximum, offset){
+    const response = await GetAllClients(offset)
+
+    todosClientes = response.data
+    renderClients(response.data)
+
+    CreatePagination(Number(start), Number(maximum))
+    nextPage(Number(offset))
+    return
+}
+
+async function GetAllClients(offset) {
+    // Coleta o token armazenado pela requisição de login
+    const token = sessionStorage.getItem('access-token')
+    try{
+        // Requisição para o endpoint que retorna a lista de clientes
+        const resposta = await fetch(`${api_url}/api/clients?offset=${offset}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            })
+        const clientes = await resposta.json()
+
+        if (!resposta.ok) {
+                ErrorModal(clientes.message, 'Erro ao carregar clientes')
+                throw new Error(clientes.message)
+            }
+
+        return clientes
+
+    } catch (error) {
+        console.log(error)
+        return
+    }
+
+}
+
+// function CreateHeader()
+
+function CreatePagination(start, all){
+    // const template = document.getElementById('cliente-template')
+    // if (template.content.querySelector('.pagination-clients')){
+    //     return
+    // }
+    const nav = document.createElement('nav')
+    nav.className = 'pagination-clients'
+
+    const reverse = document.createElement('button')
+    reverse.textContent = '<'
+    reverse.className = 'pagination-preview-button'
+    reverse.id = 'reverse-page'
+    nav.appendChild(reverse)
+
+    for (let i = start; i <= start + 3; i++) {
+        const button = document.createElement('button')
+        button.textContent = i
+
+        if (i === 1) {
+            button.className = 'pagination-button active'
+        } else {
+            button.className = 'pagination-button'
+        }
+
+        nav.appendChild(button)
+    }
+    const reticences = document.createElement('button')
+    reticences.textContent = '...'
+    reticences.className = 'pagination-more-button'
+    reticences.id = 'reticences-page'
+    nav.appendChild(reticences)
+
+    const last = document.createElement('button')
+    last.textContent = all
+    last.className = 'pagination-last-button'
+    nav.appendChild(last)
+
+    const next = document.createElement('button')
+    next.textContent = '>'
+    next.className = 'pagination-next-button'
+    next.id = 'next-page'
+    nav.appendChild(next)
+
+    container.appendChild(nav)
+}
+
+function nextPage(page) {
+    const pages = document.querySelector('.pagination-clients')
+    const buttons = pages.querySelectorAll('.pagination-button')
+
+    buttons.forEach(btn => btn.classList.remove('active'))
+    buttons.forEach(btn => {
+        if (btn.textContent === String(page)) {
+            btn.classList.add('active')
+        }
+    })
+}
+
 
 function renderClients(clientes) {
   if (clientes.length === 0) {
@@ -156,7 +247,7 @@ async function DeleteContact(id) {
     }
 }
 
-function RenderModalContact(data, message) {
+function RenderModalContact(data) {
     const modal = document.getElementById('modal-cliente');
 
     // Preenche os campos do modal
@@ -172,8 +263,8 @@ function RenderModalContact(data, message) {
     document.getElementById('visitas').value = data.visitas;
     document.getElementById('obs').value = data.obs;
 
-    const title = document.querySelector('.modal-title');
-    title.textContent = message;
+    const title = modal.querySelector('.modal-title');
+    title.textContent = 'Editar Contao';
 
     modal.showModal();
 
@@ -215,11 +306,6 @@ document.addEventListener('click', function (e) {
 
                 const content = await response.json()
 
-                document.addEventListener('error-closed', () => {
-                        console.log('sucesso')
-                        // RenderModalContact(data, 'Cadastro de Clientes')
-                    })
-
                 if (!response.ok){
                     modal.close()
                     ErrorModal(content.message, 'Erro ao registrar usuário')
@@ -252,8 +338,8 @@ document.addEventListener('click', async function (event) {
     if (event.target && event.target.matches('.edit-contact')) {
         event.stopPropagation()
 
+        // Coletar informações da tabela
         const row = event.target.closest('tr')
-
         const info = row.querySelector('.cliente-nome')
         const id = info.getAttribute('data-client-id')
 
@@ -272,10 +358,11 @@ document.addEventListener('click', async function (event) {
     }
 });
 
+
 // Requisição para pesquisar clientes
 async function SearchClient(input) {
     try {
-        const response = await fetch(`${api_url}/api/clients?search=${input}`, {
+        const response = await fetch(`${api_url}/api/clients/search/${input}`, {
             method: 'GET',
             headers: {
                 'Content-Type':'application/json',
@@ -287,7 +374,10 @@ async function SearchClient(input) {
             alert('Erro ao buscar contato')
         }
 
-        return response
+        const resposta = await response.json()
+
+        return resposta.data
+
     } catch (error) {
         console.log(error)
     }
@@ -299,8 +389,8 @@ container.addEventListener('input', function(e){
         clearTimeout(debounceTimer)
             debounceTimer = setTimeout(async() => {
                 const texto = e.target.value
-                
-                const response = SearchClient(texto)
+
+                const response = await SearchClient(texto)
 
                 RenderSearchClients(response)
                 searchClient = true
@@ -330,7 +420,7 @@ function RenderSearchClients(data){
                 // 1. Botão CHAT
         const btnVisualizar = document.createElement('button');
         btnVisualizar.className = 'input-client-button-chat';
-        btnVisualizar.dataset.id = item.id;
+        btnVisualizar.dataset.id = item.clientid;
         btnVisualizar.title = 'Visualizar Item'; // Tooltip para acessibilidade
         const iconVisualizar = document.createElement('i');
         iconVisualizar.className = 'fas fa-comments';
@@ -339,7 +429,8 @@ function RenderSearchClients(data){
         // 2. Botão EDITAR
         const btnEditar = document.createElement('button');
         btnEditar.className = 'input-client-button--edit';
-        btnEditar.dataset.id = item.id;
+        btnEditar.id = 'edit-contact'
+        btnEditar.dataset.id = item.clientid;
         btnEditar.title = 'Editar Item';
         const iconEditar = document.createElement('i');
         iconEditar.className = 'fas fa-pen-to-square'; // Ícone de caneta
@@ -348,7 +439,7 @@ function RenderSearchClients(data){
         // 3. Botão DELETAR
         const btnDeletar = document.createElement('button');
         btnDeletar.className = 'input-client-button--delete';
-        btnDeletar.dataset.id = item.id;
+        btnDeletar.dataset.id = item.clientid;
         btnDeletar.title = 'Deletar Item';
         const iconDeletar = document.createElement('i');
         iconDeletar.className = 'fas fa-trash-can'; // Ícone de lixeira
@@ -369,7 +460,7 @@ function RenderSearchClients(data){
     dropdown.appendChild(lista);
     dropdown.style.display = 'block';
 
-};
+}
 
 // Fecha o dropdown com a tecla Escape
 document.addEventListener('keydown', function(event) {
@@ -384,10 +475,84 @@ document.addEventListener('keydown', function(event) {
     }
 );
 
-document.body.addEventListener('click', function(event){
+// Eventos para o dropdown de pesquisa de clientes
+document.body.addEventListener('click', async function(event){
+    const clientDropdown = document.getElementById('input-client-dropdown');
+
     if (searchClient) {
-        const clientDropdown = document.getElementById('input-client-dropdown');
         clientDropdown.style.display = 'none'
         searchClient = false
     }
+
+    const botao = event.target.closest('button')
+    if (botao.className == 'input-client-button--edit') {
+        event.stopPropagation()
+
+        const id = botao.getAttribute('data-id')
+        const response = await RequestUniqueContact(id)
+
+        RenderModalContact(response)
+    }
+
+    if (botao.className == 'input-client-button--delete') {
+        event.stopPropagation()
+
+        const id = botao.getAttribute('data-id')
+        await DeleteContact(id)
+        carregarClientes()
+    }
+
+})
+
+
+// EventListener para os botões de paginação
+document.body.addEventListener('click', async(event) => {
+    const botoes = document.querySelectorAll('.pagination-button')
+    const start = botoes[0].textContent
+    const last = botoes[3].textContent
+    const maximum = document.querySelector('.pagination-last-button').textContent
+
+    const botao = event.target.closest('button')
+    if (botao.className === 'pagination-button') {
+        const offset = botao.textContent
+
+        ListNextPageClients(start, maximum, offset)
+        return
+    } else if (botao.className === 'pagination-preview-button') {
+        const active = document.querySelector('.pagination-button.active').textContent
+        const min = active - 1
+        if (min < 1) {
+            alert('Você já chegou a primeira página')
+            return
+        }
+
+        if (active === start){
+            ListNextPageClients(Number(active) - 4, maximum, min)
+            return
+        }
+
+        await ListNextPageClients(start, maximum, min)
+        return
+    } else if (botao.className === 'pagination-more-button') {
+
+        ListNextPageClients(Number(start) + 4, maximum, Number(last) + 1)
+        return
+    } else if (botao.className === 'pagination-next-button'){
+        const active = document.querySelector('.pagination-button.active').textContent
+        const max = Number(active) + 1
+        if (max > maximum) {
+            alert('Você já chegou a ultima página')
+            return
+        }
+
+        if (active === last) {
+            console.log(max);
+            console.log(typeof max);
+            ListNextPageClients(max, maximum, max)
+        }
+
+        ListNextPageClients(start, maximum, max)
+
+    }
+
 })
