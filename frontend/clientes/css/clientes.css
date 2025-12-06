@@ -322,7 +322,8 @@ body {
     box-shadow: 4px 4px 3px rgba(0,0,0,0.5);
 }
 
-.pagination-button.active{
+.pagination-button.active,
+.pagination-last-button.active{
     background-color: #3B82F6;
     height: 35px;
     border: none;

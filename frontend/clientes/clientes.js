@@ -46,15 +46,16 @@ async function carregarClientes() {
     }
 }
 
-async function ListNextPageClients(start, maximum, offset){
+async function ListNextPageClients(start, maximum, offset, last){
     const response = await GetAllClients(offset)
 
     todosClientes = response.data
     renderClients(response.data)
 
     CreatePagination(Number(start), Number(maximum))
-    nextPage(Number(offset))
+    nextPage(Number(offset), last)
     return
+
 }
 
 async function GetAllClients(offset) {
@@ -106,6 +107,8 @@ function CreatePagination(start, all){
 
         if (i === 1) {
             button.className = 'pagination-button active'
+        } else if (i === Number(all)) {
+            break
         } else {
             button.className = 'pagination-button'
         }
@@ -132,16 +135,25 @@ function CreatePagination(start, all){
     container.appendChild(nav)
 }
 
-function nextPage(page) {
+function nextPage(page, last) {
     const pages = document.querySelector('.pagination-clients')
     const buttons = pages.querySelectorAll('.pagination-button')
+    const lastButton = pages.querySelector('.pagination-last-button')
 
     buttons.forEach(btn => btn.classList.remove('active'))
+
+    if (!last){
     buttons.forEach(btn => {
         if (btn.textContent === String(page)) {
             btn.classList.add('active')
-        }
-    })
+            }
+        })
+        return
+    }
+
+    lastButton.classList.add('active')
+    return
+
 }
 
 
@@ -508,8 +520,16 @@ document.body.addEventListener('click', async function(event){
 // EventListener para os botões de paginação
 document.body.addEventListener('click', async(event) => {
     const botoes = document.querySelectorAll('.pagination-button')
-    const start = botoes[0].textContent
-    const last = botoes[3].textContent
+    let start
+    let last
+    if (botoes.length === 0) {
+        start = document.querySelector('.pagination-button.active')
+        last = start
+    } else {
+        start = botoes[0].textContent
+        last = botoes[botoes.length - 1].textContent
+    }
+    const active = document.querySelector('.pagination-button.active').textContent
     const maximum = document.querySelector('.pagination-last-button').textContent
 
     const botao = event.target.closest('button')
@@ -519,7 +539,6 @@ document.body.addEventListener('click', async(event) => {
         ListNextPageClients(start, maximum, offset)
         return
     } else if (botao.className === 'pagination-preview-button') {
-        const active = document.querySelector('.pagination-button.active').textContent
         const min = active - 1
         if (min < 1) {
             alert('Você já chegou a primeira página')
@@ -527,15 +546,15 @@ document.body.addEventListener('click', async(event) => {
         }
 
         if (active === start){
-            ListNextPageClients(Number(active) - 4, maximum, min)
+            ListNextPageClients(Number(active) - 4, maximum, min, false)
             return
         }
 
-        await ListNextPageClients(start, maximum, min)
+        ListNextPageClients(start, maximum, min, false)
         return
     } else if (botao.className === 'pagination-more-button') {
 
-        ListNextPageClients(Number(start) + 4, maximum, Number(last) + 1)
+        ListNextPageClients(Number(start) + 4, maximum, Number(last) + 1, false)
         return
     } else if (botao.className === 'pagination-next-button'){
         const active = document.querySelector('.pagination-button.active').textContent
@@ -546,13 +565,17 @@ document.body.addEventListener('click', async(event) => {
         }
 
         if (active === last) {
-            console.log(max);
-            console.log(typeof max);
-            ListNextPageClients(max, maximum, max)
+            ListNextPageClients(max, maximum, max, false)
+            return
         }
 
-        ListNextPageClients(start, maximum, max)
+        ListNextPageClients(start, maximum, max, false)
+        return
 
+    } else if (botao.className === 'pagination-last-button'){
+        const number = botao.textContent
+        ListNextPageClients(start, maximum, Number(number), true)
+        return
     }
 
 })
