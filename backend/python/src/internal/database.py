@@ -76,7 +76,7 @@ def CheckPermission(id, permission):
 
     # Valida se o id recebido é uma string
     if not isinstance(id, str):
-        logger.error('Valor id em GetClients precisa ser uma string')
+        logger.error('Valor id em CheckPermission precisa ser uma string')
         return CreateError(400, 'Formato inválido')
 
     conn = None
@@ -102,7 +102,7 @@ def CheckPermission(id, permission):
         return HandleExceptions(e)
 
 # Função para listar todos os clientes
-def GetClients(id, role):
+def GetClients(id, role, offset):
     # Valida se existe um pool criado
     if not connectionPool:
         logger.error('Pool de Conexões não inicializado', exc_info=True)
@@ -122,13 +122,18 @@ def GetClients(id, role):
                 # Coleta a conexão
                 logger.debug('Conexão obtida do pool')
 
-                query = 'SELECT clientId, nome, email, telefone, last_contact, status, resp_name FROM contacts WHERE userid = %s'
+                query = """SELECT clientId, nome, email, telefone, last_contact, status, resp_name
+                FROM contacts
+                WHERE userid = %s LIMIT %s OFFSET %s"""
+                count = "SELECT COUNT(*) AS total FROM contacts WHERE userid = %s"
 
                 if role == 'admin':
-                    query = 'SELECT clientId, nome, email, telefone, last_contact, status, resp_name FROM contacts WHERE bussines_id = %s'
+                    query ="""SELECT clientId, nome, email, telefone, last_contact, status, resp_name
+                FROM contacts
+                WHERE bussines_id = %s LIMIT %s OFFSET %s"""
+                    count = "SELECT COUNT(*) AS total FROM contacts WHERE bussines_id = %s"
 
-                cursor.execute(query, (id,))
-
+                cursor.execute(query, (id, 10, int(offset)))
                 results:list = cursor.fetchall()
                 # Validação em caso de não existência de contatos
                 if not results:
@@ -137,7 +142,7 @@ def GetClients(id, role):
                 # Cria uma lista com os clientes registrados e retorna como resposta
                 # Lista já no formato aceito pelo frontend
                 chaves = [
-                    'id', 'name', 'email', 'phone', 'last_contact','status', 'resp', 
+                    'id', 'name', 'email', 'phone', 'last_contact','status', 'resp'
                 ]
 
                 clientes: list[dict] = []
@@ -152,7 +157,19 @@ def GetClients(id, role):
                
                     clientes.append(data)
 
-                return clientes
+                cursor.execute(count, (id,))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query[0]
+
+                response = {
+                    'total': total,
+                    'clientes': clientes
+                }
+
+                return response
 
     except Exception as e:
         logger.error('Erro com a função GetClients', exc_info=True)

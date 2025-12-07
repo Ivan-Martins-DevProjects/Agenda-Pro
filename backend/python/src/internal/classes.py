@@ -31,9 +31,9 @@ class User:
         # Retorna se o usuário está autorizado ou não
         return check
 
-    def GetAllClients(self):
+    def GetAllClients(self, offset):
         # Busca os clientes referentes a role do usuário no banco de dados
-        clientes = database.GetClients(self.ID, self.Role)
+        clientes = database.GetClients(self.ID, self.Role, offset)
 
         # Caso não tenha nenhum cliente informa ao FrontEnd
         if not clientes:

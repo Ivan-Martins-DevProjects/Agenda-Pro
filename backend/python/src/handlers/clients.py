@@ -52,6 +52,10 @@ def ListClients():
     BussinesID = data['BussinesID']
     role = data['Role']
 
+    paramOffset = request.args.get('offset', default=0, type=int)
+    offset = (paramOffset - 1) * 10
+    print(offset)
+
     # Cria o usuário com base no payload recebido
     user = classes.User(ID=id, BussinesID=BussinesID, Role=role)
 
@@ -63,7 +67,7 @@ def ListClients():
         return check
 
     # Executa a função para receber a lista de clientes
-    clientes = user.GetAllClients()
+    clientes = user.GetAllClients(offset)
     return clientes
 
 

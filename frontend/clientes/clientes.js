@@ -15,6 +15,9 @@ let debounceTimer
 // Variável para verificar estado do dropbox de pesquisar cliente
 let searchClient
 
+// Variável para controlar o número total de páginas
+let MaxPage
+
 // Adiciona a função carregar clientes ao botão "Clientes" no menu lateral
 btnClientes.addEventListener('click', () => {
     carregarClientes()
@@ -33,11 +36,13 @@ async function carregarClientes() {
 
 
         // Adicona a lista recebida a lista vazia criada antes
-        todosClientes = resposta.data
+        todosClientes = resposta.data.clientes
 
         // Renderiza a tabela com as informações recebidas
-        renderClients(resposta.data)
-        CreatePagination(1, 22)
+        renderClients(resposta.data.clientes)
+
+        MaxPage = Math.ceil(resposta.data.total / 10)
+        CreatePagination(1, MaxPage)
         return
 
     } catch (erro) {
@@ -46,13 +51,15 @@ async function carregarClientes() {
     }
 }
 
-async function ListNextPageClients(start, maximum, offset, last){
+async function ListNextPageClients(start, offset, last){
     const response = await GetAllClients(offset)
 
-    todosClientes = response.data
-    renderClients(response.data)
+    todosClientes = response.data.clientes
+    renderClients(response.data.clientes)
 
-    CreatePagination(Number(start), Number(maximum))
+    const MaxPage = Math.ceil(response.data.total / 10)
+
+    CreatePagination(Number(start), MaxPage)
     nextPage(Number(offset), last)
     return
 
@@ -102,13 +109,13 @@ function CreatePagination(start, all){
     nav.appendChild(reverse)
 
     for (let i = start; i <= start + 3; i++) {
+        if (i > Number(all)) break;
+
         const button = document.createElement('button')
         button.textContent = i
 
         if (i === 1) {
             button.className = 'pagination-button active'
-        } else if (i === Number(all)) {
-            break
         } else {
             button.className = 'pagination-button'
         }
@@ -121,10 +128,12 @@ function CreatePagination(start, all){
     reticences.id = 'reticences-page'
     nav.appendChild(reticences)
 
-    const last = document.createElement('button')
-    last.textContent = all
-    last.className = 'pagination-last-button'
-    nav.appendChild(last)
+    if (all > start){
+        const last = document.createElement('button')
+        last.textContent = all
+        last.className = 'pagination-last-button'
+        nav.appendChild(last)
+    }
 
     const next = document.createElement('button')
     next.textContent = '>'
@@ -523,20 +532,20 @@ document.body.addEventListener('click', async(event) => {
     let start
     let last
     if (botoes.length === 0) {
-        start = document.querySelector('.pagination-button.active')
+        start = Number(document.querySelector('.pagination-button.active').textContent)
         last = start
     } else {
-        start = botoes[0].textContent
+        start = Number(botoes[0].textContent)
         last = botoes[botoes.length - 1].textContent
     }
-    const active = document.querySelector('.pagination-button.active').textContent
-    const maximum = document.querySelector('.pagination-last-button').textContent
+    
+    const active = Number(document.querySelector('.pagination-button.active').textContent)
 
     const botao = event.target.closest('button')
     if (botao.className === 'pagination-button') {
         const offset = botao.textContent
 
-        ListNextPageClients(start, maximum, offset)
+        ListNextPageClients(start, offset)
         return
     } else if (botao.className === 'pagination-preview-button') {
         const min = active - 1
@@ -546,35 +555,35 @@ document.body.addEventListener('click', async(event) => {
         }
 
         if (active === start){
-            ListNextPageClients(Number(active) - 4, maximum, min, false)
+            ListNextPageClients(active - 4, min, false)
             return
         }
 
-        ListNextPageClients(start, maximum, min, false)
+        ListNextPageClients(start, min, false)
         return
     } else if (botao.className === 'pagination-more-button') {
 
-        ListNextPageClients(Number(start) + 4, maximum, Number(last) + 1, false)
+        ListNextPageClients(Number(start) + 4, Number(last) + 1, false)
         return
     } else if (botao.className === 'pagination-next-button'){
         const active = document.querySelector('.pagination-button.active').textContent
         const max = Number(active) + 1
-        if (max > maximum) {
+        if (max > MaxPage) {
             alert('Você já chegou a ultima página')
             return
         }
 
         if (active === last) {
-            ListNextPageClients(max, maximum, max, false)
+            ListNextPageClients(max, max, false)
             return
         }
 
-        ListNextPageClients(start, maximum, max, false)
+        ListNextPageClients(start, max, false)
         return
 
     } else if (botao.className === 'pagination-last-button'){
         const number = botao.textContent
-        ListNextPageClients(start, maximum, Number(number), true)
+        ListNextPageClients(start, Number(number), true)
         return
     }
 

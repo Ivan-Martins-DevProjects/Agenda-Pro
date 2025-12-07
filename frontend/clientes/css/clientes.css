@@ -294,8 +294,9 @@ body {
 
 /* ===== Pagination Cliente ===== */
 .pagination-clients{
-    display: flex;
-    margin-top: 16rem;
+    display: absolute;
+    margin-left: 40%;
+    margin-top: 5rem;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
