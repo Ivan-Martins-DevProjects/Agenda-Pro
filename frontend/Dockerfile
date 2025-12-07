@@ -3,8 +3,8 @@ WORKDIR /app
 
 RUN rm -rf /usr/share/nginx/html/*
 
-COPY ./app/ /usr/share/nginx/html/
+COPY . /usr/share/nginx/html/
 
-EXPOSE 7000
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
