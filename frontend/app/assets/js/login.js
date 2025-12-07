@@ -29,7 +29,7 @@
 
         sessionStorage.setItem('access-token', data.Token)
         console.log(`Login bem-sucedido! Redirecionando`)
-        window.location.href = '/frontend/index.html'
+        window.location.href = 'index.html'
 
     } catch (error) {
         console.error("Erro no Login:", error);
