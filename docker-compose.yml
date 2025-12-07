@@ -1,0 +1,52 @@
+services:
+  frontend:
+    container_name: frontend
+    depends_on:
+      - backend-login
+    build: ./frontend
+    ports:
+      - 7000:80
+    networks:
+      - agendapro
+
+  backend-login:
+    container_name: backend-login
+    depends_on:
+      - backend-app
+    build: ./backend/golang
+    ports:
+      - 8181:8181
+    networks:
+      - agendapro
+
+  backend-app:
+    container_name: backend-app
+    depends_on:
+      - db
+    build: ./backend/python
+    ports:
+      - 8585:8585
+    networks:
+      - agendapro
+
+  db:
+    container_name: db-agendapro
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: agenda
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - agendapro
+
+
+volumes:
+  postgres:
+
+networks:
+  agendapro:
