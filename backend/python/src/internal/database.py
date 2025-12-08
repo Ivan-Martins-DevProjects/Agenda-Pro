@@ -17,7 +17,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Encapsulamento das credenciais do banco de dados Postgres
-DatabaseConfig = os.getenv('DB_URL', 'postgres')
+DatabaseConfig = os.getenv('POSTGRES_URL', 'postgres')
 
 # Map de erros para um except mais bem tratado
 DatabaseErrorMap = {

@@ -15,8 +15,11 @@ services:
     depends_on:
       - backend-app
     build: ./backend/golang
+    environment:
+      - JWT_KEY=${JWT_KEY}
+      - POSTGRES_URL=${POSTGRES_URL}
     ports:
-      - 8181:8181
+      - ${GO_API_PORT}:8181
     networks:
       - agendapro
     restart: always
@@ -26,8 +29,11 @@ services:
     depends_on:
       - db
     build: ./backend/python
+    environment:
+      - JWT_KEY=${JWT_KEY}
+      - POSTGRES_URL=${POSTGRES_URL}
     ports:
-      - 8585:8585
+      - ${PYTHON_API_PORT}:8585
     networks:
       - agendapro
     restart: always
@@ -36,11 +42,11 @@ services:
     container_name: db-agendapro
     image: postgres:15
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: agenda
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - 5432:5432
+      - ${POSTGRES_PORT}:5432
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql

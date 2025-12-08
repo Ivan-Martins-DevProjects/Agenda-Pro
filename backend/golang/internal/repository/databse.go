@@ -29,7 +29,7 @@ func GetPool() (*sql.DB, error) {
 		return nil, structs.CreateError(500, "Erro ao carregar as variáveis de ambiente")
 	}
 
-	postgres := os.Getenv("SQL_URL")
+	postgres := os.Getenv("POSTGRES_URL")
 	if postgres == "" {
 		return nil, fmt.Errorf("variáveis de conexão ao banco de dados nulas: %v", err)
 	}
