@@ -37,7 +37,7 @@ class User:
 
         # Caso não tenha nenhum cliente informa ao FrontEnd
         if not clientes:
-            response = errors.CreateResponse('No clients')
+            response = errors.CreateResponse(clientes)
             return response
 
         # Caso haja formata a resposta de forma que o FrontEnd possa processar

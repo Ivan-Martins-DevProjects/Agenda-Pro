@@ -294,12 +294,12 @@ body {
 
 /* ===== Pagination Cliente ===== */
 .pagination-clients{
-    display: absolute;
-    margin-left: 40%;
+    display: flex;
+    margin-left: 3%;
     margin-top: 5rem;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
 }
 
 .pagination-clients button{

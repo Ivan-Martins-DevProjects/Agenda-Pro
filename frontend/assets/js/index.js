@@ -1,5 +1,5 @@
 const btnDashboard = document.getElementById('page-dashboard')
-const api_url = 'http://127.0.0.1:8585'
+const api_url = 'http://localhost:8585'
 
 window.addEventListener('DOMContentLoaded', async() => {
     try {

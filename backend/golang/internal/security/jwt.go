@@ -23,7 +23,6 @@ func CreateToken(s *structs.TokenJwt) (string, error) {
 		ID: s.ID,
 		BussinesID: s.BussinesID,
 		Nome: s.Nome,
-		Email: s.Email,
 		Instance: s.Instance,
 		IsConnected: s.IsConnected,
 		Role: s.Role,

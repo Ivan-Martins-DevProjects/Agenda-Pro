@@ -54,7 +54,6 @@ def ListClients():
 
     paramOffset = request.args.get('offset', default=0, type=int)
     offset = (paramOffset - 1) * 10
-    print(offset)
 
     # Cria o usuário com base no payload recebido
     user = classes.User(ID=id, BussinesID=BussinesID, Role=role)
@@ -95,6 +94,7 @@ def InsertContact():
         return response
 
     data = response['data']
+    print(data)
     id = data['ID']
     BussinesID = data['BussinesID']
     nome = data['Nome']
@@ -107,14 +107,15 @@ def InsertContact():
 
     clientId = uuid.uuid4()
     chaves = [
-        'userid', 'bussinesId', 'clientId', 'nome', 'email', 'telefone',
-        'obs', 'cpf', 'rua', 'numero', 'bairro', 'cidade', 'respName'
+        'nome', 'email', 'telefone','obs', 'cpf', 
+        'rua', 'numero', 'bairro', 'cidade'
     ]
 
     data = {
         "userid" : id,
         "bussinesId" : BussinesID,
         "clientID" : str(clientId),
+        "respName" : nome
     }
 
     for chave in chaves:

@@ -85,6 +85,4 @@ func UserLogin(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	fmt.Println("Resposta enviada: ", data)
-
 }

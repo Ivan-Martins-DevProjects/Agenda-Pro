@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 import os
 import psycopg
-from psycopg import errors
+from psycopg import errors, sql
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
@@ -21,7 +21,7 @@ DatabaseConfig = os.getenv('DB_URL', 'postgres')
 
 # Map de erros para um except mais bem tratado
 DatabaseErrorMap = {
-    errors.UniqueViolation:             (400, 'Registro duplicado'),
+    errors.UniqueViolation:             (409, 'Usuário já cadastrado'),
     errors.ForeignKeyViolation:         (400, 'Chave estrangeira inválida'),
     errors.NotNullViolation:            (400, 'Campo obrigatório faltando'),
     errors.CheckViolation:              (400, 'Violação de regra CHECK'),
@@ -89,7 +89,7 @@ def CheckPermission(id, permission):
                 logger.debug('Conexão obtida do pool')
 
                 # Define a query e a executa
-                query = f'SELECT {permission} FROM roles WHERE user_id = %s'
+                query = sql.SQL('SELECT {column} FROM roles WHERE user_id = %s').format(column=sql.Identifier(permission))
                 cursor.execute(query, (id,))
 
                 # Retorna o resultado da query
@@ -135,17 +135,23 @@ def GetClients(id, role, offset):
 
                 cursor.execute(query, (id, 10, int(offset)))
                 results:list = cursor.fetchall()
+
+                clientes: list[dict] = []
+
+                response = {
+                    'total': 0,
+                    'clientes': []
+                }
+
                 # Validação em caso de não existência de contatos
                 if not results:
-                    return CreateError(404, 'Lista de contatos vazia')
-
+                    return response
                 # Cria uma lista com os clientes registrados e retorna como resposta
                 # Lista já no formato aceito pelo frontend
                 chaves = [
                     'id', 'name', 'email', 'phone', 'last_contact','status', 'resp'
                 ]
 
-                clientes: list[dict] = []
 
                 for result in results:
                     data = {}
@@ -276,7 +282,7 @@ def InsertNewContactDB(data):
                 VALUES (
                     %s, %s, %s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s
                 )
-                RETURNING userid;"""
+                RETURNING clientid;"""
 
                 queryAdress = """
                 INSERT INTO contacts_address (
@@ -293,11 +299,13 @@ def InsertNewContactDB(data):
                 cursor.execute(queryContacts, (
                     userid, clientId, nome, email, 'ativo', telefone, 0, 0, obs, respName, bussinesId, cpf,)
                 )
-                conn.commit()
                 resultContacts = cursor.fetchone()
+                print(resultContacts)
+
                 if not resultContacts:
-                    logger.error('Erro ao buscar informações do usuário')
-                    return CreateError(500, 'Erro interno do servidor')
+                    logger.error('Usuário já cadastrado')
+                    return CreateError(409, 'Usuário já cadastrado')
+                conn.commit()
 
                 cursor.execute(queryAdress, (
                     clientId, rua, bairro, cidade, numero,)
@@ -335,10 +343,7 @@ def DeleteContactDB(id):
 
                 cursor.execute(query_1, (id,))
                 conn.commit()
-                if cursor.rowcount <= 0:
-                    logger.error('Erro ao deletar contato da tabela contacts_address')
-                    return CreateError(500, 'Erro interno do servidor')
-
+                
                 cursor.execute(query_2, (id,))
                 conn.commit()
                 if cursor.rowcount <=0:

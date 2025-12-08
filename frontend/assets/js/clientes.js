@@ -39,7 +39,10 @@ async function carregarClientes() {
         todosClientes = resposta.data.clientes
 
         // Renderiza a tabela com as informações recebidas
-        renderClients(resposta.data.clientes)
+        renderClients(todosClientes)
+        if (todosClientes.length === 0) {
+            return
+        }
 
         MaxPage = Math.ceil(resposta.data.total / 10)
         CreatePagination(1, MaxPage)
@@ -167,13 +170,18 @@ function nextPage(page, last) {
 
 
 function renderClients(clientes) {
+    // 1️⃣ Clona o conteúdo do template
+  const template = document.getElementById('cliente-template').content.cloneNode(true);
+
   if (clientes.length === 0) {
-    ;
+      container.innerHTML = ''
+
+      const table = template.querySelector('.client-table')
+      if (table) table.remove()
+
+      container.appendChild(template)
     return;
   }
-
-  // 1️⃣ Clona o conteúdo do template
-  const template = document.getElementById('cliente-template').content.cloneNode(true);
 
   // 2️⃣ Insere o template no container visível
   container.innerHTML = ''; // limpa conteúdo anterior
