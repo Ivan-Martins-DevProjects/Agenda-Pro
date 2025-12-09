@@ -9,6 +9,11 @@ services:
     networks:
       - agendapro
     restart: always
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /usr/share/nginx/html
 
   backend-login:
     container_name: backend-login
@@ -23,6 +28,15 @@ services:
     networks:
       - agendapro
     restart: always
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/golang
+          target: /app
+          ignore:
+            - .env
+        - action: rebuild
+          path: go.sum
 
   backend-app:
     container_name: backend-app
@@ -37,6 +51,16 @@ services:
     networks:
       - agendapro
     restart: always
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/python
+          target: /python
+          ignore:
+            - __pycache__/
+            - logs/
+            - venv/
+            - requirements.txt
 
   db:
     container_name: db-agendapro
