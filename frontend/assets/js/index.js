@@ -7,10 +7,15 @@ window.addEventListener('DOMContentLoaded', async() => {
         btnDashboard.classList.add('active')
 
         const data = await LoadDashboard(api_url)
-        if (!data || data.length === 0) {
-            throw new Error ('Erro ao renderizar página')
+        if (data && data.status === 405) {
+            const h1 = document.createElement('h1')
+            h1.textContent = 'Função em construção'
+            h1.style.marginTop = '15%'
+            h1.style.marginLeft = '35%'
+
+            container.append(h1)
+            return
         }
-        console.log(data)
 
     } catch (error) {
         console.log('Erro ao carregar dashboard' + error)
@@ -26,13 +31,19 @@ btnDashboard.addEventListener('click', async() => {
         menuLinks.forEach(l => l.classList.remove('active'))
         btnDashboard.classList.add('active')
 
-        const data = await LoadDashboard(api_url)
-        if (!data || data.length === 0) {
-            container.innerHTML = '<p>Nenhum cliente encontrado.</p>';
-            throw new Error('Erro ao renderizar página')
-        }
-        console.log(data)
+        const data = await LoadDashboard()
+        console.log(data);
+        if (data && data.status === 405) {
+            const h1 = document.createElement('h1')
+            h1.textContent = 'Função em construção'
+            h1.style.marginTop = '15%'
+            h1.style.marginLeft = '35%'
 
+            container.append(h1)
+            return
+        }
+
+        return data
     } catch (error) {
         console.log('Erro ao carregar dashboard' + error)
         return null
@@ -40,7 +51,7 @@ btnDashboard.addEventListener('click', async() => {
 
 })
 
-async function LoadDashboard(api_url) {
+async function LoadDashboard() {
     try {
         const response = await fetch(`${api_url}/api/dashboard`, {
             method: 'GET',
@@ -50,15 +61,13 @@ async function LoadDashboard(api_url) {
         })
 
         if (!response.ok) {
-            console.error('Erro com a requisição')
-            throw new Error('Requisição inválida')
+            return response
         }
 
         const data = await response.json()
         return data
 
     } catch (error) {
-        console.error(error)
         return null
     }
 }

@@ -50,7 +50,7 @@ class User:
 
         # Se check for False o usuário não tem permissão
         if check is False:
-            return errors.CreateError(401, 'Usuário não autorizado')
+            return errors.CreateError(404, 'Permissão não encontrada')
         elif check['status'] == 'error':
             return check
 
@@ -69,7 +69,7 @@ class User:
         check = self.Allowed('write_contacts')
 
         if check is False:
-            return errors.CreateError(401, 'Usuário não autorizado')
+            return errors.CreateError(404, 'Permissão não encontrada')
         elif check['status'] == 'error':
             return check
 
@@ -82,7 +82,7 @@ class User:
     def DeleteContact(self, id):
         check = self.Allowed('write_contacts')
         if check is False:
-            return errors.CreateError(401, 'Usuário não autorizado')
+            return errors.CreateError(404, 'Permissão não encontrada')
         elif check['status'] == 'error':
             return check
 
@@ -92,7 +92,7 @@ class User:
     def SearchContact(self, id):
         check = self.Allowed('read_contacts')
         if check is False:
-            return errors.CreateError(401, 'Usuário não autorizado')
+            return errors.CreateError(404, 'Permissão não encontrada')
         elif check['status'] == 'error':
             return check
 

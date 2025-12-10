@@ -1,6 +1,7 @@
 const btnClientes = document.getElementById('page-clientes');
 const menuLinks = document.querySelectorAll('.menu-link')
 const container = document.getElementById('content-container');
+const FrontendURL = 'http://localhost:7000'
 
 
 const token = sessionStorage.getItem('access-token')
@@ -81,10 +82,13 @@ async function GetAllClients(offset) {
             })
         const clientes = await resposta.json()
 
-        if (!resposta.ok) {
-                ErrorModal(clientes.message, 'Erro ao carregar clientes')
-                throw new Error(clientes.message)
-            }
+        if (!resposta.ok && resposta.status == 401) {
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+        } else if (!resposta.ok) {
+            ErrorModal(clientes.message, 'Erro ao carregar clientes')
+            throw new Error(clientes.message)
+        }
 
         return clientes
 
@@ -179,12 +183,19 @@ function renderClients(clientes) {
       const table = template.querySelector('.client-table')
       if (table) table.remove()
 
+      const h1 = document.createElement('h1')
+      h1.textContent = 'Nenhum cliente encontrado'
+      h1.style.marginTop = '15%'
+      h1.style.marginLeft = '35%'
+
+      template.append(h1)
+
       container.appendChild(template)
     return;
   }
 
   // 2️⃣ Insere o template no container visível
-  container.innerHTML = ''; // limpa conteúdo anterior
+  container.innerHTML = '';
   container.appendChild(template);
 
   // 3️⃣ Seleciona o tbody dentro do template clonado
@@ -238,7 +249,10 @@ async function RequestUniqueContact(id) {
 
         const content = await response.json()
 
-        if (!response.ok){
+        if (!response.ok && response.status === 401){
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+        } else if (!resposta.ok){
             ErrorModal(content.message, 'Erro ao coletar informações do usuário')
             throw new Error(content.message)
         }
@@ -264,10 +278,14 @@ async function DeleteContact(id) {
         })
         const content = await response.json()
 
-        if (!response.ok){
+        if (!response.ok && response.status === 401){
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+        } else if (!resposta.ok){
             ErrorModal(content.message, 'Erro ao deletar usuário')
             throw new Error(content.message)
         }
+
 
         alert('Contato excluído com sucesso')
     } catch (error) {
@@ -335,15 +353,17 @@ document.addEventListener('click', function (e) {
 
                 const content = await response.json()
 
-                if (!response.ok){
-                    modal.close()
-                    ErrorModal(content.message, 'Erro ao registrar usuário')
-                    return
-                } else {
-                    modal.close()
-                    alert('Contato criado com sucesso')
-                    return
-                }
+            if (!response.ok && response.status === 401){
+                alert('Acesso não autorizado')
+                window.location.replace(`${FrontendURL}/login.html`)
+            } else if (!resposta.ok){
+                ErrorModal(content.message, 'Erro ao deletar usuário')
+                throw new Error(content.message)
+            }
+
+                modal.close()
+                alert('Contato criado com sucesso')
+                return
             }
 
             modal.showModal()
@@ -399,8 +419,12 @@ async function SearchClient(input) {
             }
         })
 
-        if (!response.ok) {
-            alert('Erro ao buscar contato')
+        if (!response.ok && response.status === 401){
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+        } else if (!resposta.ok){
+            alert('Erro ao buscar usuário')
+            throw new Error(content.message)
         }
 
         const resposta = await response.json()
@@ -546,7 +570,7 @@ document.body.addEventListener('click', async(event) => {
         start = Number(botoes[0].textContent)
         last = botoes[botoes.length - 1].textContent
     }
-    
+
     const active = Number(document.querySelector('.pagination-button.active').textContent)
 
     const botao = event.target.closest('button')
