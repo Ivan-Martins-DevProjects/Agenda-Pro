@@ -1,79 +1,496 @@
-const btnClientes = document.getElementById('page-clientes');
+// Seleciona todos os elementos com a classe 'menu-link' para manipulação do menu de navegação
 const menuLinks = document.querySelectorAll('.menu-link')
+// Seleciona o container principal onde o conteúdo dinâmico será inserido
 const container = document.getElementById('content-container');
+// URL base para o frontend, usada para redirecionamentos
 const FrontendURL = 'http://localhost:7000'
 
+// Arrays para controle e gerenciamento dos EventListeners, permitindo remoção posterior
+var ClientsListeners = []  // Armazena listeners relacionados à página de clientes
+var SearchListeners = []   // Armazena listeners relacionados à funcionalidade de busca
 
-const token = sessionStorage.getItem('access-token')
-
-// Cria lista para Renderizar a tabela de clientes
-let todosClientes = []
-
-
-// Variável para armazenar o timer
+// Variável para controle do timer da função de debounce
 let debounceTimer
 
-// Variável para verificar estado do dropbox de pesquisar cliente
+// Variável para controlar o estado do dropdown de pesquisa de clientes
 let searchClient
 
-// Variável para controlar o número total de páginas
+// Variável para armazenar o número total de páginas disponíveis na paginação
 let MaxPage
 
-// Adiciona a função carregar clientes ao botão "Clientes" no menu lateral
-btnClientes.addEventListener('click', () => {
-    carregarClientes()
-})
+// Array que armazena todos os clientes carregados da API
+let todosClientes = []
 
-async function carregarClientes() {
-    try {
-        // Remove o estilo de opção ativa de todos os outros elementos
-        menuLinks.forEach(l => l.classList.remove('active'))
-        // Adicona o estilo de opção ativa ao item Clientes
-        btnClientes.classList.add('active')
+// Array com os IDs dos campos do formulário de cliente, usado para validação e processamento
+const ModalInputs = [
+        'nome', 'email', 'telefone', 'cpf', 'rua', 'numero', 'bairro', 'cidade',
+        'gasto', 'visitas', 'obs'
+]
 
+// --------------------------------------------------------------------------------//
+// Funções relacionadas aos eventos da página de clientes
+// --------------------------------------------------------------------------------//
 
-        // Requisição para o endpoint que retorna a lista de clientes
-        const resposta = await GetAllClients(1)
+/**
+ * Fecha o modal especificado e remove os event listeners associados
+ * @param {HTMLElement} modal - Elemento do modal a ser fechado
+ * @param {Array} data - Array de objetos contendo informações sobre os listeners a serem removidos
+ */
+function CloseModalRemoveListeners(modal, data) {
+    // Fecha o modal se ele existir
+    if (modal) {
+        modal.close()
+    }
 
-
-        // Adicona a lista recebida a lista vazia criada antes
-        todosClientes = resposta.data.clientes
-
-        // Renderiza a tabela com as informações recebidas
-        renderClients(todosClientes)
-        if (todosClientes.length === 0) {
-            return
-        }
-
-        MaxPage = Math.ceil(resposta.data.total / 10)
-        CreatePagination(1, MaxPage)
-        return
-
-    } catch (erro) {
-        console.log(erro.message)
-        return false
+    // Remove cada event listener especificado no array data
+    let element
+    if (data) {
+        data.forEach((item) => {
+            element = document.querySelector(item.var)
+            element.removeEventListener(item.type, item.func)
+        })
     }
 }
 
+/**
+ * Função principal para carregar e exibir a lista de clientes
+ * Realiza a requisição à API, renderiza a tabela e configura a paginação
+ */
+async function carregarClientes() {
+    // Remove o estilo de opção ativa de todos os itens do menu
+    menuLinks.forEach(l => l.classList.remove('active'))
+    // Adiciona o estilo de opção ativa ao item Clientes do menu
+    btnClientes.classList.add('active')
+
+    // Requisição à API para obter a primeira página de clientes (limite de 10 por página)
+    const resposta = await GetAllClients(1)
+
+    // Armazena os clientes recebidos na variável global
+    todosClientes = resposta.data.clientes
+
+    // Renderiza a tabela de clientes com os dados obtidos
+    renderClients(todosClientes)
+    // Configura os event listeners para os elementos da tabela
+    LoadClientsEventListeners()
+
+    // Calcula o número total de páginas arredondando para cima
+    MaxPage = Math.ceil(resposta.data.total / 10)
+    // Cria os controles de paginação
+    CreatePagination(1, MaxPage)
+    // Recarrega os event listeners para incluir os botões de paginação
+    LoadClientsEventListeners()
+    return
+}
+
+/**
+ * Configura e exibe o modal para cadastro de um novo cliente
+ * @param {Event} event - Evento de clique que acionou a função
+ */
+function NewContactListener(event) {
+    // Seleciona elementos do modal
+    const modal = document.getElementById('modal-cliente');
+    const registerBtn = modal.querySelector('.btn-register');
+    const exitBtn = modal.querySelector('.btn-exit');
+    const title = modal.querySelector('.modal-title');
+
+    // Função para fechar o modal
+    function close(event) {
+        event.preventDefault()
+        console.log('fechou');
+        CloseModalRemoveListeners(modal)
+    }
+
+    // Limpa todos os campos do formulário
+    ModalInputs.forEach(id => {
+        document.getElementById(id).value = '';
+    });
+
+    // Define o título do modal
+    title.textContent = 'Cadastro de Clientes';
+
+    // Configura o botão de registro para chamar a função de API
+    registerBtn.addEventListener('click', NewContactAPI);
+
+    // Configura o botão de sair para fechar o modal
+    exitBtn.addEventListener('click', close, { once: true });
+
+    // Impede o fechamento nativo com a tecla Escape e usa a função personalizada
+    modal.addEventListener('cancel', close, { once: true });
+
+    // Exibe o modal
+    modal.showModal();
+}
+
+/**
+ * Envia os dados do formulário para a API para criar um novo cliente
+ * @param {Event} event - Evento de clique no botão de registro
+ */
+async function NewContactAPI(event) {
+    const modal = document.getElementById('modal-cliente')
+    event.preventDefault()
+
+    // Cria um objeto com os dados do formulário
+    body = {}
+    ModalInputs.forEach(id => {
+        body[id] = document.getElementById(id).value
+    })
+
+    try {
+        // Envia os dados para a API
+        const response = await fetch(`${api_url}/api/clients/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type':'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify(body)
+        })
+
+        const content = await response.json()
+
+        // Tratamento de erros de autenticação
+        if (!response.ok && response.status === 401) {
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+            return
+        } else if (!response.ok) {
+            modal.close()
+            throw new Error(content.message)
+        }
+
+        // Sucesso na criação do cliente
+        modal.close()
+        alert('Contato criado com sucesso')
+        // Recarrega a lista de clientes
+        carregarClientes()
+        LoadClientsEventListeners()
+        return
+
+    } catch (error) {
+        // Exibe modal de erro em caso de falha
+        ErrorModal(error, 'Erro ao criar usuário')
+        return
+    }
+}
+
+/**
+ * Prepara e exibe o modal de edição de contato
+ * @param {Event} event - Evento de clique no botão de edição
+ * @param {string} closest - Seletor CSS para encontrar o elemento pai mais próximo
+ */
+async function EditClientsListener(event, closest) {
+    event.preventDefault()
+
+    // Obtém o ID do cliente a ser editado
+    let editBtn = event.target
+    let id = editBtn.dataset.id
+    if (!id){
+        editBtn = event.target.closest(closest)
+        id = editBtn.dataset.id
+    }
+    if (!id) return
+
+    // Requisita os dados detalhados do cliente
+    const response = await RequestUniqueContact(id)
+    // Renderiza o modal com os dados do cliente
+    RenderModalContact(response.data)
+    // Dispara evento para indicar que a ação de busca foi concluída
+    document.dispatchEvent(new CustomEvent('search-action-complete'))
+}
+
+/**
+ * Exclui um cliente após confirmação
+ * @param {Event} event - Evento de clique no botão de exclusão
+ * @param {string} closest - Seletor CSS para encontrar o elemento pai mais próximo
+ */
+async function DeleteClientsListener(event, closest) {
+    event.preventDefault()
+
+    // Obtém o ID do cliente a ser excluído
+    let deleteBtn = event.target
+    let id = deleteBtn.dataset.id
+    if (!id) {
+        deleteBtn = event.target.closest(closest)
+        id = deleteBtn.dataset.id
+    }
+    if (!id) return
+
+    // Executa a exclusão e recarrega a lista
+    await DeleteContact(id)
+    carregarClientes()
+    // Dispara evento para indicar que a ação de busca foi concluída
+    document.dispatchEvent(new CustomEvent('search-action-complete'))
+}
+
+/**
+ * Implementa a funcionalidade de busca com debounce
+ * Aguarda 500ms após a última digitação antes de enviar a requisição
+ * @param {Event} event - Evento de teclado no campo de busca
+ */
+async function SearchClientsListener(event) {
+    // Se a tecla Escape for pressionada, oculta o dropdown de resultados
+    if (event.key === 'Escape') {
+        const searchBar = document.querySelector('.input-client-dropdown')
+        if (!searchBar) {
+            return
+        }
+        searchBar.style.display = 'none'
+        searchClient = false
+        return
+    }
+
+    // Limpa o timer anterior e configura um novo
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(async () => {
+        const texto = event.target.value
+        if (!texto) {
+            return
+        }
+
+        // Realiza a busca na API
+        const response = await SearchClientAPI(texto)
+
+        // Renderiza os resultados da busca
+        RenderSearchClients(response)
+        searchClient = true
+
+        // Função auxiliar para direcionar eventos para as funções apropriadas
+        function setClosest(event, closest, func) {
+            switch (func) {
+                case 'delete':
+                    DeleteClientsListener(event, closest)
+                    break
+                case 'edit':
+                    EditClientsListener(event, closest)
+            }
+        }
+
+        // Configura os botões de exclusão nos resultados da busca
+        const resultsBar = document.getElementById('input-client-dropdown')
+        const exclude = resultsBar.querySelectorAll('.input-client-button--delete')
+        exclude.forEach(item => {
+            SearchListeners.push({
+                var: '.input-client-button--delete',
+                type: 'click',
+                func: DeleteClientsListener,
+                many: true
+            })
+            item.addEventListener('click', (event) => {
+                setClosest(event, '.input-client-button--delete', 'delete')
+            })
+        })
+
+        // Configura os botões de edição nos resultados da busca
+        const edit = resultsBar.querySelectorAll('.input-client-button--edit')
+        edit.forEach(item => {
+            SearchListeners.push({
+                var: '.input-client-button--edit',
+                type: 'click',
+                func: EditClientsListener,
+            })
+            item.addEventListener('click', (event) => {
+                setClosest(event, '.input-client-button--edit', 'edit')
+            })
+        })
+    }, 500); // Aguarda 500ms após a última digitação
+}
+
+/**
+ * Gerencia os eventos de paginação da lista de clientes
+ * @param {Event} event - Evento de clique nos botões de paginação
+ */
+async function PaginationListener(event) {
+    let active
+    let last
+    const botoes = document.querySelectorAll('.pagination-button')
+    const start = Number(botoes[0].textContent)
+    const lastElement = document.querySelector('.pagination-last-button')
+
+    // Determina o número da última página
+    if (!lastElement){
+        last = start
+    } else{
+        last = Number(lastElement.textContent)
+    }
+
+    // Determina a página atualmente ativa
+    const ElementActive = document.querySelector('.pagination-button.active')
+    if (!ElementActive) {
+        active = last
+    } else {
+        active = Number(ElementActive.textContent)
+    }
+
+    // Identifica qual botão foi clicado
+    const botao = event.target.closest('button')
+
+    // Executa a ação correspondente ao botão clicado
+    switch (botao.className) {
+        case 'pagination-button':
+            // Botão de página específica
+            const offset = Number(botao.textContent)
+            ListNextPageClients(start, offset)
+            return
+
+        case 'pagination-preview-button':
+            // Botão de página anterior
+            const min = active - 1
+
+            if (min < 1) {
+                alert('Você chegou a primeira página')
+                return
+            }
+            if (active === start){
+                ListNextPageClients(active - 4, min, false)
+                return
+            }
+
+            ListNextPageClients(start, min, false)
+            return
+
+        case 'pagination-more-button':
+            // Botão para exibir mais páginas
+            ListNextPageClients(start + 4, last + 1, false)
+            return
+
+        case 'pagination-next-button':
+            // Botão de próxima página
+            const max = active + 1
+            if (max > last) {
+                alert('Você chegou a última página')
+                return
+            }
+
+            if (max === last) {
+                console.log(last);
+                ListNextPageClients(last, last, false)
+                return
+            }
+
+            ListNextPageClients(start, max, false)
+            return
+
+        case 'pagination-last-button':
+            // Botão para ir diretamente à última página
+            const number = Number(botao.textContent)
+            ListNextPageClients(start, number, true)
+            return
+    }
+}
+
+// --------------------------------------------------------------------------------//
+// Gerador dos Event Listeners da página clientes
+// --------------------------------------------------------------------------------//
+
+/**
+ * Configura todos os event listeners necessários para a página de clientes
+ * Inclui botões de ação, campo de busca e paginação
+ */
+function LoadClientsEventListeners() {
+    // Verifica e oculta o dropdown de busca se estiver visível
+    window.clientDropdown = document.getElementById('input-client-dropdown')
+    if (searchClient) {
+        clientDropdown.style.display = 'none'
+        searchClient = false
+    }
+
+    // Configura o botão para adicionar novo contato
+    const newContact = document.querySelector('.btn-new-contact')
+    if (newContact){
+        newContact.addEventListener('click', NewContactListener)
+        ClientsListeners.push({
+            var: '.btn-new-contact',
+            type: 'click',
+            func: NewContactListener,
+            many: false
+        })
+    }
+
+    // Configura o botão de edição (se existir)
+    const edit = document.querySelector('.edit-contact')
+    if (edit){
+        edit.addEventListener('click', EditClientsListener)
+        ClientsListeners.push({
+            var: '.edit-contact',
+            type: 'click',
+            func: EditClientsListener,
+            many: false
+        })
+    }
+
+    // Configura todos os botões de exclusão na tabela
+    const deleteBtns = document.querySelectorAll('.exclude-contact')
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', DeleteClientsListener);
+        ClientsListeners.push({
+            var: '.exclude-contact',
+            type: 'click',
+            func: DeleteClientsListener,
+            many: true
+        });
+    });
+
+    // Configura o campo de busca com a função de debounce
+    const SearchClient = document.querySelector('.search-input')
+    SearchClient.addEventListener('keydown', SearchClientsListener)
+    ClientsListeners.push({
+        var: '.search-input',
+        type: 'keydown',
+        func: SearchClientsListener,
+        many: false
+    })
+
+    // Configura os eventos de paginação no container principal
+    container.addEventListener('click', PaginationListener)
+    ClientsListeners.push({
+        var: 'content',
+        type: 'click',
+        func: PaginationListener,
+        many: false
+    })
+
+    // Configura um evento personalizado para limpar os listeners de busca
+    document.addEventListener('search-action-complete', () => {
+        CloseModalRemoveListeners(undefined, SearchListeners)
+    })
+}
+
+// --------------------------------------------------------------------------------//
+// Lógica da aplicação
+// --------------------------------------------------------------------------------//
+
+/**
+ * Carrega uma página específica de clientes da API e atualiza a interface
+ * @param {number} start - Número da página inicial exibida na paginação
+ * @param {number} offset - Número da página a ser carregada
+ * @param {boolean} last - Indica se a página a ser carregada é a última
+ */
 async function ListNextPageClients(start, offset, last){
+    // Requisita a página específica de clientes
     const response = await GetAllClients(offset)
 
+    // Atualiza a lista de clientes com os novos dados
     todosClientes = response.data.clientes
     renderClients(response.data.clientes)
 
-    const MaxPage = Math.ceil(response.data.total / 10)
+    // Recalcula o número total de páginas
+    MaxPage = Math.ceil(response.data.total / 10)
 
+    // Recria os controles de paginação
     CreatePagination(Number(start), MaxPage)
+    // Atualiza o estado da paginação
     nextPage(Number(offset), last)
     return
-
 }
 
+/**
+ * Requisita uma lista de clientes da API com paginação
+ * @param {number} offset - Número da página a ser retornada (começando em 1)
+ * @returns {Promise<Object>} - Promise que resolve para os dados da resposta da API
+ */
 async function GetAllClients(offset) {
-    // Coleta o token armazenado pela requisição de login
-    const token = sessionStorage.getItem('access-token')
     try{
-        // Requisição para o endpoint que retorna a lista de clientes
+        // Requisição para o endpoint que retorna a lista de clientes paginada
         const resposta = await fetch(`${api_url}/api/clients?offset=${offset}`, {
                 method: 'GET',
                 headers: {
@@ -82,6 +499,7 @@ async function GetAllClients(offset) {
             })
         const clientes = await resposta.json()
 
+        // Tratamento de erros de autenticação
         if (!resposta.ok && resposta.status == 401) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
@@ -93,34 +511,35 @@ async function GetAllClients(offset) {
         return clientes
 
     } catch (error) {
-        console.log(error)
+        ErrorModal(clients.message, 'Erro ao Listar todos os clientes')
         return
     }
-
 }
 
-// function CreateHeader()
-
-function CreatePagination(start, all){
-    // const template = document.getElementById('cliente-template')
-    // if (template.content.querySelector('.pagination-clients')){
-    //     return
-    // }
+/**
+ * Cria dinamicamente os elementos de controle de paginação
+ * @param {number} start - Número da primeira página a ser exibida
+ * @param {number} MaxPage - Número total de páginas disponíveis
+ */
+function CreatePagination(start, MaxPage){
+    // Cria o elemento nav que conterá os botões de paginação
     const nav = document.createElement('nav')
     nav.className = 'pagination-clients'
 
+    // Botão para página anterior
     const reverse = document.createElement('button')
     reverse.textContent = '<'
     reverse.className = 'pagination-preview-button'
     reverse.id = 'reverse-page'
     nav.appendChild(reverse)
 
+    // Cria botões para as páginas (até 4 por vez)
     for (let i = start; i <= start + 3; i++) {
-        if (i > Number(all)) break;
-
+        if (i > Number(MaxPage)) break;
         const button = document.createElement('button')
         button.textContent = i
 
+        // Marca a primeira página como ativa
         if (i === 1) {
             button.className = 'pagination-button active'
         } else {
@@ -129,35 +548,47 @@ function CreatePagination(start, all){
 
         nav.appendChild(button)
     }
+
+    // Botão de reticências (...) para exibir mais páginas
     const reticences = document.createElement('button')
     reticences.textContent = '...'
     reticences.className = 'pagination-more-button'
     reticences.id = 'reticences-page'
     nav.appendChild(reticences)
 
-    if (all > start){
+    // Botão para ir diretamente à última página (se houver mais páginas)
+    if (MaxPage > start){
         const last = document.createElement('button')
-        last.textContent = all
+        last.textContent = MaxPage
         last.className = 'pagination-last-button'
         nav.appendChild(last)
     }
 
+    // Botão para próxima página
     const next = document.createElement('button')
     next.textContent = '>'
     next.className = 'pagination-next-button'
     next.id = 'next-page'
     nav.appendChild(next)
 
+    // Adiciona os controles de paginação ao container principal
     container.appendChild(nav)
 }
 
+/**
+ * Atualiza o estado visual dos botões de paginação
+ * @param {number} page - Número da página atual
+ * @param {boolean} last - Indica se a página atual é a última
+ */
 function nextPage(page, last) {
     const pages = document.querySelector('.pagination-clients')
     const buttons = pages.querySelectorAll('.pagination-button')
     const lastButton = pages.querySelector('.pagination-last-button')
 
+    // Remove a classe 'active' de todos os botões
     buttons.forEach(btn => btn.classList.remove('active'))
 
+    // Se não for a última página, marca o botão da página atual como ativo
     if (!last){
     buttons.forEach(btn => {
         if (btn.textContent === String(page)) {
@@ -167,78 +598,94 @@ function nextPage(page, last) {
         return
     }
 
+    // Se for a última página, marca o botão da última página como ativo
     lastButton.classList.add('active')
     return
-
 }
 
-
+/**
+ * Renderiza a tabela de clientes com base nos dados fornecidos
+ * @param {Array} clientes - Array de objetos contendo os dados dos clientes
+ */
 function renderClients(clientes) {
-    // 1️⃣ Clona o conteúdo do template
-  const template = document.getElementById('cliente-template').content.cloneNode(true);
+    // Clona o conteúdo do template para manipulação
+    const template = document.getElementById('cliente-template').content.cloneNode(true);
 
-  if (clientes.length === 0) {
-      container.innerHTML = ''
+    // Se não houver clientes, exibe mensagem informativa
+    if (clientes.length === 0) {
+        container.innerHTML = ''
+        // Remove a tabela do template
+        const table = template.querySelector('.client-table')
+        if (table) table.remove()
 
-      const table = template.querySelector('.client-table')
-      if (table) table.remove()
+        // Cria a mensagem de lista vazia
+        const h1 = document.createElement('h1')
+        h1.textContent = 'Nenhum cliente encontrado'
+        h1.style.marginTop = '15%'
+        h1.style.marginLeft = '35%'
 
-      const h1 = document.createElement('h1')
-      h1.textContent = 'Nenhum cliente encontrado'
-      h1.style.marginTop = '15%'
-      h1.style.marginLeft = '35%'
+        // Adiciona o título ao template
+        template.append(h1)
 
-      template.append(h1)
-
-      container.appendChild(template)
-    return;
-  }
-
-  // 2️⃣ Insere o template no container visível
-  container.innerHTML = '';
-  container.appendChild(template);
-
-  // 3️⃣ Seleciona o tbody dentro do template clonado
-  const tbody = container.querySelector('#client-table tbody');
-  const rowTemplate = tbody.querySelector('tr'); // linha de modelo
-
-  // 4️⃣ Limpa o tbody e adiciona as linhas dos clientes
-  tbody.innerHTML = '';
-
-  clientes.forEach(cliente => {
-    const clone = rowTemplate.cloneNode(true);
-    const info = clone.querySelector('.cliente-nome')
-    // Insere o id do cliente diretamente no HTML
-    info.textContent = cliente.name;
-    info.setAttribute('data-client-id', cliente.id)
-    clone.querySelector('.cliente-email').textContent = cliente.email;
-    clone.querySelector('.cliente-numero').textContent = cliente.phone
-    clone.querySelector('.cliente-responsavel').textContent = cliente.resp;
-    clone.querySelector('.cliente-contato').textContent = cliente.last_contact
-
-    // Valida os estilos de status de acordo com a resposta recebida pela api
-    const status = clone.querySelector('.status')
-    if (cliente.status === 'ativo') {
-        status.classList.add('active')
-        status.textContent = 'Ativo'
-    } else if (cliente.status == 'potencial') {
-        status.classList.add('pending')
-        status.textContent = 'Potencial'
-    } else if (cliente.status == 'inativo') {
-        status.classList.add('inactive')
-        status.textContent = 'Inativo'
+        // Adiciona o template ao container
+        container.appendChild(template)
+        return;
     }
 
-    // Cria o template com as informações recebidas
-    tbody.appendChild(clone);
+    // Insere o template no container visível
+    container.innerHTML = '';
+    container.appendChild(template);
 
-  });
+    // Seleciona o tbody dentro do template clonado
+    const tbody = container.querySelector('#client-table tbody');
+    const rowTemplate = tbody.querySelector('tr'); // linha de modelo
+
+    // Limpa o tbody e adiciona as linhas dos clientes
+    tbody.innerHTML = '';
+
+    // Itera sobre cada cliente e cria uma linha na tabela
+    clientes.forEach(cliente => {
+        const clone = rowTemplate.cloneNode(true);
+        const info = clone.querySelector('.cliente-nome')
+        // Preenche os dados do cliente na linha
+        info.textContent = cliente.name;
+        clone.querySelector('.cliente-email').textContent = cliente.email;
+        clone.querySelector('.cliente-numero').textContent = cliente.phone
+        clone.querySelector('.cliente-responsavel').textContent = cliente.resp;
+        clone.querySelector('.cliente-contato').textContent = cliente.last_contact
+
+        // Aplica estilos de status com base no valor retornado pela API
+        const status = clone.querySelector('.status')
+        if (cliente.status === 'ativo') {
+            status.classList.add('active')
+            status.textContent = 'Ativo'
+        } else if (cliente.status == 'potencial') {
+            status.classList.add('pending')
+            status.textContent = 'Potencial'
+        } else if (cliente.status == 'inativo') {
+            status.classList.add('inactive')
+            status.textContent = 'Inativo'
+        }
+
+        // Adiciona o ID do cliente aos botões de ação
+        const deleteBtn = clone.querySelector('#exclude-contact')
+        const editBtn = clone.querySelector('#edit-contact')
+        deleteBtn.dataset.id = cliente.id
+        editBtn.dataset.id = cliente.id
+
+        // Adiciona a linha preenchida ao tbody
+        tbody.appendChild(clone);
+    });
 }
 
+/**
+ * Requisita os dados detalhados de um cliente específico
+ * @param {string} id - ID do cliente a ser consultado
+ * @returns {Promise<Object>} - Promise que resolve para os dados do cliente
+ */
 async function RequestUniqueContact(id) {
     try {
-        const token = sessionStorage.getItem('access-token')
-
+        // Requisição à API para obter dados detalhados do cliente
         const response = await fetch(`${api_url}/api/client/${id}/info`, {
             method: 'GET',
             headers: {
@@ -247,19 +694,17 @@ async function RequestUniqueContact(id) {
             }
         })
 
-        const content = await response.json()
-
+        // Tratamento de erros de autenticação
         if (!response.ok && response.status === 401){
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
-        } else if (!resposta.ok){
+        } else if (!response.ok){
             ErrorModal(content.message, 'Erro ao coletar informações do usuário')
             throw new Error(content.message)
         }
 
-
-        RenderModalContact(content.data)
-        return
+        const content = await response.json()
+        return content
 
     } catch (error) {
         console.error(error)
@@ -267,8 +712,13 @@ async function RequestUniqueContact(id) {
     }
 }
 
+/**
+ * Envia uma requisição para excluir um cliente
+ * @param {string} id - ID do cliente a ser excluído
+ */
 async function DeleteContact(id) {
     try {
+        // Requisição à API para excluir o cliente
         const response = await fetch(`${api_url}/api/clients/delete/${id}`,{
             method: 'DELETE',
             headers: {
@@ -276,17 +726,17 @@ async function DeleteContact(id) {
                 'Authorization':token
             }
         })
-        const content = await response.json()
 
+        // Tratamento de erros de autenticação
         if (!response.ok && response.status === 401){
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
-        } else if (!resposta.ok){
+        } else if (!response.ok){
             ErrorModal(content.message, 'Erro ao deletar usuário')
             throw new Error(content.message)
         }
 
-
+        // Mensagem de sucesso
         alert('Contato excluído com sucesso')
     } catch (error) {
         console.error(error)
@@ -294,10 +744,14 @@ async function DeleteContact(id) {
     }
 }
 
+/**
+ * Preenche o modal de edição com os dados do cliente
+ * @param {Object} data - Objeto contendo os dados do cliente
+ */
 function RenderModalContact(data) {
     const modal = document.getElementById('modal-cliente');
 
-    // Preenche os campos do modal
+    // Preenche todos os campos do formulário com os dados do cliente
     document.getElementById('nome').value = data.nome;
     document.getElementById('email').value = data.email;
     document.getElementById('telefone').value = data.telefone;
@@ -310,107 +764,37 @@ function RenderModalContact(data) {
     document.getElementById('visitas').value = data.visitas;
     document.getElementById('obs').value = data.obs;
 
+    // Define o título do modal
     const title = modal.querySelector('.modal-title');
-    title.textContent = 'Editar Contao';
+    title.textContent = 'Editar Contato';
 
+    // Configura o botão de sair para fechar o modal
+    const exitBtn = modal.querySelector('.btn-exit')
+    exitBtn.addEventListener('click', (event) => {
+        event.preventDefault()
+        modal.close()
+    }, { once: true })
+
+    // Configura o botão de confirmação (atualmente exibe mensagem de desenvolvimento)
+    const confirmBtn = modal.querySelector('.btn-register')
+    confirmBtn.textContent = 'Confirmar'
+    confirmBtn.addEventListener('click', (event) => {
+        event.preventDefault()
+        alert('Em desenvolvimento')
+    }, { once: true })
+
+    // Exibe o modal
     modal.showModal();
-
 }
 
-// Abrir modal de adicionar clientes (Método utilizado para evitar problemas com elemento não criado)
-document.addEventListener('click', function (e) {
-    switch (true) {
-        case e.target.matches('.btn-new-contact'):
-            const modal = document.getElementById('modal-cliente')
-            inputs = [
-                'nome', 'email', 'telefone', 'cpf', 'rua', 'numero', 'bairro', 'cidade',
-                'gasto', 'visitas', 'obs'
-            ]
-            inputs.forEach(id => {
-                document.getElementById(id).value = ''
-            })
-
-            document.querySelector('.modal-title').textContent = 'Cadastro de Clientes';
-
-            register = document.querySelector('.btn-register')
-            register.onclick = async (e) => {
-                e.preventDefault()
-                const token = sessionStorage.getItem('access-token')
-
-                body = {}
-                inputs.forEach(id => {
-                    body[id] = document.getElementById(id).value
-                })
-
-                const response = await fetch(`${api_url}/api/clients/create`,{
-                    method : 'POST',
-                    headers: {
-                        'Content-Type':'application/json',
-                        'Authorization': token
-                    },
-                    body: JSON.stringify(body)
-                })
-
-                const content = await response.json()
-
-            if (!response.ok && response.status === 401){
-                alert('Acesso não autorizado')
-                window.location.replace(`${FrontendURL}/login.html`)
-            } else if (!resposta.ok){
-                ErrorModal(content.message, 'Erro ao deletar usuário')
-                throw new Error(content.message)
-            }
-
-                modal.close()
-                alert('Contato criado com sucesso')
-                return
-            }
-
-            modal.showModal()
-            break;
-
-        case e.target.matches('.btn-exit'):
-            e.preventDefault()
-            const modalClose = document.getElementById('modal-cliente')
-
-            modalClose.close()
-            break
-
-        default:
-            break;
-    }
-});
-
-// Função para abrir o modal de edição de contato
-document.addEventListener('click', async function (event) {
-    // Verifica se o alvo é um botão de edição
-    if (event.target && event.target.matches('.edit-contact')) {
-        event.stopPropagation()
-
-        // Coletar informações da tabela
-        const row = event.target.closest('tr')
-        const info = row.querySelector('.cliente-nome')
-        const id = info.getAttribute('data-client-id')
-
-        const response = await RequestUniqueContact(id)
-
-        RenderModalContact(response)
-
-    // Função para deletar contatos
-    } else if (event.target.matches('.exclude-contact')) {
-        const row = event.target.closest('tr')
-        const info = row.querySelector('.cliente-nome')
-        const id = info.getAttribute('data-client-id')
-
-        await DeleteContact(id)
-        carregarClientes()
-    }
-});
-
-
-// Requisição para pesquisar clientes
-async function SearchClient(input) {
+/**
+ * Realiza uma busca de clientes por nome ou termo
+ * @param {string} input - Termo de busca
+ * @returns {Promise<Array>} - Promise que resolve para um array de clientes correspondentes
+ */
+async function SearchClientAPI(input) {
     try {
+        // Requisição à API para buscar clientes pelo termo fornecido
         const response = await fetch(`${api_url}/api/clients/search/${input}`, {
             method: 'GET',
             headers: {
@@ -419,10 +803,11 @@ async function SearchClient(input) {
             }
         })
 
+        // Tratamento de erros de autenticação
         if (!response.ok && response.status === 401){
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
-        } else if (!resposta.ok){
+        } else if (!response.ok){
             alert('Erro ao buscar usuário')
             throw new Error(content.message)
         }
@@ -436,187 +821,74 @@ async function SearchClient(input) {
     }
 }
 
-container.addEventListener('input', function(e){
-    // Evento para pesquisar contatos
-    if (e.target.matches('#input-client-field')) {
-        clearTimeout(debounceTimer)
-            debounceTimer = setTimeout(async() => {
-                const texto = e.target.value
-
-                const response = await SearchClient(texto)
-
-                RenderSearchClients(response)
-                searchClient = true
-
-            }, 500);
-    }
-})
-
+/**
+ * Renderiza os resultados da busca no dropdown
+ * @param {Array} data - Array de clientes encontrados na busca
+ */
 function RenderSearchClients(data){
     const dropdown = document.getElementById('input-client-dropdown')
     dropdown.innerHTML = ''
+
+    // Se não houver resultados, oculta o dropdown
     if (data.length === 0) {
         dropdown.style.display = 'none'
         return
     }
 
+    // Cria a lista de resultados
     const lista = document.createElement('ul')
 
+    // Itera sobre cada cliente encontrado e cria um item na lista
     data.forEach(item => {
         const li = document.createElement('li')
         const span = document.createElement('span')
         span.textContent = item.nome
 
+        // Container para os botões de ação
         const acoesContainer = document.createElement('div')
         acoesContainer.className = 'input-client-actions'
 
-                // 1. Botão CHAT
+        // Botão para visualizar/chat com o cliente
         const btnVisualizar = document.createElement('button');
         btnVisualizar.className = 'input-client-button-chat';
         btnVisualizar.dataset.id = item.clientid;
-        btnVisualizar.title = 'Visualizar Item'; // Tooltip para acessibilidade
+        btnVisualizar.title = 'Visualizar Item';
         const iconVisualizar = document.createElement('i');
         iconVisualizar.className = 'fas fa-comments';
         btnVisualizar.appendChild(iconVisualizar);
 
-        // 2. Botão EDITAR
+        // Botão para editar o cliente
         const btnEditar = document.createElement('button');
         btnEditar.className = 'input-client-button--edit';
-        btnEditar.id = 'edit-contact'
+        btnEditar.id = 'search-edit-contact'
         btnEditar.dataset.id = item.clientid;
         btnEditar.title = 'Editar Item';
         const iconEditar = document.createElement('i');
-        iconEditar.className = 'fas fa-pen-to-square'; // Ícone de caneta
+        iconEditar.className = 'fas fa-pen-to-square';
         btnEditar.appendChild(iconEditar);
 
-        // 3. Botão DELETAR
+        // Botão para excluir o cliente
         const btnDeletar = document.createElement('button');
         btnDeletar.className = 'input-client-button--delete';
+        btnDeletar.id = 'search-exclude-contact';
         btnDeletar.dataset.id = item.clientid;
         btnDeletar.title = 'Deletar Item';
         const iconDeletar = document.createElement('i');
-        iconDeletar.className = 'fas fa-trash-can'; // Ícone de lixeira
+        iconDeletar.className = 'fas fa-trash-can';
         btnDeletar.appendChild(iconDeletar);
 
-        // Adiciona os três botões ao container
+        // Adiciona os botões ao container de ações
         acoesContainer.appendChild(btnVisualizar);
         acoesContainer.appendChild(btnEditar);
         acoesContainer.appendChild(btnDeletar);
 
-        // --- FIM DAS MUDANÇAS ---
-
+        // Adiciona o nome e os botões ao item da lista
         li.appendChild(span);
         li.appendChild(acoesContainer);
         lista.appendChild(li);
     });
 
+    // Adiciona a lista ao dropdown e o exibe
     dropdown.appendChild(lista);
     dropdown.style.display = 'block';
-
 }
-
-// Fecha o dropdown com a tecla Escape
-document.addEventListener('keydown', function(event) {
-    if (!searchClient) {
-        return
-    }
-    if (event.key === 'Escape') {
-        const clientDropdown = document.getElementById('input-client-dropdown');
-        clientDropdown.style.display = 'none';
-        searchClient = false
-        }
-    }
-);
-
-// Eventos para o dropdown de pesquisa de clientes
-document.body.addEventListener('click', async function(event){
-    const clientDropdown = document.getElementById('input-client-dropdown');
-
-    if (searchClient) {
-        clientDropdown.style.display = 'none'
-        searchClient = false
-    }
-
-    const botao = event.target.closest('button')
-    if (botao.className == 'input-client-button--edit') {
-        event.stopPropagation()
-
-        const id = botao.getAttribute('data-id')
-        const response = await RequestUniqueContact(id)
-
-        RenderModalContact(response)
-    }
-
-    if (botao.className == 'input-client-button--delete') {
-        event.stopPropagation()
-
-        const id = botao.getAttribute('data-id')
-        await DeleteContact(id)
-        carregarClientes()
-    }
-
-})
-
-
-// EventListener para os botões de paginação
-document.body.addEventListener('click', async(event) => {
-    const botoes = document.querySelectorAll('.pagination-button')
-    let start
-    let last
-    if (botoes.length === 0) {
-        start = Number(document.querySelector('.pagination-button.active').textContent)
-        last = start
-    } else {
-        start = Number(botoes[0].textContent)
-        last = botoes[botoes.length - 1].textContent
-    }
-
-    const active = Number(document.querySelector('.pagination-button.active').textContent)
-
-    const botao = event.target.closest('button')
-    if (botao.className === 'pagination-button') {
-        const offset = botao.textContent
-
-        ListNextPageClients(start, offset)
-        return
-    } else if (botao.className === 'pagination-preview-button') {
-        const min = active - 1
-        if (min < 1) {
-            alert('Você já chegou a primeira página')
-            return
-        }
-
-        if (active === start){
-            ListNextPageClients(active - 4, min, false)
-            return
-        }
-
-        ListNextPageClients(start, min, false)
-        return
-    } else if (botao.className === 'pagination-more-button') {
-
-        ListNextPageClients(Number(start) + 4, Number(last) + 1, false)
-        return
-    } else if (botao.className === 'pagination-next-button'){
-        const active = document.querySelector('.pagination-button.active').textContent
-        const max = Number(active) + 1
-        if (max > MaxPage) {
-            alert('Você já chegou a ultima página')
-            return
-        }
-
-        if (active === last) {
-            ListNextPageClients(max, max, false)
-            return
-        }
-
-        ListNextPageClients(start, max, false)
-        return
-
-    } else if (botao.className === 'pagination-last-button'){
-        const number = botao.textContent
-        ListNextPageClients(start, Number(number), true)
-        return
-    }
-
-})

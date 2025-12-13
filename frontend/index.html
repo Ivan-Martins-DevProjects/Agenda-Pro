@@ -47,7 +47,7 @@
                 <ul>
                     <li><a href="#" class="menu-link active" id="page-dashboard"><i class="fas fa-home" style="margin-right: 10px;"></i>Home</a></li>
                     <li><a href="#" class="menu-link" id="page-clientes"><i class="fas fa-user" style="margin-right: 10px;"></i>Clientes</a></li>
-                    <li><a href="#" class="menu-link" data-page="pages/servicos.html"><i class="fas fa-briefcase" style="margin-right: 10px;"></i>Serviços</a></li>
+                    <li><a href="#" class="menu-link" id="page-services"><i class="fas fa-briefcase" style="margin-right: 10px;"></i>Serviços</a></li>
                     <li><a href="#" class="menu-link" data-page="pages/configuracoes.html"><i class="fas fa-calendar" style="margin-right: 10px;"></i>Agendamentos</a></li>
                     <li><a href="#" class="menu-link" data-page="pages/chat.html"><i class="fas fa-comments" style="margin-right: 10px;"></i>Chat</a></li>
                     <li><a href="#" class="menu-link" data-page="pages/configuracoes.html"><i class="fas fa-gear" style="margin-right: 10px;"></i>Configurações</a></li>
@@ -78,7 +78,7 @@
                         placeholder="Pesquisar cliente..."
                         id="input-client-field">
                 <div class="input-client-dropdown" id="input-client-dropdown"></div>
-                    <button class="btn-new-contact">
+                    <button class="btn-new-contact" id="new-contact">
                         <i class="fas fa-plus"></i>
                         Adicionar Cliente
                     </button>
@@ -111,20 +111,11 @@
                             <td class="cliente-responsavel"></td>
                             <td class="actions">
                                 <button class="edit-contact" id="edit-contact">Editar</button>
-                                <button class="exclude-contact">Excluir</button>
+                                <button class="exclude-contact" id="exclude-contact">Excluir</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-
-                <!-- <nav class="pagination-clients"> -->
-                <!--     <button class="pagination-button active">1</button> -->
-                <!--     <button class="pagination-button">2</button> -->
-                <!--     <button class="pagination-button">3</button> -->
-                <!--     <button class="pagination-button">4</button> -->
-                <!--     <button class="pagination-button">5</button> -->
-                <!--     <button class="pagination-button">6</button> -->
-                <!-- </nav> -->
             </template>
 
 

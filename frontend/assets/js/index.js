@@ -1,6 +1,12 @@
 const btnDashboard = document.getElementById('page-dashboard')
 const api_url = 'http://localhost:8585'
 
+window.menuLinks = document.querySelectorAll('.menu-link')
+window.container = document.getElementById('content-container');
+
+var token = sessionStorage.getItem('access-token')
+var btnClientes = document.getElementById('page-clientes');
+
 window.addEventListener('DOMContentLoaded', async() => {
     try {
         menuLinks.forEach(l => l.classList.remove('active'))
@@ -49,6 +55,12 @@ btnDashboard.addEventListener('click', async() => {
         return null
     }
 
+})
+
+btnClientes.addEventListener('click', async() => {
+    await carregarClientes()
+    LoadClientsEventListeners()
+    return
 })
 
 async function LoadDashboard() {
