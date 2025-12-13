@@ -94,7 +94,6 @@ def InsertContact():
         return response
 
     data = response['data']
-    print(data)
     id = data['ID']
     BussinesID = data['BussinesID']
     nome = data['Nome']
@@ -126,19 +125,19 @@ def InsertContact():
         elif chave == 'email':
             resp = isEmail(body.get(chave))
             if resp is False:
-                return errors.CreateError(401, 'Email Inválido')
+                return errors.CreateError(400, 'Email Inválido')
             valor = body.get(chave)
 
         elif chave == 'nome':
             resp = isName(body.get(chave))
             if resp is False:
-                return errors.CreateError(401, 'Formato de Nome inválido')
+                return errors.CreateError(400, 'Formato de Nome inválido')
             valor = body.get(chave)
 
         elif chave == 'telefone':
             resp = isNumber(body.get(chave))
             if resp is False:
-                return errors.CreateError(401, 'Número de telefone inválido')
+                return errors.CreateError(400, 'Número de telefone inválido')
             valor = body.get(chave)
 
         elif chave == 'respName':

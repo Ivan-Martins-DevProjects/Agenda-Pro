@@ -52,7 +52,7 @@ def GetContactAPI(id):
         return jsonify(response), 200
     
     logger.error('ID do contato, recebido na query, vazio')
-    return CreateError(401, 'ID do contato não enviado')
+    return CreateError(400, 'ID do contato não enviado')
 
 # Rota responsável pela criação de novos clientes
 @app.route('/api/clients/create', methods=['POST'])

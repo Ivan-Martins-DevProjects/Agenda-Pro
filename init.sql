@@ -126,6 +126,9 @@ ALTER TABLE ONLY public.roles
 ALTER TABLE ONLY public.contacts
     ADD CONSTRAINT unique_clientid UNIQUE (clientid);
 
+ALTER TABLE ONLY public.contacts
+    ADD CONSTRAINT unique_telefone UNIQUE (telefone);
+
 --
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --

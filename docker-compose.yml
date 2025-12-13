@@ -8,7 +8,6 @@ services:
       - 7000:80
     networks:
       - agendapro
-    restart: always
     develop:
       watch:
         - action: sync
@@ -27,7 +26,6 @@ services:
       - ${GO_API_PORT}:8181
     networks:
       - agendapro
-    restart: always
     develop:
       watch:
         - action: sync
@@ -50,7 +48,6 @@ services:
       - ${PYTHON_API_PORT}:8585
     networks:
       - agendapro
-    restart: always
     develop:
       watch:
         - action: sync
@@ -61,6 +58,8 @@ services:
             - logs/
             - venv/
             - requirements.txt
+        - action: rebuild
+          path: ./init.sql
 
   db:
     container_name: db-agendapro
@@ -76,7 +75,6 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - agendapro
-    restart: always
 
 
 volumes:

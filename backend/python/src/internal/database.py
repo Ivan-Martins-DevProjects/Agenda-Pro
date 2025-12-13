@@ -282,6 +282,7 @@ def InsertNewContactDB(data):
                 VALUES (
                     %s, %s, %s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s
                 )
+                ON CONFLICT (telefone) DO NOTHING
                 RETURNING clientid;"""
 
                 queryAdress = """

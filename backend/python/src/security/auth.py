@@ -35,7 +35,8 @@ def ValidateJWT() :
         
         # Registra um erro diferente para caso tenha recebido um token adulterado
         elif payload['code'] == 409:
-            return CreateError(401,'Requisição não autorizada')
+            logger.warning('Token Adulterado')
+            return CreateError(409,'Requisição não autorizada')
 
         # Resposta em caso de erro interno
         elif payload['code'] == 500:
