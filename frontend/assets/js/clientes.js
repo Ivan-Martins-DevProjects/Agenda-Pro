@@ -4,6 +4,12 @@ const menuLinks = document.querySelectorAll('.menu-link')
 const container = document.getElementById('content-container');
 // URL base para o frontend, usada para redirecionamentos
 const FrontendURL = 'http://localhost:7000'
+// Seleciona o modal de edição e adicção de contatos
+const modal = document.getElementById('modal-cliente');
+
+// ----------------------------------------------------------------------------------// CustomEvents
+// ----------------------------------------------------------------------------------//
+const CustomEventCloseEditModal = new CustomEvent ('edit-modal-closed')
 
 // Arrays para controle e gerenciamento dos EventListeners, permitindo remoção posterior
 var ClientsListeners = []  // Armazena listeners relacionados à página de clientes
@@ -173,6 +179,31 @@ async function NewContactAPI(event) {
     }
 }
 
+async function EditContactAPI(id, data) {
+    try {
+        const response = await fetch(`${api_url}/api/clients/update/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type':'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify(data)
+        })
+
+        if (!response.ok && response.status === 401){
+            alert('Acesso no autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+        } else if (!response.ok) {
+            throw new Error(content.message)
+        }
+
+        alert('Contato atualizado com sucesso')
+        modal.dispatchEvent(CustomEventCloseEditModal)
+    } catch (error) {
+        ErrorModal(error, 'Erro ao atualizar informações do contato')
+        modal.dispatchEvent(CustomEventCloseEditModal)
+    }
+}
 /**
  * Prepara e exibe o modal de edição de contato
  * @param {Event} event - Evento de clique no botão de edição
@@ -182,8 +213,9 @@ async function EditClientsListener(event, closest) {
     event.preventDefault()
 
     // Obtém o ID do cliente a ser editado
+    let id
     let editBtn = event.target
-    let id = editBtn.dataset.id
+    id = editBtn.dataset.id
     if (!id){
         editBtn = event.target.closest(closest)
         id = editBtn.dataset.id
@@ -193,7 +225,7 @@ async function EditClientsListener(event, closest) {
     // Requisita os dados detalhados do cliente
     const response = await RequestUniqueContact(id)
     // Renderiza o modal com os dados do cliente
-    RenderModalContact(response.data)
+    RenderModalContact(response.data, id)
     // Dispara evento para indicar que a ação de busca foi concluída
     document.dispatchEvent(new CustomEvent('search-action-complete'))
 }
@@ -407,15 +439,17 @@ function LoadClientsEventListeners() {
     }
 
     // Configura o botão de edição (se existir)
-    const edit = document.querySelector('.edit-contact')
-    if (edit){
-        edit.addEventListener('click', EditClientsListener)
-        ClientsListeners.push({
-            var: '.edit-contact',
-            type: 'click',
-            func: EditClientsListener,
-            many: false
-        })
+    const editBtns = document.querySelectorAll('.edit-contact')
+    if (editBtns){
+        editBtns.forEach(btn => {
+            btn.addEventListener('click', EditClientsListener)
+            ClientsListeners.push({
+                var: '.edit-contact',
+                type: 'click',
+                func: EditClientsListener,
+                many: true
+                })
+            })
     }
 
     // Configura todos os botões de exclusão na tabela
@@ -732,15 +766,13 @@ async function DeleteContact(id) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
         } else if (!response.ok){
-            ErrorModal(content.message, 'Erro ao deletar usuário')
             throw new Error(content.message)
         }
 
         // Mensagem de sucesso
         alert('Contato excluído com sucesso')
     } catch (error) {
-        console.error(error)
-        return
+        ErrorModal(error, 'Erro ao deletar usurio')
     }
 }
 
@@ -748,8 +780,7 @@ async function DeleteContact(id) {
  * Preenche o modal de edição com os dados do cliente
  * @param {Object} data - Objeto contendo os dados do cliente
  */
-function RenderModalContact(data) {
-    const modal = document.getElementById('modal-cliente');
+function RenderModalContact(data, id) {
 
     // Preenche todos os campos do formulário com os dados do cliente
     document.getElementById('nome').value = data.nome;
@@ -768,20 +799,45 @@ function RenderModalContact(data) {
     const title = modal.querySelector('.modal-title');
     title.textContent = 'Editar Contato';
 
-    // Configura o botão de sair para fechar o modal
     const exitBtn = modal.querySelector('.btn-exit')
-    exitBtn.addEventListener('click', (event) => {
+    const confirmBtn = modal.querySelector('.btn-register')
+
+    function Confirm(event) {
+        event.preventDefault()
+        body = {}
+        ModalInputs.forEach(item => {
+                body[item] = modal.querySelector('#' + item).value
+        })
+
+        EditContactAPI(id, body)
+    }
+
+    function closeEdit(event) {
         event.preventDefault()
         modal.close()
-    }, { once: true })
+        modal.dispatchEvent(CustomEventCloseEditModal)
+    }
+
+    modal.addEventListener('edit-modal-closed', (event) => {
+        event.preventDefault()
+        if (modal.open) {
+            modal.close()
+        }
+
+        exitBtn.removeEventListener('click', closeEdit)
+        confirmBtn.removeEventListener('click', Confirm)
+    }, {once: true})
+
+    modal.addEventListener('cancel', () => {
+        modal.dispatchEvent(CustomEventCloseEditModal)
+    })
+
+    // Configura o botão de sair para fechar o modal
+    exitBtn.addEventListener('click', closeEdit)
 
     // Configura o botão de confirmação (atualmente exibe mensagem de desenvolvimento)
-    const confirmBtn = modal.querySelector('.btn-register')
     confirmBtn.textContent = 'Confirmar'
-    confirmBtn.addEventListener('click', (event) => {
-        event.preventDefault()
-        alert('Em desenvolvimento')
-    }, { once: true })
+    confirmBtn.addEventListener('click', Confirm)
 
     // Exibe o modal
     modal.showModal();
