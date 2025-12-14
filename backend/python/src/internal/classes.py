@@ -79,6 +79,16 @@ class User:
 
         return response
 
+    def EditContact(self, id, data):
+        check = self.Allowed('write_contacts')
+        if check is False:
+            return errors.CreateError(404, 'Permissão não encontrada')
+        elif check['status'] == 'error':
+            return check
+
+        response = database.UpdateContactDB(id, data)
+        return response
+
     def DeleteContact(self, id):
         check = self.Allowed('write_contacts')
         if check is False:

@@ -66,11 +66,20 @@ def CreateContactAPI():
     return jsonify(response), 200
 
 @app.route('/api/clients/delete/<id>', methods=['DELETE'])
-def EditContactAPI(id):
+def DeleteContactAPI(id):
     response = clients.DeleteContact(id)
     if not response:
         return CreateError(500, 'Erro interno do servidor')
     
+    if response['status'] == 'error':
+        return jsonify(response), response['code']
+
+    return jsonify(response), 200
+
+@app.route('/api/clients/update/<id>', methods=['PUT'])
+def EditContactAPI(id):
+    response = clients.UpdateContact(id)
+
     if response['status'] == 'error':
         return jsonify(response), response['code']
 

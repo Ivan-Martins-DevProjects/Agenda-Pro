@@ -150,6 +150,25 @@ def InsertContact():
 
     return insert
 
+def UpdateContact(id):
+    response = TokenValidate()
+    if response['status'] == 'error':
+        return response
+
+    data = response['data']
+    userId = data['ID']
+    BussinesID = data['BussinesID']
+    role = data['Role']
+
+    body = request.get_json()
+    user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
+    response = user.EditContact(id, body)
+    if not response:
+        logger.error('Finção UpdateContact não retornou nada')
+        return errors.CreateError(500, 'Erro interno do servidor')
+    
+    return response
+
 def DeleteContact(id):
     response = TokenValidate()
     if response['status'] == 'error':

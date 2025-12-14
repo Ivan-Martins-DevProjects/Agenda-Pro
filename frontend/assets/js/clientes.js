@@ -10,6 +10,12 @@ const modal = document.getElementById('modal-cliente');
 // ----------------------------------------------------------------------------------// CustomEvents
 // ----------------------------------------------------------------------------------//
 const CustomEventCloseEditModal = new CustomEvent ('edit-modal-closed')
+const ActionComplete = new CustomEvent('action-complete')
+
+document.addEventListener('action-complete', () => {
+    RemoveClientsListeners(ClientsListeners)
+    RemoveClientsListeners(SearchListeners)
+})
 
 // Arrays para controle e gerenciamento dos EventListeners, permitindo remoção posterior
 var ClientsListeners = []  // Armazena listeners relacionados à página de clientes
@@ -36,7 +42,6 @@ const ModalInputs = [
 // --------------------------------------------------------------------------------//
 // Funções relacionadas aos eventos da página de clientes
 // --------------------------------------------------------------------------------//
-
 /**
  * Fecha o modal especificado e remove os event listeners associados
  * @param {HTMLElement} modal - Elemento do modal a ser fechado
@@ -62,6 +67,20 @@ function CloseModalRemoveListeners(modal, data) {
  * Função principal para carregar e exibir a lista de clientes
  * Realiza a requisição à API, renderiza a tabela e configura a paginação
  */
+function RemoveClientsListeners(data) {
+    let element
+    try {
+        data.forEach(item => {
+            const element = document.querySelector(item.var)
+            if (!element){
+                throw new Error(`Elemento não encontrado: ${item.var}`)
+            }
+            element.removeEventListener(item.type, item.func)
+        })
+    } catch (error) {
+        console.log(error);
+    }
+}
 async function carregarClientes() {
     // Remove o estilo de opção ativa de todos os itens do menu
     menuLinks.forEach(l => l.classList.remove('active'))
@@ -76,11 +95,12 @@ async function carregarClientes() {
 
     // Renderiza a tabela de clientes com os dados obtidos
     renderClients(todosClientes)
-    // Configura os event listeners para os elementos da tabela
-    LoadClientsEventListeners()
+    //
+    // Remove Listeners Anteriores para evitar conflito
+    document.dispatchEvent(ActionComplete)
 
     // Calcula o número total de páginas arredondando para cima
-    MaxPage = Math.ceil(resposta.data.total / 10)
+    const MaxPage = Math.ceil(resposta.data.total / 10)
     // Cria os controles de paginação
     CreatePagination(1, MaxPage)
     // Recarrega os event listeners para incluir os botões de paginação
@@ -102,7 +122,6 @@ function NewContactListener(event) {
     // Função para fechar o modal
     function close(event) {
         event.preventDefault()
-        console.log('fechou');
         CloseModalRemoveListeners(modal)
     }
 
@@ -169,7 +188,6 @@ async function NewContactAPI(event) {
         alert('Contato criado com sucesso')
         // Recarrega a lista de clientes
         carregarClientes()
-        LoadClientsEventListeners()
         return
 
     } catch (error) {
@@ -198,10 +216,10 @@ async function EditContactAPI(id, data) {
         }
 
         alert('Contato atualizado com sucesso')
-        modal.dispatchEvent(CustomEventCloseEditModal)
+        carregarClientes()
     } catch (error) {
         ErrorModal(error, 'Erro ao atualizar informações do contato')
-        modal.dispatchEvent(CustomEventCloseEditModal)
+        carregarClientes()
     }
 }
 /**
@@ -227,7 +245,7 @@ async function EditClientsListener(event, closest) {
     // Renderiza o modal com os dados do cliente
     RenderModalContact(response.data, id)
     // Dispara evento para indicar que a ação de busca foi concluída
-    document.dispatchEvent(new CustomEvent('search-action-complete'))
+    // document.dispatchEvent(ActionComplete)
 }
 
 /**
@@ -248,10 +266,17 @@ async function DeleteClientsListener(event, closest) {
     if (!id) return
 
     // Executa a exclusão e recarrega a lista
-    await DeleteContact(id)
-    carregarClientes()
+    const confirm = window.confirm('Deseja continuar?')
+    if (!confirm) {
+        return
+    } else {
+        await DeleteContact(id)
+        carregarClientes()
+        return
+    }
+
     // Dispara evento para indicar que a ação de busca foi concluída
-    document.dispatchEvent(new CustomEvent('search-action-complete'))
+    document.dispatchEvent(ActionComplete)
 }
 
 /**
@@ -304,8 +329,7 @@ async function SearchClientsListener(event) {
             SearchListeners.push({
                 var: '.input-client-button--delete',
                 type: 'click',
-                func: DeleteClientsListener,
-                many: true
+                func: DeleteClientsListener
             })
             item.addEventListener('click', (event) => {
                 setClosest(event, '.input-client-button--delete', 'delete')
@@ -373,8 +397,14 @@ async function PaginationListener(event) {
                 return
             }
             if (active === start){
-                ListNextPageClients(active - 4, min, false)
-                return
+                let initial = active - 4
+                if (initial <= 0){
+                    ListNextPageClients(1, min, false)
+                    return
+                } else {
+                    ListNextPageClients(active - 4, min, false)
+                    return
+                }
             }
 
             ListNextPageClients(start, min, false)
@@ -394,7 +424,6 @@ async function PaginationListener(event) {
             }
 
             if (max === last) {
-                console.log(last);
                 ListNextPageClients(last, last, false)
                 return
             }
@@ -420,7 +449,7 @@ async function PaginationListener(event) {
  */
 function LoadClientsEventListeners() {
     // Verifica e oculta o dropdown de busca se estiver visível
-    window.clientDropdown = document.getElementById('input-client-dropdown')
+    window.clientDropdown = document.querySelector('.input-client-dropdown')
     if (searchClient) {
         clientDropdown.style.display = 'none'
         searchClient = false
@@ -433,8 +462,7 @@ function LoadClientsEventListeners() {
         ClientsListeners.push({
             var: '.btn-new-contact',
             type: 'click',
-            func: NewContactListener,
-            many: false
+            func: NewContactListener
         })
     }
 
@@ -446,8 +474,7 @@ function LoadClientsEventListeners() {
             ClientsListeners.push({
                 var: '.edit-contact',
                 type: 'click',
-                func: EditClientsListener,
-                many: true
+                func: EditClientsListener
                 })
             })
     }
@@ -459,8 +486,7 @@ function LoadClientsEventListeners() {
         ClientsListeners.push({
             var: '.exclude-contact',
             type: 'click',
-            func: DeleteClientsListener,
-            many: true
+            func: DeleteClientsListener
         });
     });
 
@@ -470,17 +496,15 @@ function LoadClientsEventListeners() {
     ClientsListeners.push({
         var: '.search-input',
         type: 'keydown',
-        func: SearchClientsListener,
-        many: false
+        func: SearchClientsListener
     })
 
     // Configura os eventos de paginação no container principal
     container.addEventListener('click', PaginationListener)
     ClientsListeners.push({
-        var: 'content',
+        var: '.content',
         type: 'click',
-        func: PaginationListener,
-        many: false
+        func: PaginationListener
     })
 
     // Configura um evento personalizado para limpar os listeners de busca
@@ -507,13 +531,17 @@ async function ListNextPageClients(start, offset, last){
     todosClientes = response.data.clientes
     renderClients(response.data.clientes)
 
+
     // Recalcula o número total de páginas
-    MaxPage = Math.ceil(response.data.total / 10)
+    const MaxPage = Math.ceil(response.data.total / 10)
 
     // Recria os controles de paginação
     CreatePagination(Number(start), MaxPage)
     // Atualiza o estado da paginação
     nextPage(Number(offset), last)
+    RemoveClientsListeners(ClientsListeners)
+    RemoveClientsListeners(SearchListeners)
+    LoadClientsEventListeners()
     return
 }
 
@@ -567,8 +595,9 @@ function CreatePagination(start, MaxPage){
     reverse.id = 'reverse-page'
     nav.appendChild(reverse)
 
+    const end = MaxPage - 2
     // Cria botões para as páginas (até 4 por vez)
-    for (let i = start; i <= start + 3; i++) {
+    for (let i = start; i <= start + end; i++) {
         if (i > Number(MaxPage)) break;
         const button = document.createElement('button')
         button.textContent = i
@@ -584,11 +613,13 @@ function CreatePagination(start, MaxPage){
     }
 
     // Botão de reticências (...) para exibir mais páginas
-    const reticences = document.createElement('button')
-    reticences.textContent = '...'
-    reticences.className = 'pagination-more-button'
-    reticences.id = 'reticences-page'
-    nav.appendChild(reticences)
+    if (MaxPage > 10) {
+        const reticences = document.createElement('button')
+        reticences.textContent = '...'
+        reticences.className = 'pagination-more-button'
+        reticences.id = 'reticences-page'
+        nav.appendChild(reticences)
+    }
 
     // Botão para ir diretamente à última página (se houver mais páginas)
     if (MaxPage > start){
@@ -802,7 +833,7 @@ function RenderModalContact(data, id) {
     const exitBtn = modal.querySelector('.btn-exit')
     const confirmBtn = modal.querySelector('.btn-register')
 
-    function Confirm(event) {
+    function ConfirmSend(event) {
         event.preventDefault()
         body = {}
         ModalInputs.forEach(item => {
@@ -825,7 +856,7 @@ function RenderModalContact(data, id) {
         }
 
         exitBtn.removeEventListener('click', closeEdit)
-        confirmBtn.removeEventListener('click', Confirm)
+        confirmBtn.removeEventListener('click', ConfirmSend)
     }, {once: true})
 
     modal.addEventListener('cancel', () => {
@@ -837,7 +868,7 @@ function RenderModalContact(data, id) {
 
     // Configura o botão de confirmação (atualmente exibe mensagem de desenvolvimento)
     confirmBtn.textContent = 'Confirmar'
-    confirmBtn.addEventListener('click', Confirm)
+    confirmBtn.addEventListener('click', ConfirmSend)
 
     // Exibe o modal
     modal.showModal();

@@ -326,6 +326,52 @@ def InsertNewContactDB(data):
         logger.exception('Erro com a função GetUniqueContact')
         return HandleExceptions(e)
 
+def UpdateContactDB(id, body):
+    if not connectionPool:
+        logger.error('Pool de Conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    if not isinstance(id, str):
+        logger.error('Valor id em UpdateContactDB precisa ser uma string')
+        return CreateError(400, 'Formato inválido')
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                Contacts = [
+                    'telefone', 'cpf', 'nome', 'gasto', 'email', 'visitas'
+                ]
+                data = {
+                    key : value
+                    for key, value in body.items() if key in Contacts
+                }
+                logger.info(f'data: {data}')
+                    
+                values = tuple( value for value in data.values())
+                logger.info(f'values: {values}')
+                assignments = [
+                    sql.SQL('{0} = {1}').format(sql.Identifier(key), sql.Placeholder())
+                    for key in data.keys()
+                ]
+                fields = sql.SQL(', ').join(assignments)
+                logger.info(f'fields: {fields}')
+
+                query = sql.SQL('UPDATE contacts SET {fields} WHERE clientid = %s RETURNING clientid').format(
+                    fields=fields
+                )
+                cursor.execute(query, values + (id,))
+
+                results = cursor.fetchone()
+                if not results:
+                    logger.info('Usuário já cadastrado')
+                    return CreateError(409, 'Outro usuário já possui essas informações')
+
+                conn.commit()
+                return CreateResponse('Usuário atualizado com sucesso')
+
+    except Exception as e:
+        logger.error('Erro com a função UpdateContactDB', exc_info=True)
+        return HandleExceptions(e)
 
 def DeleteContactDB(id):
     if not connectionPool:
