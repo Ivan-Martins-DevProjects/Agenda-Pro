@@ -48,6 +48,7 @@ const ModalInputs = [
  * @param {Array} data - Array de objetos contendo informações sobre os listeners a serem removidos
  */
 function CloseModalRemoveListeners(modal, data) {
+    console.log('Listeners Recebidos: ' + data.length);
     // Fecha o modal se ele existir
     if (modal) {
         modal.close()
@@ -61,6 +62,7 @@ function CloseModalRemoveListeners(modal, data) {
             element.removeEventListener(item.type, item.func)
         })
     }
+    console.log('Listeners Removidos: ' + data.length);
 }
 
 /**

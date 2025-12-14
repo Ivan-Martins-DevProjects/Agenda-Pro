@@ -238,7 +238,7 @@ body {
     left: 0;
     margin-top: 1rem;
     width: 250px;
-    height: 48vh;
+    height: 55vh;
     background: #F2F4F5;
     backdrop-filter: blur(12px);
     overflow: hidden;
@@ -285,9 +285,7 @@ body {
 
 .side-menu li a:hover {
     background-color: #E4E5E9;
-    height: 5px;
-    transform: scale(1.2);
-    padding: 1.5rem;
+    padding: 1rem;
     font-weight: bolder;
     color: #22252A;
 }
