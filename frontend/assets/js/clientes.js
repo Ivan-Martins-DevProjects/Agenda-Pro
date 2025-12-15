@@ -1,3 +1,6 @@
+import { api_url, token } from './index.js'
+import ErrorModal from './index.js'
+
 // Seleciona todos os elementos com a classe 'menu-link' para manipulação do menu de navegação
 const menuLinks = document.querySelectorAll('.menu-link')
 // Seleciona o container principal onde o conteúdo dinâmico será inserido
@@ -83,7 +86,7 @@ function RemoveClientsListeners(data) {
         console.log(error);
     }
 }
-async function carregarClientes() {
+export default async function carregarClientes() {
     // Remove o estilo de opção ativa de todos os itens do menu
     menuLinks.forEach(l => l.classList.remove('active'))
     // Adiciona o estilo de opção ativa ao item Clientes do menu
@@ -576,7 +579,7 @@ async function GetAllClients(offset) {
         return clientes
 
     } catch (error) {
-        ErrorModal(clients.message, 'Erro ao Listar todos os clientes')
+        ErrorModal(error, 'Erro ao Listar todos os clientes')
         return
     }
 }

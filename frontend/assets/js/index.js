@@ -1,18 +1,28 @@
+import carregarClientes from './clientes.js'
+import RenderServices from './services.js'
 
 // Obtém referência ao botão do Dashboard no menu lateral
 const btnDashboard = document.getElementById('page-dashboard')
 
 // URL base da API utilizada para requisições
-const api_url = 'http://localhost:8585'
+export const api_url = 'http://localhost:8585'
 
 // Seleciona todos os links do menu lateral
-menuLinks = document.querySelectorAll('.menu-link')
+const menuLinks = document.querySelectorAll('.menu-link')
 
 // Seleciona o container principal onde o conteúdo das páginas será renderizado
-container = document.getElementById('content-container');
+var container = document.getElementById('content-container');
 
 // Obtém o token de acesso armazenado na sessão
-var token = sessionStorage.getItem('access-token')
+export const token = sessionStorage.getItem('access-token')
+
+const servicesList = [
+    { id: 1, name: 'Corte Degradê', description: 'Corte moderno com degrade na lateral e posterior, finalizado com loção pós-barba.', price: 40.00, duration: 30 },
+    { id: 2, name: 'Barba Completa', description: 'Alinhamento, navalha, toalha quente e tônicos para uma barba impecável.', price: 30.00, duration: 25 },
+    { id: 3, name: 'Pacote Executivo', description: 'Corte + Barba + Máscara facial relaxante. O tratamento completo para o cavalheiro.', price: 80.00, duration: 60 },
+    { id: 4, name: 'Sombrancelha', description: 'Design e alinhamento de sobrancelha com pinça ou navalha.', price: 15.00, duration: 10 }
+]
+
 
 // Executa a função PageDashboard assim que o DOM estiver totalmente carregado
 window.addEventListener('DOMContentLoaded', () => {
@@ -104,7 +114,8 @@ async function PageClients(btn) {
  */
 function PageServices(btn) {
     ClearActiveSideMenu(btn)
-    PageInConstruction()
+    RenderServices(servicesList)
+    // PageInConstruction()
     return
 }
 
@@ -164,7 +175,7 @@ async function LoadDashboard() {
  * @param {string} message - Mensagem de erro
  * @param {string} title - Título do erro
  */
-function ErrorModal(message, title) {
+export default function ErrorModal(message, title) {
     const errorModal = document.getElementById('error-modal-template')
     const errorClone = errorModal.content.cloneNode(true)
 
@@ -179,7 +190,7 @@ function ErrorModal(message, title) {
         CloseModalRemoveListeners(undefined, data)
     }
 
-    data = []
+    const data = []
 
     // Adiciona evento de clique no botão de fechar
     const exitBtn = document.querySelector('.btn-cancel-exclude')
