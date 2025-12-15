@@ -87,6 +87,7 @@ async function carregarClientes() {
     // Remove o estilo de opção ativa de todos os itens do menu
     menuLinks.forEach(l => l.classList.remove('active'))
     // Adiciona o estilo de opção ativa ao item Clientes do menu
+    const btnClientes = document.getElementById('page-clientes')
     btnClientes.classList.add('active')
 
     // Requisição à API para obter a primeira página de clientes (limite de 10 por página)
