@@ -106,11 +106,13 @@ export default async function carregarClientes() {
     document.dispatchEvent(ActionComplete)
 
     // Calcula o número total de páginas arredondando para cima
-    const MaxPage = Math.ceil(resposta.data.total / 10)
-    // Cria os controles de paginação
-    CreatePagination(1, MaxPage)
-    // Recarrega os event listeners para incluir os botões de paginação
-    LoadClientsEventListeners()
+    if (todosClientes.length > 1){
+        const MaxPage = Math.ceil(resposta.data.total / 10)
+        // Cria os controles de paginação
+        CreatePagination(1, MaxPage)
+    }
+        // Recarrega os event listeners para incluir os botões de paginação
+        LoadClientsEventListeners()
     return
 }
 
@@ -161,11 +163,19 @@ async function NewContactAPI(event) {
     event.preventDefault()
 
     // Cria um objeto com os dados do formulário
-    body = {}
+    const body = {};
     ModalInputs.forEach(id => {
-        body[id] = document.getElementById(id).value
-    })
+    const value = document.getElementById(id).value;
+    const isNumericField = ['numero', 'visitas', 'gasto'].includes(id);
 
+    if (isNumericField) {
+        const numValue = parseInt(value, 10);
+
+        body[id] = isNaN(numValue) ? 0 : numValue;
+    } else {
+        body[id] = value;
+    }
+});
     try {
         // Envia os dados para a API
         const response = await fetch(`${api_url}/api/clients/create`, {
@@ -217,8 +227,9 @@ async function EditContactAPI(id, data) {
         if (!response.ok && response.status === 401){
             alert('Acesso no autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
-        } else if (!response.ok) {
-            throw new Error(content.message)
+        } else if (!response.ok && response.status === 409) {
+            console.log(response);
+            throw new Error('Usuário já cadastrado')
         }
 
         alert('Contato atualizado com sucesso')
@@ -841,7 +852,7 @@ function RenderModalContact(data, id) {
 
     function ConfirmSend(event) {
         event.preventDefault()
-        body = {}
+        const body = {}
         ModalInputs.forEach(item => {
                 body[item] = modal.querySelector('#' + item).value
         })
