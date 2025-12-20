@@ -96,3 +96,4 @@ def SearchContactAPI(id):
 
     return jsonify(response), 200
 
+

@@ -52,7 +52,7 @@ services:
       watch:
         - action: sync
           path: ./backend/python
-          target: /python
+          target: /app
           ignore:
             - __pycache__/
             - logs/

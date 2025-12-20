@@ -8,9 +8,7 @@ from psycopg import errors, sql
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from src.validation.errors import CreateResponse
-
-from ..validation import CreateError
+from ..validation import CreateError, CreateResponse
 load_dotenv()
 
 # Captura o nome do arquivo para registro dos logs
@@ -40,12 +38,12 @@ def IfNull(valor, default='N/A'):
 def HandleExceptions(e):
     for errType, (status, message) in DatabaseErrorMap.items():
         if isinstance(e, errType):
-            return CreateError(status, message)
+            return  CreateError(status, message)
 
     if isinstance(e, psycopg.DatabaseError):
-        return CreateError(500, 'Erro interno do servidor')
+        return  CreateError(500, 'Erro interno do servidor')
 
-    return CreateError(500, 'Erro inesperado')
+    return  CreateError(500, 'Erro inesperado')
 
 # Inicializa uma variável global para o pool de conexões
 connectionPool = None
@@ -67,8 +65,7 @@ def CreatePool():
         # em caso de erro retorna o pool como None
         connectionPool = None
 
-# Função responsável por checar as permissões do usuário
-def CheckPermission(id, permission):
+def RequestPermissionsDB(id):
     # Valida se o Pool de Conexões foi criado
     if not connectionPool:
         logger.error('Pool de Conexões não inicializado', exc_info=True)
@@ -84,12 +81,12 @@ def CheckPermission(id, permission):
 
     try:
         with connectionPool.connection() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(row_factory=dict_row) as cursor:
             # Obtém a conexão do pool de conexões
                 logger.debug('Conexão obtida do pool')
 
                 # Define a query e a executa
-                query = sql.SQL('SELECT {column} FROM roles WHERE user_id = %s').format(column=sql.Identifier(permission))
+                query = 'SELECT * FROM roles WHERE user_id = %s'
                 cursor.execute(query, (id,))
 
                 # Retorna o resultado da query
@@ -249,7 +246,7 @@ def InsertNewContactDB(data):
                 logger.debug('Conexão obtida do pool')
                 
                 userid = data['userid']
-                clientId = data['clientID']
+                clientId = data['contactID']
                 nome = data['nome']
                 email = data['email']
                 telefone = data['telefone']
@@ -405,7 +402,7 @@ def DeleteContactDB(id):
 
 
 
-def SearchContactDB(id):
+def SearchContactDB(id, text, role):
     if not connectionPool:
         logger.error('Pool de Conexões não inicializado', exc_info=True)
         return CreateError(500, 'Erro interno do servidor')
@@ -417,21 +414,40 @@ def SearchContactDB(id):
     try:
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
-                query = """
-                SELECT 
-                    c.clientid,
-                    c.nome
-                FROM contacts c
-                LEFT JOIN contacts_address a ON a.clientid = c.clientid
-                WHERE 
-                    c.nome ILIKE '%%' || %s || '%%'
-                    OR a.rua ILIKE '%%' || %s || '%%'
-                    OR a.bairro ILIKE '%%' || %s || '%%'
-                    OR a.cidade ILIKE '%%' || %s || '%%'
-                    OR a.numero::text ILIKE '%%' || %s || '%%';
+                if role == 'admin':
+                    query = """
+                    SELECT 
+                        c.clientid,
+                        c.nome
+                    FROM contacts c
+                    LEFT JOIN contacts_address a ON a.clientid = c.clientid
+                    WHERE c.bussines_id = %s
+                      AND (
+                            c.nome ILIKE '%%' || %s || '%%'
+                         OR a.rua ILIKE '%%' || %s || '%%'
+                         OR a.bairro ILIKE '%%' || %s || '%%'
+                         OR a.cidade ILIKE '%%' || %s || '%%'
+                         OR a.numero::text ILIKE '%%' || %s || '%%'
+                      );
+                """
+                else:
+                    query = """
+                    SELECT 
+                        c.clientid,
+                        c.nome
+                    FROM contacts c
+                    LEFT JOIN contacts_address a ON a.clientid = c.clientid
+                    WHERE c.userid = %s
+                      AND (
+                            c.nome ILIKE '%%' || %s || '%%'
+                         OR a.rua ILIKE '%%' || %s || '%%'
+                         OR a.bairro ILIKE '%%' || %s || '%%'
+                         OR a.cidade ILIKE '%%' || %s || '%%'
+                         OR a.numero::text ILIKE '%%' || %s || '%%'
+                      );
                 """
 
-                cursor.execute(query, (id, id, id, id, id))
+                cursor.execute(query, (id, text, text, text, text, text))
                 result = cursor.fetchall()
 
                 if not result:
@@ -442,3 +458,6 @@ def SearchContactDB(id):
     except Exception as e:
         logger.exception('Erro ao buscar termo de pesquisa na função SearchContactDB')
         return HandleExceptions(e)
+
+result = RequestPermissionsDB('1')
+print(result)

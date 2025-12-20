@@ -2,202 +2,171 @@ import logging
 import uuid
 
 from flask import request
+from pydantic import ValidationError
 
 from src.security import auth
 from src.validation import errors
 from src.internal import classes
-from src.validation.checkTypes import isEmail, isName, isNumber
 
 logger = logging.getLogger(__name__)
 
-def TokenValidate():
-# Valida e decodifica o token recebido
-    payload = auth.ValidateJWT()
-    if not payload or not isinstance(payload, dict):
-        logger.error('Erro ao decodificar JWT')
-        return errors.CreateError(500, 'Erro interno de servidor')
+def HeaderHandler(scope):
+    CheckJWT = auth.ValidateJWT()
+    if CheckJWT['status'] == 'error':
+        return errors.CreateError(401, 'Sessão não encontrada')
 
-    elif payload['status'] == 'error':
-        return payload
-    
-    # Verificação extra para garantir a conformidade dos valores
-    data:dict = payload['data']
-    if not data:
-        logger.error('Erro com a extração de valores do jwt', exc_info=True)
-        return errors.CreateError(500, "Erro interno do servidor")
-    
-    response = {
+    token = CheckJWT['data']
+    check = classes.AuthServices(token)
+
+    user = check.Autenticar()
+    if isinstance(user, dict):
+        return user
+
+    hasPermission = user.is_permitted(scope)
+    if isinstance(hasPermission, dict):
+        return hasPermission
+
+    userServices = classes.UserServices(user)
+    AccessID = user.true_id()
+
+    data = {
+        'userServices': userServices,
+        'AccessID': AccessID
+    }
+
+    return {
         'status': 'success',
         'data': data
     }
 
-    return response
-
-
 def ListClients():
-    # valida o token e converte a estrutura em json
-    response = TokenValidate()
+    AuthHeader = HeaderHandler('read_contacts')
+    if AuthHeader['status'] == 'error':
+        return AuthHeader
 
-    # Tratamento de erros em caso de problema com o token
-    if response['status'] == 'error':
-        if response['code'] == 401 or response['code'] == 500:
-            return response
-        elif response['code'] == 409:
-            return errors.CreateError(401, 'Requisição não autorizada')
+    userServices = AuthHeader['data']['userServices']
+    AccessID = AuthHeader['data']['AccessID']
 
-
-    # Parametrização dos valores recebidos pelo token
-    data = response['data']
-    id = data['ID']
-    BussinesID = data['BussinesID']
-    role = data['Role']
-
+    
     paramOffset = request.args.get('offset', default=0, type=int)
     offset = (paramOffset - 1) * 10
 
-    # Cria o usuário com base no payload recebido
-    user = classes.User(ID=id, BussinesID=BussinesID, Role=role)
-
-    # Valida se o usuário tem permissão para essa tarefa
-    check = user.Allowed('read_contacts')
-    if check is False:
-        return errors.CreateError(401, 'Usuário não autorizado')
-    elif check['status'] == 'error':
-        return check
-
     # Executa a função para receber a lista de clientes
-    clientes = user.GetAllClients(offset)
-    return clientes
+    clients = userServices.get_all_clients(
+        offset=offset,
+        ID=AccessID
+    )
+    return clients
 
 
 def GetContact(contactId):
-    response = TokenValidate()
+    AuthHeader = HeaderHandler('read_contacts')
+    if AuthHeader['status'] == 'error':
+        return AuthHeader
 
-    if response['status'] == 'error':
-        return response
+    userServices = AuthHeader['data']['userServices']
+    AccessID = AuthHeader['data']['AccessID']
 
-    data = response['data']
-    id = data['ID']
-    BussinesID = data['BussinesID']
-    role = data['Role']
+    CheckUserFromContact = userServices.validate_user_from_contact(
+        contactID=contactId,
+        ID=AccessID
+    )
+    if isinstance(CheckUserFromContact, dict):
+        return CheckUserFromContact
 
-    # Cria o usuário com base no payload recebido
-    user = classes.User(ID=id, BussinesID=BussinesID, Role=role)
-    response = user.GetUniqueContact(contactId)
-
+    response = userServices.get_unique_contact(
+        contactId=contactId,
+        UserID=AccessID
+    )
     return response
 
 
 def InsertContact():
-    response = TokenValidate()
-    if response['status'] == 'error':
-        return response
+    AuthHeader = HeaderHandler('write_contacts')
+    if AuthHeader['status'] == 'error':
+        return AuthHeader
 
-    data = response['data']
-    id = data['ID']
-    BussinesID = data['BussinesID']
-    nome = data['Nome']
-    role = data['Role']
-
-    # Cria o usuário com base no payload recebido
-    user = classes.User(ID=id, BussinesID=BussinesID, Role=role)
+    userServices = AuthHeader['data']['userServices']
 
     body = request.get_json()
-
-    clientId = uuid.uuid4()
-    chaves = [
-        'nome', 'email', 'telefone','obs', 'cpf', 
-        'rua', 'numero', 'bairro', 'cidade'
-    ]
-
-    data = {
-        "userid" : id,
-        "bussinesId" : BussinesID,
-        "clientID" : str(clientId),
-        "respName" : nome
+    contact_data = {
+        "userid": str(userServices.user.ID),
+        "bussinesId": userServices.user.BussinesID,
+        "contactID": str(uuid.uuid4()),
+        "nome": body.get('nome'),
+        "email": body.get('email'),
+        "telefone": body.get('telefone'),
+        "obs": body.get('obs'),
+        "cpf": body.get('cpf'),
+        "rua": body.get('rua'),
+        "numero": body.get('numero'),
+        "bairro": body.get('bairro'),
+        "cidade": body.get('cidade'),
+        "gasto": body.get('gasto'),
+        "visitas": body.get('visitas'),
     }
 
-    for chave in chaves:
-        valor = body.get(chave) or ''
-        if chave == 'numero':
-            valor = body.get(chave) or 0
-
-        elif chave == 'email':
-            resp = isEmail(body.get(chave))
-            if resp is False:
-                return errors.CreateError(400, 'Email Inválido')
-            valor = body.get(chave)
-
-        elif chave == 'nome':
-            resp = isName(body.get(chave))
-            if resp is False:
-                return errors.CreateError(400, 'Formato de Nome inválido')
-            valor = body.get(chave)
-
-        elif chave == 'telefone':
-            resp = isNumber(body.get(chave))
-            if resp is False:
-                return errors.CreateError(400, 'Número de telefone inválido')
-            valor = body.get(chave)
-
-        elif chave == 'respName':
-            valor = nome
-        data[chave] = valor
-
-    insert = user.InsertNewContact(data)
-    if insert['status'] == 'error':
-        return insert
-
-    return insert
+    try:
+        validated_client = classes.Clients(**contact_data)
+    except ValidationError as e:
+        return errors.CreateError(404, e)
+    
+    data = validated_client.model_dump()
+    data['bussinesId'] = userServices.user.BussinesID
+    data['respName'] = userServices.user.Nome
+    
+    response = userServices.insert_new_contact(data)
+    return response
 
 def UpdateContact(id):
-    response = TokenValidate()
-    if response['status'] == 'error':
-        return response
+    AuthHeader = HeaderHandler('write_contacts')
+    if AuthHeader['status'] == 'error':
+        return AuthHeader
 
-    data = response['data']
-    userId = data['ID']
-    BussinesID = data['BussinesID']
-    role = data['Role']
+    userServices = AuthHeader['data']['userServices']
+    AccessID = AuthHeader['data']['AccessID']
+
+    CheckUserFromContact = userServices.validate_user_from_contact(
+        contactID=id,
+        ID=AccessID
+    )
+    if isinstance(CheckUserFromContact, dict):
+        return CheckUserFromContact
 
     body = request.get_json()
-    user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
-    response = user.EditContact(id, body)
-    if not response:
-        logger.error('Finção UpdateContact não retornou nada')
-        return errors.CreateError(500, 'Erro interno do servidor')
     
+    response = userServices.update_contact(id, body)
     return response
+
 
 def DeleteContact(id):
-    response = TokenValidate()
-    if response['status'] == 'error':
-        return response
+    AuthHeader = HeaderHandler('delete_contact')
+    if AuthHeader['status'] == 'error':
+        return AuthHeader
 
-    data = response['data']
-    userId = data['ID']
-    BussinesID = data['BussinesID']
-    role = data['Role']
+    userServices = AuthHeader['data']['userServices']
+    AccessID = AuthHeader['data']['AccessID']
 
-    user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
-    response = user.DeleteContact(id)
-    if not response:
-        logger.error('Função DeleteContact não retornou nada')
-        return errors.CreateError(500, 'Erro interno do servidor')
-
+    CheckUserFromContact = userServices.validate_user_from_contact(
+        contactID=id,
+        ID=AccessID
+    )
+    if isinstance(CheckUserFromContact, dict):
+        return CheckUserFromContact
+    response = userServices.delete_contact(id)
     return response
 
-def SearchContact(id):
-    response = TokenValidate()
-    if response['status'] == 'error':
-        return response
+def SearchContact(text):
+    AuthHeader = HeaderHandler('read_contacts')
+    if AuthHeader['status'] == 'error':
+        return AuthHeader
 
-    data = response['data']
-    userId = data['ID']
-    BussinesID = data['BussinesID']
-    role = data['Role']
+    userServices = AuthHeader['data']['userServices']
+    AccessID = AuthHeader['data']['AccessID']
 
-    user = classes.User(ID=userId, BussinesID=BussinesID, Role=role)
-    response = user.SearchContact(id)
+    response = userServices.search_contact(
+        id=AccessID,
+        text=text
+    )
     return response
 
