@@ -29,10 +29,10 @@ DatabaseErrorMap = {
 }
 
 def IfNull(valor, default='N/A'):
-            if not valor:
-                return default
+    if not valor:
+        return default
 
-            return valor
+    return valor
 
 # Função que lida com os exeptions, associando-os ao item relativo dentro do map de erros
 def HandleExceptions(e):
@@ -91,7 +91,7 @@ def RequestPermissionsDB(id):
 
                 # Retorna o resultado da query
                 result = cursor.fetchone()
-                return CreateResponse(result)
+                return CreateResponse(result, 200)
 
     # Registra qualquer erro com a consulta
     except Exception as e:
@@ -216,7 +216,7 @@ def GetUniqueContact(contactId, id, role):
                 if not result:
                     return CreateError(404, 'Nenhum contato encontrado')
 
-                response = CreateResponse(result)
+                response = CreateResponse(result, 200)
 
                 return response
 
@@ -298,7 +298,6 @@ def InsertNewContactDB(data):
                     userid, clientId, nome, email, 'ativo', telefone, 0, 0, obs, respName, bussinesId, cpf,)
                 )
                 resultContacts = cursor.fetchone()
-                print(resultContacts)
 
                 if not resultContacts:
                     logger.error('Usuário já cadastrado')
@@ -314,7 +313,7 @@ def InsertNewContactDB(data):
                     "id" : clientId
                 }
 
-                response = CreateResponse(data)
+                response = CreateResponse(200, data)
 
                 return response
 
@@ -342,16 +341,13 @@ def UpdateContactDB(id, body):
                     key : value
                     for key, value in body.items() if key in Contacts
                 }
-                logger.info(f'data: {data}')
                     
                 values = tuple( value for value in data.values())
-                logger.info(f'values: {values}')
                 assignments = [
                     sql.SQL('{0} = {1}').format(sql.Identifier(key), sql.Placeholder())
                     for key in data.keys()
                 ]
                 fields = sql.SQL(', ').join(assignments)
-                logger.info(f'fields: {fields}')
 
                 query = sql.SQL('UPDATE contacts SET {fields} WHERE clientid = %s RETURNING clientid').format(
                     fields=fields
@@ -364,7 +360,7 @@ def UpdateContactDB(id, body):
                     return CreateError(409, 'Outro usuário já possui essas informações')
 
                 conn.commit()
-                return CreateResponse('Usuário atualizado com sucesso')
+                return CreateResponse(201, 'Usuário atualizado com sucesso')
 
     except Exception as e:
         logger.error('Erro com a função UpdateContactDB', exc_info=True)
@@ -394,7 +390,7 @@ def DeleteContactDB(id):
                     logger.error('Erro ao deletar contato da tabela contatos')
                     return CreateError(500, 'Erro interno do servidor')
 
-                return CreateResponse('Usuário excluído com sucesso')
+                return CreateResponse(200, 'Usuário excluído com sucesso')
 
     except Exception as e:
         logger.exception('Erro com a função DeleteContactDB')
@@ -451,13 +447,11 @@ def SearchContactDB(id, text, role):
                 result = cursor.fetchall()
 
                 if not result:
-                    return CreateResponse([])
+                    return CreateResponse([], 200)
 
-                return CreateResponse(result)
+                return CreateResponse(result, 200)
 
     except Exception as e:
         logger.exception('Erro ao buscar termo de pesquisa na função SearchContactDB')
         return HandleExceptions(e)
 
-result = RequestPermissionsDB('1')
-print(result)

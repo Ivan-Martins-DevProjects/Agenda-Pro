@@ -1,3 +1,7 @@
+function ListServices(params) {
+
+}
+
 export default function RenderServices(services) {
     const content = document.querySelector('.content')
 

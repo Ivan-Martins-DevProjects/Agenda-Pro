@@ -121,24 +121,22 @@
 
 
             <!-- Modal de mensagem de erro -->
-            <template id="error-modal-template">
-                    <div class="modal-overlay">
-                        <div class="modal-box">
-                            <button class="close-modal-btn">&times;</button>
-                            <div class="modal-icon"><i class="fa fa-exclamation-circle" style="color: red;"></i></div>
-                            <div class="modal-title">
-                                <p id="modal-code">Erro ao Autenticar</p>
-                            </div>
-                            <div class="modal-message">
-                                <p id="modal-message"></p>
-                            </div>
-                            <div class="error-buttons">
-                                <!-- <button class="btn-confirm-exclude">Confirmar</button> -->
-                                <button class="btn-cancel-exclude">Cancelar</button>
-                            </div>
+            <dialog id="error-modal-template">
+                    <div class="modal-box">
+                        <button class="close-modal-btn">&times;</button>
+                        <div class="modal-icon"><i class="fa fa-exclamation-circle" style="color: red;"></i></div>
+                        <div class="modal-title">
+                            <p id="modal-code">Erro ao Autenticar</p>
+                        </div>
+                        <div class="modal-message">
+                            <p id="modal-message"></p>
+                        </div>
+                        <div class="error-buttons">
+                            <!-- <button class="btn-confirm-exclude">Confirmar</button> -->
+                            <button class="btn-cancel-exclude">Cancelar</button>
                         </div>
                     </div>
-            </template>
+            </dialog>
 
 
     <!-- Modal de Cadastro de clientes -->

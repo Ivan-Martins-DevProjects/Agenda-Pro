@@ -1,10 +1,11 @@
 import logging
-from flask import Flask, json, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from src.internal import database
+from src.requests.request_builder import RequestBuilder
 from src.validation import *
-from src.handlers import dashboard, clients
+from src.handlers import dashboard, page_clients
 
 # Setup para mensagens de Logs
 SetupLogging()
@@ -29,70 +30,62 @@ def data():
     return jsonify(resultado)
 
 @app.route('/api/clients', methods=['GET'])
-def GetContactsAPI():
-    response = clients.ListClients()
+def list_contacts_api():
+    req_data = RequestBuilder.from_flask(request)
+
+    response = page_clients.list_contacts(req_data)
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
-    if response['status'] == 'error':
-        return jsonify(response), response['code']
-
-    return jsonify(response), 200
+    return jsonify(response), response['code']
 
 # Rota responsável por coletar informações de um único contato
 @app.route('/api/client/<id>/info', methods=['GET'])
-def GetContactAPI(id):
-    if id:
-        response = clients.GetContact(id)
-        if not response:
-            return CreateError(500, 'Erro interno do servidor')
-        if response['status'] == 'error':
-            return jsonify(response), response['code']
-
-        return jsonify(response), 200
+def get_contact_api(id):
+    if not id:
+        return CreateError(400, 'ID do cliente ausente')
     
-    logger.error('ID do contato, recebido na query, vazio')
-    return CreateError(400, 'ID do contato não enviado')
+    req_data = RequestBuilder.from_flask(request)
+    response = page_clients.get_contact(id, req_data)
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
+
+    return jsonify(response), response['code']
 
 # Rota responsável pela criação de novos clientes
 @app.route('/api/clients/create', methods=['POST'])
-def CreateContactAPI():
-    response = clients.InsertContact()
+def create_contact_api():
+    req_data = RequestBuilder.from_flask(request)
+    response = page_clients.insert_contact(req_data)
     if not response:
         return CreateError(500, 'Erro interno do servidor')
-    if response['status'] == 'error':
-        return jsonify(response), response['code']
 
-    return jsonify(response), 200
+    return jsonify(response), response['code']
 
 @app.route('/api/clients/delete/<id>', methods=['DELETE'])
-def DeleteContactAPI(id):
-    response = clients.DeleteContact(id)
+def delete_contact_api(id):
+    req_data = RequestBuilder.from_flask(request)
+    response = page_clients.delete_contact(id, req_data)
     if not response:
         return CreateError(500, 'Erro interno do servidor')
     
-    if response['status'] == 'error':
-        return jsonify(response), response['code']
-
-    return jsonify(response), 200
+    return jsonify(response), response['code']
 
 @app.route('/api/clients/update/<id>', methods=['PUT'])
 def EditContactAPI(id):
-    response = clients.UpdateContact(id)
+    req_data = RequestBuilder.from_flask(request)
+    response = page_clients.update_contact(id, req_data)
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
 
-    if response['status'] == 'error':
-        return jsonify(response), response['code']
-
-    return jsonify(response), 200
+    return jsonify(response), response['code']
 
 @app.route('/api/clients/search/<id>')
-def SearchContactAPI(id):
-    response = clients.SearchContact(id)
+def search_contact_api(id):
+    req_data = RequestBuilder.from_flask(request)
+    response = page_clients.search_contact(id, req_data)
     if not response:
         CreateError(500, 'Erro interno do servidor')
-
-    if response['status'] == 'error':
-        return jsonify(response), response['code']
 
     return jsonify(response), 200
 

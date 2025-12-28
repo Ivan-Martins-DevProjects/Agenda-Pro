@@ -1,4 +1,4 @@
-import carregarClientes from './clientes.js'
+import CloseModalRemoveListeners, {carregarClientes} from './clientes.js'
 import RenderServices from './services.js'
 
 // Obtém referência ao botão do Dashboard no menu lateral
@@ -177,23 +177,21 @@ async function LoadDashboard() {
  */
 export default function ErrorModal(message, title) {
     const errorModal = document.getElementById('error-modal-template')
-    const errorClone = errorModal.content.cloneNode(true)
 
     // Preenche modal com título e mensagem
-    errorClone.querySelector('#modal-code').textContent = title
-    errorClone.querySelector('#modal-message').textContent = message
-    document.body.appendChild(errorClone)
+    errorModal.querySelector('#modal-code').textContent = title
+    errorModal.querySelector('#modal-message').textContent = message
 
     // Função para fechar o modal
     function CloseModal(event) {
         event.preventDefault()
-        CloseModalRemoveListeners(undefined, data)
+        CloseModalRemoveListeners(errorModal, data)
     }
 
     const data = []
 
     // Adiciona evento de clique no botão de fechar
-    const exitBtn = document.querySelector('.btn-cancel-exclude')
+    const exitBtn = errorModal.querySelector('.btn-cancel-exclude')
     exitBtn.addEventListener('click', CloseModal)
     data.push({
         var: '.btn-cancel-exclude',
@@ -201,14 +199,17 @@ export default function ErrorModal(message, title) {
         func: CloseModal
     })
 
-    // Fecha o modal ao clicar no overlay
-    const overlay = document.querySelector('.modal-overlay')
-    overlay.addEventListener('click', CloseModal)
+    const close = errorModal.querySelector('.close-modal-btn')
+    close.addEventListener('click', CloseModal)
     data.push({
-        var: '.modal-overlay',
+        var: '.close-modal-btn',
         type: 'click',
         func: CloseModal
     })
+
+    errorModal.addEventListener('cancel', CloseModal, {once:true})
+
+    errorModal.showModal()
 }
 
 /**

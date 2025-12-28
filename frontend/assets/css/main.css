@@ -290,33 +290,37 @@ body {
     color: #22252A;
 }
 
-/* Modal de Erro */
-.modal-overlay {
+
+/* Dialog base */
+#error-modal-template {
+    border: none;
+    width: 500px;
+    background: transparent;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1200;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
+/* Backdrop nativo do dialog */
+#error-modal-template::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Caixa do modal */
 .modal-box {
     background-color: #fff;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     text-align: center;
-    position: relative; /* Necessário para posicionar o botão de fechar */
+    position: relative;
     max-width: 400px;
     width: 90%;
-    z-index: 1200;
     animation: fadeIn 0.3s ease-out;
 }
 
+/* Animação */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -328,6 +332,7 @@ body {
     }
 }
 
+/* Botão fechar */
 .close-modal-btn {
     position: absolute;
     top: 1px;
@@ -345,94 +350,26 @@ body {
 }
 
 .close-modal-btn:hover {
-    color: #fff;
+    color: #333;
 }
 
+/* Ícone */
 .modal-icon {
     font-size: 48px;
     margin-bottom: 1rem;
 }
 
+/* Texto */
 .modal-message p,
-.modal-title p{
-    margin: 0;
-    margin-bottom: 0.5rem;
-    color: #555;
-    font-size: 18px;
-    font-weight: bold;
-}
-/* Modal de Erro */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-box {
-    background-color: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    text-align: center;
-    position: relative; /* Necessário para posicionar o botão de fechar */
-    max-width: 400px;
-    width: 90%;
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.close-modal-btn {
-    position: absolute;
-    top: 1px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
-    background: none;
-    border: none;
-    font-size: 28px;
-    color: #aaa;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.close-modal-btn:hover {
-    color: #fff;
-}
-
-.modal-icon {
-    font-size: 48px;
-    margin-bottom: 1rem;
-}
-
-.modal-message p,
-.modal-title p{
-    margin: 0;
-    margin-bottom: 0.5rem;
+.modal-title p {
+    margin: 0 0 0.5rem;
     color: #555;
     font-size: 18px;
     font-weight: bold;
 }
 
-.error-buttons{
+/* Botões */
+.error-buttons {
     display: flex;
     justify-content: center;
     gap: 35px;
@@ -450,7 +387,7 @@ body {
     transition: all 0.3s ease;
 }
 
-.error-buttons button:hover{
+.error-buttons button:hover {
     transform: scale(1.4);
 }
 
@@ -463,3 +400,4 @@ body {
     background-color: #E63F3F;
     font-weight: bold;
 }
+

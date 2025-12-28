@@ -20,10 +20,11 @@ def CreateError(code, message):
     return dict
 
 
-def CreateResponse(message):
+def CreateResponse(message, code):
 
     dict = {
         "status": "success",
+        "code": code,
         "data": message
     }
 

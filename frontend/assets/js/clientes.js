@@ -50,7 +50,7 @@ const ModalInputs = [
  * @param {HTMLElement} modal - Elemento do modal a ser fechado
  * @param {Array} data - Array de objetos contendo informações sobre os listeners a serem removidos
  */
-function CloseModalRemoveListeners(modal, data) {
+export default function CloseModalRemoveListeners(modal, data) {
     console.log('Listeners Recebidos: ' + data.length);
     // Fecha o modal se ele existir
     if (modal) {
@@ -86,7 +86,7 @@ function RemoveClientsListeners(data) {
         console.log(error);
     }
 }
-export default async function carregarClientes() {
+export async function carregarClientes() {
     // Remove o estilo de opção ativa de todos os itens do menu
     menuLinks.forEach(l => l.classList.remove('active'))
     // Adiciona o estilo de opção ativa ao item Clientes do menu
@@ -94,7 +94,7 @@ export default async function carregarClientes() {
     btnClientes.classList.add('active')
 
     // Requisição à API para obter a primeira página de clientes (limite de 10 por página)
-    const resposta = await GetAllClients(1)
+    const resposta = await GetAllClients(0)
 
     // Armazena os clientes recebidos na variável global
     todosClientes = resposta.data.clientes
@@ -196,7 +196,7 @@ async function NewContactAPI(event) {
             return
         } else if (!response.ok) {
             modal.close()
-            throw new Error(content.message)
+            throw new Error('Verifique se digitou corretamente')
         }
 
         // Sucesso na criação do cliente
@@ -208,6 +208,7 @@ async function NewContactAPI(event) {
 
     } catch (error) {
         // Exibe modal de erro em caso de falha
+        modal.close()
         ErrorModal(error, 'Erro ao criar usuário')
         return
     }
@@ -235,8 +236,9 @@ async function EditContactAPI(id, data) {
         alert('Contato atualizado com sucesso')
         carregarClientes()
     } catch (error) {
-        ErrorModal(error, 'Erro ao atualizar informações do contato')
-        carregarClientes()
+        return error
+        // ErrorModal(error, 'Erro ao atualizar informações do contato')
+        // carregarClientes()
     }
 }
 /**
@@ -542,7 +544,7 @@ function LoadClientsEventListeners() {
  */
 async function ListNextPageClients(start, offset, last){
     // Requisita a página específica de clientes
-    const response = await GetAllClients(offset)
+    const response = await GetAllClients(offset - 1)
 
     // Atualiza a lista de clientes com os novos dados
     todosClientes = response.data.clientes
@@ -820,7 +822,7 @@ async function DeleteContact(id) {
         // Mensagem de sucesso
         alert('Contato excluído com sucesso')
     } catch (error) {
-        ErrorModal(error, 'Erro ao deletar usurio')
+        return error
     }
 }
 
@@ -850,14 +852,20 @@ function RenderModalContact(data, id) {
     const exitBtn = modal.querySelector('.btn-exit')
     const confirmBtn = modal.querySelector('.btn-register')
 
-    function ConfirmSend(event) {
+    async function ConfirmSend(event) {
         event.preventDefault()
         const body = {}
         ModalInputs.forEach(item => {
                 body[item] = modal.querySelector('#' + item).value
         })
 
-        EditContactAPI(id, body)
+        const response = await EditContactAPI(id, body)
+        if (response){
+            if (modal) {
+                modal.close()
+            }
+            ErrorModal(response, 'Erro ao editar usuário')
+        }
     }
 
     function closeEdit(event) {

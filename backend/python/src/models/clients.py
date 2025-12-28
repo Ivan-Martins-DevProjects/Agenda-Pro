@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 from dataclasses import dataclass
 from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, ValidationError, field_validator
 
 from src.validation import errors
 from src.internal import database
@@ -26,14 +26,28 @@ class ServiceLayer:
         response = database.GetUniqueContact(contactID, userID, role)
         return response
 
+    def services_errors(self, e):
+        error_list = {
+            ValidationError: (400, 'Requisição inválida')
+        }
+
+        for errType, (status, message) in error_list.items():
+            if isinstance(e, errType):
+                return errors.CreateError(status, message)
+
+        return errors.CreateError(500, 'Erro inesperado do servidro')
+
+
 class AuthServices:
     def __init__(self, JWT) -> None:
         self.token = JWT
         self.secret = os.getenv("JWT_KEY")
         self.ErrorMap = {
-            jwt.ExpiredSignatureError: (401, 'Assinatura expirada'),
-            jwt.InvalidSignatureError: (409, 'Erro ao verificar assinatura'),
-            jwt.InvalidTokenError: (401, 'Assinatura inválida')
+            jwt.ExpiredSignatureError: (401, 'Sessão expirada'),
+            jwt.InvalidSignatureError: (409, 'Erro ao verificar sessão'),
+            jwt.InvalidTokenError: (401, 'Sessão inválida'),
+            jwt.DecodeError: (401, 'Erro ao verificar sessão'),
+            ValueError: (401, 'Sessão inválida'),
         }
 
     def JwtErrors(self, e):
@@ -67,6 +81,7 @@ class AuthServices:
             Role =  payload['Role']
 
             permissions = database.RequestPermissionsDB(ID)
+
             if permissions['status'] == 'error':
                 return permissions
 
@@ -194,16 +209,23 @@ class UserServices:
         return True
 
     def insert_new_contact(self, data):
+        try:
+            Clients(**data)
+            response = self.repo.InsertNewContact(data)
+        except Exception as e:
+            logger.error('Payload da função insert_new_contact mal formatado', exc_info=True)
+            return self.services.services_errors(e)
+
         response = self.repo.InsertNewContact(data)
         return response
 
     def get_all_clients(self, offset, ID):
         clients = self.repo.ListClients(
-            offset=offset,
+            offset=offset * 10,
             ID=ID,
             Role=self.user.Role
         )
-        return errors.CreateResponse(clients)
+        return errors.CreateResponse(clients, 200)
 
     def get_unique_contact(self, contactId, UserID):
         response = self.repo.GetContact(
@@ -213,10 +235,16 @@ class UserServices:
         )
         return response
 
-    def update_contact(self, contactID, body):
+    def update_contact(self, contactID, data):
+        try:
+            Clients(**data)
+        except Exception as e:
+            logger.error('erro ao validar body recebido na função update_contact', exc_info=True)
+            return self.services.services_errors(e)
+
         response = self.repo.UpdateContact(
             ContactID=contactID,
-            data=body
+            data=data
         )
         return response
 
