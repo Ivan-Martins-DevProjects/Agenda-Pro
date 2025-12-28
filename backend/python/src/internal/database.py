@@ -420,10 +420,13 @@ def SearchContactDB(id, text, role):
                     WHERE c.bussines_id = %s
                       AND (
                             c.nome ILIKE '%%' || %s || '%%'
-                         OR a.rua ILIKE '%%' || %s || '%%'
-                         OR a.bairro ILIKE '%%' || %s || '%%'
-                         OR a.cidade ILIKE '%%' || %s || '%%'
-                         OR a.numero::text ILIKE '%%' || %s || '%%'
+                            OR c.email ILIKE '%%' || %s || '%%'
+                            OR c.cpf ILIKE '%%' || %s || '%%'
+                            OR c.telefone ILIKE '%%' || %s || '%%'
+                            OR a.rua ILIKE '%%' || %s || '%%'
+                            OR a.bairro ILIKE '%%' || %s || '%%'
+                            OR a.cidade ILIKE '%%' || %s || '%%'
+                            OR a.numero::text ILIKE '%%' || %s || '%%'
                       );
                 """
                 else:
@@ -436,14 +439,17 @@ def SearchContactDB(id, text, role):
                     WHERE c.userid = %s
                       AND (
                             c.nome ILIKE '%%' || %s || '%%'
-                         OR a.rua ILIKE '%%' || %s || '%%'
-                         OR a.bairro ILIKE '%%' || %s || '%%'
-                         OR a.cidade ILIKE '%%' || %s || '%%'
-                         OR a.numero::text ILIKE '%%' || %s || '%%'
+                            OR c.email ILIKE '%%' || %s || '%%'
+                            OR c.cpf ILIKE '%%' || %s || '%%'
+                            OR c.telefone ILIKE '%%' || %s || '%%'
+                            OR a.rua ILIKE '%%' || %s || '%%'
+                            OR a.bairro ILIKE '%%' || %s || '%%'
+                            OR a.cidade ILIKE '%%' || %s || '%%'
+                            OR a.numero::text ILIKE '%%' || %s || '%%'
                       );
                 """
 
-                cursor.execute(query, (id, text, text, text, text, text))
+                cursor.execute(query, (id, text, text, text, text, text, text, text, text))
                 result = cursor.fetchall()
 
                 if not result:
