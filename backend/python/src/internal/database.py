@@ -117,18 +117,16 @@ def GetClients(id, role, offset):
         with connectionPool.connection() as conn:
             with conn.cursor() as cursor:
                 # Coleta a conexão
-                logger.debug('Conexão obtida do pool')
-
-                query = """SELECT clientId, nome, email, telefone, last_contact, status, resp_name
-                FROM contacts
-                WHERE userid = %s LIMIT %s OFFSET %s"""
-                count = "SELECT COUNT(*) AS total FROM contacts WHERE userid = %s"
-
                 if role == 'admin':
                     query ="""SELECT clientId, nome, email, telefone, last_contact, status, resp_name
                 FROM contacts
                 WHERE bussines_id = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM contacts WHERE bussines_id = %s"
+                elif role == 'user':
+                    query = """SELECT clientId, nome, email, telefone, last_contact, status, resp_name
+                    FROM contacts
+                    WHERE userid = %s LIMIT %s OFFSET %s"""
+                    count = "SELECT COUNT(*) AS total FROM contacts WHERE userid = %s"
 
                 cursor.execute(query, (id, 10, int(offset)))
                 results:list = cursor.fetchall()
@@ -460,4 +458,58 @@ def SearchContactDB(id, text, role):
     except Exception as e:
         logger.exception('Erro ao buscar termo de pesquisa na função SearchContactDB')
         return HandleExceptions(e)
+#############################################################################
 
+def list_services_db(offset, id, role):
+    if not connectionPool:
+        logger.error('Pool de conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                if role == 'admin':
+                    query ="""SELECT id, nome, description, price, duration
+                FROM services
+                WHERE bussines_id = %s LIMIT %s OFFSET %s"""
+                    count = "SELECT COUNT(*) AS total FROM services WHERE bussines_id = %s"
+                elif role == 'user':
+                    query = """SELECT id, nome, description, price, duration
+                    FROM services
+                    WHERE userid = %s LIMIT %s OFFSET %s"""
+                    count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
+
+                cursor.execute(query, (id, 10, int(offset)))
+                services = cursor.fetchall()
+
+                response = {
+                    'total': 0,
+                    'services': []
+                }
+                if not services:
+                    return CreateResponse(response, 200)
+
+                cursor.execute(count, (id,))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                services_list= []
+                for result in services:
+                    services_list.append(result)
+
+                data = {
+                    'services': services_list,
+                    'total': total
+                }
+
+                return CreateResponse(data, 200)
+
+    except Exception as e:
+        logger.error('Erro com a função list_services_db', exc_info=True)
+        return HandleExceptions(e)

@@ -3,9 +3,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from src.internal import database
+from src.models import services
 from src.requests.request_builder import RequestBuilder
 from src.validation import *
-from src.handlers import dashboard, page_clients
+from src.handlers import dashboard, page_clients, page_services
 
 # Setup para mensagens de Logs
 SetupLogging()
@@ -33,7 +34,10 @@ def data():
 def list_contacts_api():
     req_data = RequestBuilder.from_flask(request)
 
-    response = page_clients.list_contacts(req_data)
+    handler = page_clients.ClientsHandler(
+        req_data=req_data
+    )
+    response = handler.list_contacts()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
@@ -46,7 +50,12 @@ def get_contact_api(id):
         return CreateError(400, 'ID do cliente ausente')
     
     req_data = RequestBuilder.from_flask(request)
-    response = page_clients.get_contact(id, req_data)
+
+    handler = page_clients.ClientsHandler(
+        req_data=req_data,
+        clientID=id
+    )
+    response = handler.get_contact()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
@@ -56,7 +65,11 @@ def get_contact_api(id):
 @app.route('/api/clients/create', methods=['POST'])
 def create_contact_api():
     req_data = RequestBuilder.from_flask(request)
-    response = page_clients.insert_contact(req_data)
+
+    handler = page_clients.ClientsHandler(
+        req_data=req_data
+    )
+    response = handler.insert_contact()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
@@ -65,7 +78,12 @@ def create_contact_api():
 @app.route('/api/clients/delete/<id>', methods=['DELETE'])
 def delete_contact_api(id):
     req_data = RequestBuilder.from_flask(request)
-    response = page_clients.delete_contact(id, req_data)
+
+    handler = page_clients.ClientsHandler(
+        req_data=req_data,
+        clientID=id
+    )
+    response = handler.delete_contact()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
     
@@ -74,19 +92,36 @@ def delete_contact_api(id):
 @app.route('/api/clients/update/<id>', methods=['PUT'])
 def EditContactAPI(id):
     req_data = RequestBuilder.from_flask(request)
-    response = page_clients.update_contact(id, req_data)
+
+    handler = page_clients.ClientsHandler(
+        req_data=req_data,
+        clientID=id
+    )
+    response = handler.update_contact()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
     return jsonify(response), response['code']
 
-@app.route('/api/clients/search/<id>')
-def search_contact_api(id):
+@app.route('/api/clients/search/<text>')
+def search_contact_api(text):
     req_data = RequestBuilder.from_flask(request)
-    response = page_clients.search_contact(id, req_data)
+
+    handler = page_clients.ClientsHandler(
+        req_data=req_data,
+        text=text
+    )
+    response = handler.search_contact()
     if not response:
         CreateError(500, 'Erro interno do servidor')
 
     return jsonify(response), 200
 
+@app.route('/api/services', methods=['GET'])
+def list_services_api():
+    req_data = RequestBuilder.from_flask(request)
+    response = page_services.list_services(req_data)
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
 
+    return response
