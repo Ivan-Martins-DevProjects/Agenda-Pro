@@ -37,26 +37,30 @@ def set_service_header_params(req_data, scope):
         logger.error('Erro com a função set_service_header_params', exc_info=True)
         return error_maps(e)
 
-def list_services(req_data):
-    try:
-        controlers = set_service_header_params(req_data, 'read_services')
-        if isinstance(controlers, dict):
-            return controlers
-        elif not controlers:
-            raise ValueError
+class ServicesHandler:
+    def __init__(self, req_data) -> None:
+        self.req_data = req_data
 
-        servicesControl = controlers.servicesControl
-        AccessID = controlers.AccessID
-        if not servicesControl:
-            raise ValueError
+    def list_services(self):
+        try:
+            controlers = set_service_header_params(self.req_data, 'read_services')
+            if isinstance(controlers, dict):
+                return controlers
+            elif not controlers:
+                raise ValueError
 
-        offset = int(req_data.params.get('offset', 0))
+            servicesControl = controlers.servicesControl
+            AccessID = controlers.AccessID
+            if not servicesControl:
+                raise ValueError
 
-        services_list = servicesControl.list_all_services(
-            offset=offset,
-            ID=AccessID
-        )
-        return services_list
-    except Exception as e:
-        logger.error('Erro com a função list_services')
-        return error_maps(e)
+            offset = int(self.req_data.params.get('offset', 0))
+
+            services_list = servicesControl.list_all_services(
+                offset=offset,
+                ID=AccessID
+            )
+            return services_list
+        except Exception as e:
+            logger.error('Erro com a função list_services')
+            return error_maps(e)

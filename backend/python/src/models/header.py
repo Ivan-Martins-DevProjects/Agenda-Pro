@@ -1,7 +1,10 @@
+import logging
 from src.models.clients import ClientsServices
 from src.models.services import ServicesControl
 from src.security import jwt
 from src.validation import errors
+
+logger = logging.getLogger(__name__)
 
 class AuthHeader:
     def __init__(

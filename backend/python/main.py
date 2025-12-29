@@ -120,8 +120,10 @@ def search_contact_api(text):
 @app.route('/api/services', methods=['GET'])
 def list_services_api():
     req_data = RequestBuilder.from_flask(request)
-    response = page_services.list_services(req_data)
+
+    handler = page_services.ServicesHandler(req_data)
+    response = handler.list_services()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
 
-    return response
+    return jsonify(response), response['code']

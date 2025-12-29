@@ -31,6 +31,7 @@ class ServicesControl:
         return ID
 
     def list_all_services(self, offset, ID):
+        logger.debug(f'Offset: {offset}')
         services = self.repo.list_services(
             offset=offset * 10,
             ID=ID,

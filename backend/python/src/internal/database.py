@@ -468,16 +468,20 @@ def list_services_db(offset, id, role):
     conn = None
     cursor = None
 
+    offset = offset - 1
+    if offset < 0:
+        offset = 0
+
     try:
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 if role == 'admin':
-                    query ="""SELECT id, nome, description, price, duration
+                    query ="""SELECT id, name, description, price, duration
                 FROM services
                 WHERE bussines_id = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE bussines_id = %s"
                 elif role == 'user':
-                    query = """SELECT id, nome, description, price, duration
+                    query = """SELECT id, name, description, price, duration
                     FROM services
                     WHERE userid = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"

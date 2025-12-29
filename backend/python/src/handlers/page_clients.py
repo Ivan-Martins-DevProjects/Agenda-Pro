@@ -30,6 +30,7 @@ def set_clients_header_params(req_data, scope):
     except Exception as e:
         logger.error('Erro com a função set_clients_header_params', exc_info=True)
         return error_maps(e)
+
 class ClientsHandler:
     def __init__(
         self,
