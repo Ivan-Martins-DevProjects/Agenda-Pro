@@ -476,12 +476,12 @@ def list_services_db(offset, id, role):
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 if role == 'admin':
-                    query ="""SELECT id, name, description, price, duration
+                    query ="""SELECT id, title, description, price, duration
                 FROM services
                 WHERE bussines_id = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE bussines_id = %s"
                 elif role == 'user':
-                    query = """SELECT id, name, description, price, duration
+                    query = """SELECT id, title, description, price, duration
                     FROM services
                     WHERE userid = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
@@ -516,4 +516,48 @@ def list_services_db(offset, id, role):
 
     except Exception as e:
         logger.error('Erro com a função list_services_db', exc_info=True)
+        return HandleExceptions(e)
+
+def insert_service_db(data):
+    if not connectionPool:
+        logger.error('Pool de conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                userId = data.get('userId')
+                bussinesId = data.get('bussinesId')
+                id = data.get('id')
+                respName = data.get('respName')
+                title = data.get('title')
+                description = data.get('description')
+                price = int(data.get('price')) * 100
+                duration = data.get('duration')
+
+                query = """
+                INSERT INTO services (id, user_id, bussines_id, title, description, price, duration, resp_name)
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                ON CONFLICT (title) DO NOTHING
+                RETURNING id
+                """
+
+                cursor.execute(query, (id, userId, bussinesId, title, description, price, duration, respName))
+
+                result = cursor.fetchone()
+                if not result:
+                    logger.error('Serviço já cadastrado')
+                    return CreateError(409, 'Usuário já cadastrado')
+                conn.commit()
+
+                response = CreateResponse(result[0], 200)
+                return response
+
+    except Exception as e:
+        logger.exception('Erro com a função insert_service_db')
         return HandleExceptions(e)

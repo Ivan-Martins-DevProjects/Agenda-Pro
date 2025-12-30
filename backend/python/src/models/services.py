@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -31,13 +32,23 @@ class ServicesControl:
         return ID
 
     def list_all_services(self, offset, ID):
-        logger.debug(f'Offset: {offset}')
         services = self.repo.list_services(
             offset=offset * 10,
             ID=ID,
             Role=self.user.Role
         )
         return services
+
+    def insert_new_service(self, data):
+        data['userId'] = self.user.ID
+        data['bussinesId'] = self.user.BussinesID
+        data['respName'] = self.user.Nome
+        data['id'] = uuid.uuid4()
+
+        response = self.repo.insert_service(
+            data=data
+        )
+        return response
 
 class ServicesRepository:
     def list_services(self, offset, ID, Role):
@@ -46,4 +57,11 @@ class ServicesRepository:
             id=ID,
             role=Role
         )
+        return response
+
+    def insert_service(self, data):
+        response = database.insert_service_db(
+            data
+        )
+
         return response

@@ -24,6 +24,7 @@ async function ListServicesAPI(offset) {
         const response = await fetch(`${api_url}/api/services?offset=${offset}`, {
             method: 'GET',
             headers: {
+                'Content-Type': 'application/json',
                 'Authorization': token
             }
         })
@@ -53,9 +54,10 @@ async function NewServiceAPI(data) {
         const response = await fetch(`${api_url}/api/services/create`, {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'Authorization': token
             },
-            body: data
+            body: JSON.stringify(data)
         })
 
         const resposta = await response.json()
@@ -147,8 +149,10 @@ function InfoNewService() {
 /**
  * Gerencia o fluxo de criação: coleta dados e chama a API.
  */
-async function CreateNewService() {
+async function CreateNewService(event) {
+    event.preventDefault()
     const data = await InfoNewService()
+    console.log(data);
     if (!data) { return }
 
     NewServiceAPI(data)
@@ -216,6 +220,7 @@ function RenderServices(services) {
     services.forEach(item => {
         // Card Main Container
         const main = document.createElement('div')
+        main.dataset.id = item.id
         main.className = 'container'
 
         // Card Header
@@ -223,7 +228,7 @@ function RenderServices(services) {
         cardHeader.className = 'services-card-header'
 
         const h3 = document.createElement('h3')
-        h3.textContent = item.name
+        h3.textContent = item.title
 
         cardHeader.appendChild(h3)
         main.appendChild(cardHeader)
@@ -244,7 +249,7 @@ function RenderServices(services) {
 
         const price = document.createElement('span')
         price.className = 'services-price'
-        price.textContent = 'R$ ' + item.price + ',00'
+        price.textContent = 'R$ ' + item.price / 100 + ',00'
 
         const duration = document.createElement('span')
         duration.className = 'services-duration'
@@ -295,7 +300,8 @@ function NewServiceModalListeners() {
     const btnConfirm = document.querySelector('.new-service-confirm')
     const btnExit = document.querySelector('.new-service-exit')
 
-    function exit() {
+    function exit(event) {
+        event.preventDefault()
         NewServiceModal.close()
         btnExit.removeEventListener('click', exit)
         btnConfirm.removeEventListener('click', CreateNewService)

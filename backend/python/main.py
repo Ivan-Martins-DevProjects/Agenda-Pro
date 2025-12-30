@@ -130,4 +130,10 @@ def list_services_api():
 
 @app.route('/api/services/create', methods=['POST'])
 def create_service_api():
-    return jsonify({'status':'success'}), 200
+    req_data = RequestBuilder.from_flask(request)
+    handler = page_services.ServicesHandler(req_data)
+
+    response = handler.insert_service()
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
+    return jsonify(response), response['code']

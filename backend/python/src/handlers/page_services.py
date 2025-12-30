@@ -2,9 +2,7 @@ import logging
 
 from dotenv import load_dotenv
 
-from src.models import services
 from src.models.header import AuthHeader
-from src.security import jwt
 from src.validation import errors
 
 
@@ -34,7 +32,7 @@ def set_service_header_params(req_data, scope):
         return controlers
 
     except Exception as e:
-        logger.error('Erro com a função set_service_header_params', exc_info=True)
+        logger.exception('Erro com a função set_service_header_params')
         return error_maps(e)
 
 class ServicesHandler:
@@ -62,5 +60,31 @@ class ServicesHandler:
             )
             return services_list
         except Exception as e:
-            logger.error('Erro com a função list_services')
+            logger.exception('Erro com a função list_services')
+            return error_maps(e)
+
+    def insert_service(self):
+        try:
+            controlers = set_service_header_params(self.req_data, 'write_services')
+            if isinstance(controlers, dict):
+                return controlers
+            elif not controlers:
+                raise ValueError
+
+            servicesControl = controlers.servicesControl
+            if not servicesControl:
+                raise ValueError
+            logger.info(self.req_data.body)
+
+            data = self.req_data.body
+            if not data:
+                raise ValueError
+
+            insert = servicesControl.insert_new_service(data)
+            if not insert:
+                raise ValueError
+
+            return insert
+        except Exception as e:
+            logger.exception('Erro com a função insert_service')
             return error_maps(e)
