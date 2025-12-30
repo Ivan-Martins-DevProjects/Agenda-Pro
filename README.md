@@ -51,6 +51,26 @@ A plataforma contará com:
 
 ---
 
+## 🔹 Progresso Atual
+O desenvolvimento avança com foco na modularidade do frontend, segurança e arquitetura robusta no backend. Os marcos recentes incluem:
+
+🔹 **Frontend (Módulo de Clientes)**
+- Página de clientes concluída e funcional.
+- Implementadas as operações de CRUD: Adicionar, Remover, Editar e Pesquisar contatos.
+- Utilização combinada de Templates, Dialogs (Modais) e renderização dinâmica de elementos via JavaScript para uma interface reativa.
+
+🔹 **Frontend (Módulo de Serviços)**
+- Iniciada a implementação da página de serviços, aplicando as mesmas arquiteturas e técnicas validadas no módulo de clientes.
+
+🔹 **Backend & Arquitetura**
+- Autenticação robusta implementada via JWT (JSON Web Token).
+- O token é utilizado para validar as permissões em cada requisição, garantindo a identidade do usuário e verificando se ele está autorizado a efetuar a operação solicitada.
+- Foco total na aplicação dos princípios SOLID (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation e Dependency Inversion) para garantir um código limpo, escalável e de fácil manutenção.
+
+🔹 **Backend & Arquitetura**
+- banco de dados já está populado com dados fictícios (Mock Data) para facilitar a manipulação e testes imediatos das funcionalidades durante o desenvolvimento.
+
+---
 ## 🔹 Funcionalidades Planejadas
 - **Cadastro de Clientes:**
   Adição de contatos que serão sincronizados automaticamente com o WhatsApp.
