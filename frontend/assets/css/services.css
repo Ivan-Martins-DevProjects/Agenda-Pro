@@ -42,7 +42,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     border: none;
     border-radius: 10px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: bolder;
     transition: all 0.3s;
     cursor: pointer;
@@ -110,5 +110,109 @@
 .btn-services-exclude:hover {
     background-color: #E63F3F;
     color: white;
+}
+
+/* Modal de adição de novo serviço */
+.new-service-modal {
+    margin-top: 5%;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 2rem 1rem;
+    width: 500px;
+    margin-left: 35%;
+}
+
+.new-service-modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.new-service-header {
+    font-family: sans-serif;
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #3B82F6;
+}
+
+.new-service-form-group-title,
+.new-service-form-group-price {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.new-service-input-description {
+    height: 60px;
+}
+
+.new-service-body h4 {
+    color: #3B82F6;
+    font-family: sans-serif;
+}
+
+.new-service-group-section {
+    margin-top: 15px;
+    border: 1px solid #ccc;
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 1rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.new-service-group-section h4 {
+    margin-top: 5px;
+}
+
+.new-service-group-section input {
+    padding: 1rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: 0.2s all;
+}
+
+.new-service-group-section input:hover {
+    transform: scale(1.03);
+}
+
+.new-service-btns {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.new-service-btns button{
+    width: 150px;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.new-service-confirm {
+    border: 1px solid #3B82F6;
+    background-color: #3B82F6;
+    color: #fff;
+    font-weight: bold;
+    transition: 0.2s all;
+}
+
+.new-service-confirm:hover {
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+.new-service-exit {
+    border: 1px solid #E63F3F;
+    background-color: #E63F3F;
+    color: #fff;
+    font-weight: bold;
+    transition: 0.2s all;
+}
+
+.new-service-exit:hover {
+    cursor: pointer;
+    transform: scale(1.1);
 }
 

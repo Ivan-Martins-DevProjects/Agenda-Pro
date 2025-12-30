@@ -68,9 +68,9 @@
     </div>
             <!-- 🧩 Template de Cliente -->
             <template id="cliente-template">
-                <header class="page-header">
-                    <h1 class="page-title">Meus Clientes</h1>
-                </header>
+                <div class="page-header">
+                        <h1 class="page-title">Meus Clientes</h1>
+                </div>
 
                 <div class="autocomplete-container">
                         <input
@@ -79,10 +79,12 @@
                         placeholder="Pesquisar cliente..."
                         id="input-client-field">
                 <div class="input-client-dropdown" id="input-client-dropdown"></div>
+                <div>
                     <button class="btn-new-contact" id="new-contact">
                         <i class="fas fa-plus"></i>
                         Adicionar Cliente
                     </button>
+                </div>
 
                 </div>
 
@@ -119,7 +121,56 @@
                 </table>
             </template>
 
+            <dialog class="new-service-modal">
+                <div class="new-service-header">
+                    <div>
+                        <i class="fa fa-users fa-6x"></i>
+                    </div>
+                    <div class="new-service-title">
+                        <h2>Cadastro de Novo Serviço</h2>
+                    </div>
+                </div>
 
+                <div class="new-service-body">
+                    <form id="new-service-form">
+                        <div class="new-service-group-section">
+                            <h4>Título e Descrição</h4>
+                            <div class="new-service-form-row">
+                                <div class="new-service-form-group-title">
+                                    <input class="new-service-input-title" placeholder="Título" type="text" id="service-title">
+                                    <input class="new-service-input-description" placeholder="Descrição" type="text"  id="service-description"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="new-service-group-section">
+                            <h4>Preço e Duração</h4>
+                            <div class="new-service-form-row">
+                                <div class="new-service-form-group-price">
+                                    <input class="new-service-input-price" placeholder="Preço" type="number" id="service-price"/>
+                                    <input class="new-service-input-duration" placeholder="Duração" type="number" id="service-duration"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="new-service-btns">
+                            <button class="new-service-confirm">Confirmar</button>
+                            <button class="new-service-exit">Sair</button>
+                        </div>
+                    </form>
+                </div>
+            </dialog>
+
+            <dialog id="new-service-modal">
+                <div class="header-new-service">
+                    <h2>Cadastrar novo Serviço</h2>
+                </div>
+                <div new-service-body>
+                    <form class="new-service-form">
+                        <div class="new-service-group-section">
+                            <h4></h4>
+                        </div>
+                    </form>
+                </div>
+            </dialog>
             <!-- Modal de mensagem de erro -->
             <dialog id="error-modal-template">
                     <div class="modal-box">

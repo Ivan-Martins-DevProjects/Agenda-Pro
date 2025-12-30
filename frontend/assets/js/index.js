@@ -1,5 +1,5 @@
-import CloseModalRemoveListeners, {carregarClientes} from './clientes.js'
-import RenderServices from './services.js'
+import {carregarClientes, CloseModalRemoveListeners} from './clientes.js'
+import LoadServices from './services.js'
 
 // Obtém referência ao botão do Dashboard no menu lateral
 const btnDashboard = document.getElementById('page-dashboard')
@@ -114,7 +114,7 @@ async function PageClients(btn) {
  */
 function PageServices(btn) {
     ClearActiveSideMenu(btn)
-    RenderServices(servicesList)
+    LoadServices()
     // PageInConstruction()
     return
 }

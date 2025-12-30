@@ -1,4 +1,5 @@
 import { api_url, token } from './index.js'
+import { ListNextPageServices } from './services.js';
 import ErrorModal from './index.js'
 
 // Seleciona todos os elementos com a classe 'menu-link' para manipulação do menu de navegação
@@ -6,14 +7,14 @@ const menuLinks = document.querySelectorAll('.menu-link')
 // Seleciona o container principal onde o conteúdo dinâmico será inserido
 const container = document.getElementById('content-container');
 // URL base para o frontend, usada para redirecionamentos
-const FrontendURL = 'http://localhost:7000'
+export const FrontendURL = 'http://localhost:7000'
 // Seleciona o modal de edição e adicção de contatos
 const modal = document.getElementById('modal-cliente');
 
 // ----------------------------------------------------------------------------------// CustomEvents
 // ----------------------------------------------------------------------------------//
 const CustomEventCloseEditModal = new CustomEvent ('edit-modal-closed')
-const ActionComplete = new CustomEvent('action-complete')
+export const ActionComplete = new CustomEvent('action-complete')
 
 document.addEventListener('action-complete', () => {
     RemoveClientsListeners(ClientsListeners)
@@ -50,22 +51,20 @@ const ModalInputs = [
  * @param {HTMLElement} modal - Elemento do modal a ser fechado
  * @param {Array} data - Array de objetos contendo informações sobre os listeners a serem removidos
  */
-export default function CloseModalRemoveListeners(modal, data) {
-    console.log('Listeners Recebidos: ' + data.length);
+export function CloseModalRemoveListeners(modal, data) {
     // Fecha o modal se ele existir
-    if (modal) {
+    if (modal && modal instanceof HTMLElement) {
         modal.close()
     }
 
     // Remove cada event listener especificado no array data
     let element
-    if (data) {
+    if (data && Array.isArray(data)) {
         data.forEach((item) => {
             element = document.querySelector(item.var)
             element.removeEventListener(item.type, item.func)
         })
     }
-    console.log('Listeners Removidos: ' + data.length);
 }
 
 /**
@@ -74,18 +73,15 @@ export default function CloseModalRemoveListeners(modal, data) {
  */
 function RemoveClientsListeners(data) {
     let element
-    try {
         data.forEach(item => {
             const element = document.querySelector(item.var)
             if (!element){
-                throw new Error(`Elemento não encontrado: ${item.var}`)
+                return
             }
             element.removeEventListener(item.type, item.func)
         })
-    } catch (error) {
-        console.log(error);
-    }
 }
+
 export async function carregarClientes() {
     // Remove o estilo de opção ativa de todos os itens do menu
     menuLinks.forEach(l => l.classList.remove('active'))
@@ -374,7 +370,17 @@ async function SearchClientsListener(event) {
  * Gerencia os eventos de paginação da lista de clientes
  * @param {Event} event - Evento de clique nos botões de paginação
  */
-async function PaginationListener(event) {
+export async function PaginationListener(event) {
+    let caller
+    const linker = document.querySelector('.menu-link.active')
+    switch (linker.textContent) {
+        case 'Clientes':
+            caller = ListNextPageClients
+            break;
+
+        case 'Serviços':
+            caller = ListNextPageServices
+    }
     let active
     let last
     const botoes = document.querySelectorAll('.pagination-button')
@@ -404,7 +410,7 @@ async function PaginationListener(event) {
         case 'pagination-button':
             // Botão de página específica
             const offset = Number(botao.textContent)
-            ListNextPageClients(start, offset)
+            caller(start, offset)
             return
 
         case 'pagination-preview-button':
@@ -418,20 +424,20 @@ async function PaginationListener(event) {
             if (active === start){
                 let initial = active - 4
                 if (initial <= 0){
-                    ListNextPageClients(1, min, false)
+                    caller(1, min, false)
                     return
                 } else {
-                    ListNextPageClients(active - 4, min, false)
+                    caller(active - 4, min, false)
                     return
                 }
             }
 
-            ListNextPageClients(start, min, false)
+            caller(start, min, false)
             return
 
         case 'pagination-more-button':
             // Botão para exibir mais páginas
-            ListNextPageClients(start + 4, last + 1, false)
+            caller(start + 4, last + 1, false)
             return
 
         case 'pagination-next-button':
@@ -443,17 +449,17 @@ async function PaginationListener(event) {
             }
 
             if (max === last) {
-                ListNextPageClients(last, last, false)
+                caller(last, last, false)
                 return
             }
 
-            ListNextPageClients(start, max, false)
+            caller(start, max, false)
             return
 
         case 'pagination-last-button':
             // Botão para ir diretamente à última página
             const number = Number(botao.textContent)
-            ListNextPageClients(start, number, true)
+            caller(start, number, true)
             return
     }
 }
@@ -602,7 +608,8 @@ async function GetAllClients(offset) {
  * @param {number} start - Número da primeira página a ser exibida
  * @param {number} MaxPage - Número total de páginas disponíveis
  */
-function CreatePagination(start, MaxPage){
+export function CreatePagination(start, MaxPage){
+    const container = document.querySelector('.content')
     // Cria o elemento nav que conterá os botões de paginação
     const nav = document.createElement('nav')
     nav.className = 'pagination-clients'
@@ -664,7 +671,7 @@ function CreatePagination(start, MaxPage){
  * @param {number} page - Número da página atual
  * @param {boolean} last - Indica se a página atual é a última
  */
-function nextPage(page, last) {
+export function nextPage(page, last) {
     const pages = document.querySelector('.pagination-clients')
     const buttons = pages.querySelectorAll('.pagination-button')
     const lastButton = pages.querySelector('.pagination-last-button')
