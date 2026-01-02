@@ -74,7 +74,6 @@ class ServicesHandler:
             servicesControl = controlers.servicesControl
             if not servicesControl:
                 raise ValueError
-            logger.info(self.req_data.body)
 
             data = self.req_data.body
             if not data:
@@ -85,6 +84,34 @@ class ServicesHandler:
                 raise ValueError
 
             return insert
+
         except Exception as e:
             logger.exception('Erro com a função insert_service')
+            return error_maps(e)
+
+    def get_unique_service(self):
+        try:
+            controlers = set_service_header_params(self.req_data, 'read_services')
+            if isinstance(controlers, dict):
+                return controlers
+            elif not controlers:
+                raise ValueError
+
+            servicesControl = controlers.servicesControl
+            AccessID = controlers.AccessID
+            if not servicesControl:
+                raise ValueError
+
+            id = self.req_data.params.get('id')
+            if not id:
+                raise ValueError
+
+            response = servicesControl.get_unique_service(
+                serviceId=id,
+                AccessID=AccessID
+            )
+            return response
+            
+        except Exception as e:
+            logger.exception('Erro com a função get_unique_service')
             return error_maps(e)

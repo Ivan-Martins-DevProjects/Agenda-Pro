@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from src.internal import database
-from src.models import services
 from src.requests.request_builder import RequestBuilder
 from src.validation import *
 from src.handlers import dashboard, page_clients, page_services
@@ -136,4 +135,15 @@ def create_service_api():
     response = handler.insert_service()
     if not response:
         return CreateError(500, 'Erro interno do servidor')
+    return jsonify(response), response['code']
+
+@app.route('/api/services/unique', methods=['GET']) 
+def get_unique_service_api():
+    req_data = RequestBuilder.from_flask(request)
+    handler = page_services.ServicesHandler(req_data)
+
+    response = handler.get_unique_service()
+    if not response:
+        return CreateError(500, 'Erro interno do servidor')
+
     return jsonify(response), response['code']

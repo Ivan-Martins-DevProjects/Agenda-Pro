@@ -3,6 +3,7 @@ import uuid
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from werkzeug.datastructures import Accept
 
 from src.internal import database
 
@@ -50,6 +51,14 @@ class ServicesControl:
         )
         return response
 
+    def get_unique_service(self, serviceId, AccessID):
+        response = self.repo.get_unique_service(
+            id=serviceId,
+            AccessID=AccessID,
+            role=self.user.Role
+        )
+        return response
+
 class ServicesRepository:
     def list_services(self, offset, ID, Role):
         response = database.list_services_db(
@@ -65,3 +74,13 @@ class ServicesRepository:
         )
 
         return response
+
+    def get_unique_service(self, id, AccessID, role):
+        response = database.get_unique_service_db(
+            serviceId=id,
+            AccessID=AccessID,
+            role=role
+        )
+
+        return response
+        

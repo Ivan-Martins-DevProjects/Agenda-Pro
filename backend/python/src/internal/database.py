@@ -194,9 +194,6 @@ def GetUniqueContact(contactId, id, role):
     try:
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
-                # Obtém a conexão do pool de conexões
-                logger.debug('Conexão obtida do pool')
-                
                 # Define a query e a executa
                 if role == 'admin':
                     query = ''' SELECT c.nome, c.email, c.telefone, c.cpf, c.visitas, c.gasto, c.obs,
@@ -561,3 +558,37 @@ def insert_service_db(data):
     except Exception as e:
         logger.exception('Erro com a função insert_service_db')
         return HandleExceptions(e)
+
+def get_unique_service_db(serviceId, AccessID, role):
+    if not connectionPool:
+        logger.error('Pool de conexões não inicializado', exc_info=True)
+        return CreateError(500, 'Erro interno do servidor')
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                if role == 'admin':
+                    query = """
+                    SELECT title, description, price, duration FROM services
+                    WHERE id = %s AND bussines_id = %s
+                    """
+                else:
+                    query = """
+                    SELECT title, description, price, duration FROM services
+                    WHERE id = %s AND user_id = %s
+                    """
+
+                cursor.execute(query, (serviceId, AccessID))
+                result = cursor.fetchone()
+                if not result:
+                    return CreateError(404, 'Serviço não encontrado')
+
+                return CreateResponse(result, 200)
+
+    except Exception as e:
+        logger.exception('Erro com a função get_unique_service_db')
+        return HandleExceptions(e)
+
