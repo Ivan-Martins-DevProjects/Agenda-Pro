@@ -1,9 +1,10 @@
 import logging
+from src.errors.mainErrors import AppError
 from src.models.clients import ClientsServices
 from src.models.services import ServicesControl
 from src.security import jwt
-from src.validation import errors
 
+from src.errors.authErrors import UnauthorizedSession, UserNotPermited
 logger = logging.getLogger(__name__)
 
 class AuthHeader:
@@ -20,23 +21,25 @@ class AuthHeader:
         self.AccessID = AccessID
 
     def header_handler(self, req_data, scope):
-        token = req_data.headers.get('Authorization')
-        if not token:
-            return errors.CreateError(401, 'Sessão não encontrada')
+        try:
+            token = req_data.headers.get('Authorization')
+            if not token:
+                raise UnauthorizedSession('Sessão não encontrada')
 
-        check = jwt.AuthServices(token)
-        user = check.Autenticar()
-        if isinstance(user, dict):
-            return user
+            check = jwt.AuthServices(token)
+            user = check.Autenticar()
+            if not user:
+                raise AppError
 
-        hasPermission = user.is_permitted(scope)
-        if hasPermission is False:
-            raise PermissionError
-        elif isinstance(hasPermission, dict):
-            return hasPermission
+            hasPermission = user.is_permitted(scope)
+            if hasPermission is False:
+                raise UserNotPermited
 
-        self.AccessID = user.true_id()
-        self.user = user
+            self.AccessID = user.true_id()
+            self.user = user
+
+        except Exception:
+            raise
 
     def header_client_services(self):
         self.clientsServices = ClientsServices(self.user)

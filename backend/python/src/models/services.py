@@ -3,7 +3,6 @@ import uuid
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from werkzeug.datastructures import Accept
 
 from src.internal import database
 

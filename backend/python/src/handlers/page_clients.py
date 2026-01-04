@@ -1,35 +1,23 @@
 import logging
 import uuid
 
+
+from src.errors.mainErrors import AppError
 from src.models.header import AuthHeader
-from src.validation import errors
 
 logger = logging.getLogger(__name__)
 
 
-def error_maps(e):
-    error_list = {
-        ValueError: (400, 'Formato Inválido'),
-        PermissionError: (402, 'Permissão não encontrada'),
-    }
-
-    for errType, (status, message) in error_list.items():
-        if isinstance(e, errType):
-            return errors.CreateError(status, message)
-    return errors.CreateError(500, 'Erro inesperado')
-
 def set_clients_header_params(req_data, scope):
     try:
         header = AuthHeader()
-        authorized = header.header_handler(req_data, scope)
-        if isinstance(authorized, dict):
-            return authorized
-
+        header.header_handler(req_data, scope)
+        
         controlers = header.header_client_services()
         return controlers
-    except Exception as e:
-        logger.error('Erro com a função set_clients_header_params', exc_info=True)
-        return error_maps(e)
+
+    except Exception:
+        raise
 
 class ClientsHandler:
     def __init__(
@@ -45,15 +33,13 @@ class ClientsHandler:
     def list_contacts(self):
         try:
             controlers = set_clients_header_params(self.req_data, 'read_contacts')
-            if isinstance(controlers, dict):
-                return controlers
-            elif not controlers:
-                raise ValueError
+            if not controlers:
+                raise AppError(logger_message='Erro ao definir controlers')
 
             clientsServices = controlers.clientsServices
             AccessID = controlers.AccessID
             if not clientsServices:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
 
             offset = int(self.req_data.params.get('offset', 0))
 
@@ -63,27 +49,24 @@ class ClientsHandler:
             )
             return clients_list
             
-        except Exception as e:
-            logger.error('Erro com a função list_contacts', exc_info=True)
-            return error_maps(e)
+        except Exception:
+            raise
 
     def get_contact(self):
         try:
             controlers = set_clients_header_params(self.req_data, 'read_contacts')
-            if isinstance(controlers, dict):
-                return controlers
+            if not controlers:
+                raise AppError(logger_message='Erro ao definir controlers')
 
             clientsServices = controlers.clientsServices
             AccessID = controlers.AccessID
             if not clientsServices:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
 
-            CheckUserFromContact = clientsServices.validate_user_from_contact(
+            clientsServices.validate_user_from_contact(
                 contactID=self.clientID,
                 ID=AccessID
             )
-            if isinstance(CheckUserFromContact, dict):
-                return CheckUserFromContact
 
             response = clientsServices.get_unique_contact(
                 contactId=self.clientID,
@@ -91,25 +74,23 @@ class ClientsHandler:
             )
             return response
 
-        except Exception as e:
-            logger.error('Erro com a função get_contact', exc_info=True)
-            return error_maps(e)
-
+        except Exception:
+            raise
            
 
     def insert_contact(self):
         try:
             controlers = set_clients_header_params(self.req_data, 'write_contacts')
-            if isinstance(controlers, dict):
-                return controlers
+            if not controlers:
+                raise AppError(logger_message='Erro ao definir controlers')
 
             clientsServices = controlers.clientsServices
             if not clientsServices:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
 
             user = clientsServices.user
             if not user:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância user de clientsServices')
 
             body = self.req_data.body
             contact_data = {
@@ -131,37 +112,33 @@ class ClientsHandler:
 
             clientsServices.insert_new_contact(contact_data)
 
-        except Exception as e:
-            logger.error(f'Erro com a função insert_contact', exc_info=True)
-            return error_maps(e)
+        except Exception:
+            raise
 
     def update_contact(self):
         try:
             controlers = set_clients_header_params(self.req_data, 'write_contacts')
-            if isinstance(controlers, dict):
-                return controlers
+            if not controlers:
+                raise AppError(logger_message='Erro ao definir controlers')
 
             clientsServices = controlers.clientsServices
             AccessID = controlers.AccessID
             if not clientsServices:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
             
             user = clientsServices.user
             if not user:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância user de clientsServices')
 
-            CheckUserFromContact = clientsServices.validate_user_from_contact(
+            clientsServices.validate_user_from_contact(
                 contactID=self.clientID,
                 ID=AccessID
             )
-            if isinstance(CheckUserFromContact, dict):
-                return CheckUserFromContact
 
             body = self.req_data.body
             data = {
                 "userid": str(user.ID),
                 "bussinesId": user.BussinesID,
-                "contactID": str(uuid.uuid4()),
                 "nome": body.get('nome'),
                 "email": body.get('email'),
                 "telefone": body.get('telefone'),
@@ -178,48 +155,41 @@ class ClientsHandler:
             response = clientsServices.update_contact(self.clientID, data)
             return response
 
-        except Exception as e:
-            logger.error('Erro com a função update_contact', exc_info=True)
-            return error_maps(e)
+        except Exception:
+            raise
 
     def delete_contact(self):
         try:
             controlers = set_clients_header_params(self.req_data, 'delete_contact')
-            if isinstance(controlers, dict):
-                return controlers
-            elif not controlers:
-                raise ValueError
+            if not controlers:
+                raise AppError(logger_message='Erro ao definir controlers')
 
             clientsServices = controlers.clientsServices
             AccessID = controlers.AccessID
             if not clientsServices:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
 
-            CheckUserFromContact = clientsServices.validate_user_from_contact(
+            clientsServices.validate_user_from_contact(
                 contactID=self.clientID,
                 ID=AccessID
             )
-            if isinstance(CheckUserFromContact, dict):
-                return CheckUserFromContact
 
             response = clientsServices.delete_contact(self.clientID)
             return response
-        except Exception as e:
-            logger.error('Erro com a função delete_contact', exc_info=True)
-            return error_maps(e)
+
+        except Exception:
+            raise
 
     def search_contact(self):
         try:
             controlers = set_clients_header_params(self.req_data, 'read_contacts')
-            if isinstance(controlers, dict):
-                return controlers
-            elif not controlers:
-                raise ValueError
+            if not controlers:
+                raise AppError(logger_message='Erro ao definir controlers')
 
             clientsServices = controlers.clientsServices
             AccessID = controlers.AccessID
             if not clientsServices:
-                raise ValueError
+                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
 
             response = clientsServices.search_contact(
                 id=AccessID,
@@ -227,6 +197,5 @@ class ClientsHandler:
             )
             return response
 
-        except Exception as e:
-            logger.error('Erro com a função search_contact', exc_info=True)
-            return error_maps(e)
+        except Exception:
+            raise

@@ -93,7 +93,7 @@ export async function carregarClientes() {
     const resposta = await GetAllClients(0)
 
     // Armazena os clientes recebidos na variável global
-    todosClientes = resposta.data.clientes
+    todosClientes = resposta.clientes
 
     // Renderiza a tabela de clientes com os dados obtidos
     renderClients(todosClientes)
@@ -103,7 +103,7 @@ export async function carregarClientes() {
 
     // Calcula o número total de páginas arredondando para cima
     if (todosClientes.length > 1){
-        const MaxPage = Math.ceil(resposta.data.total / 10)
+        const MaxPage = Math.ceil(resposta.total / 10)
         // Cria os controles de paginação
         CreatePagination(1, MaxPage)
     }
@@ -553,12 +553,12 @@ async function ListNextPageClients(start, offset, last){
     const response = await GetAllClients(offset - 1)
 
     // Atualiza a lista de clientes com os novos dados
-    todosClientes = response.data.clientes
+    todosClientes = response.clientes
     renderClients(response.data.clientes)
 
 
     // Recalcula o número total de páginas
-    const MaxPage = Math.ceil(response.data.total / 10)
+    const MaxPage = Math.ceil(response.total / 10)
 
     // Recria os controles de paginação
     CreatePagination(Number(start), MaxPage)
@@ -591,8 +591,8 @@ async function GetAllClients(offset) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
         } else if (!resposta.ok) {
-            ErrorModal(clientes.message, 'Erro ao carregar clientes')
-            throw new Error(clientes.message)
+            ErrorModal(clientes, 'Erro ao carregar clientes')
+            throw new Error(clientes)
         }
 
         return clientes
@@ -790,15 +790,14 @@ async function RequestUniqueContact(id) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
         } else if (!response.ok){
-            ErrorModal(content.message, 'Erro ao coletar informações do usuário')
-            throw new Error(content.message)
+            throw new Error(content)
         }
 
         const content = await response.json()
         return content
 
     } catch (error) {
-        console.error(error)
+        ErrorModal(content, 'Erro ao coletar informações do usuário')
         return
     }
 }

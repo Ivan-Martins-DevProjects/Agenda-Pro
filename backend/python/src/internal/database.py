@@ -1,14 +1,17 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 
 import os
-import psycopg
-from psycopg import errors, sql
+from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from ..validation import CreateError, CreateResponse
+from ..errors.databaseErrors import databaseErrors
+from ..errors.clientsErrors import ClientNotFound, DuplicateClientError
+from ..errors.mainErrors import AppError, InvalidField, handle_exception
+from ..errors.servicesErrors import DuplicateServiceError, ServiceNotFound
+
 load_dotenv()
 
 # Captura o nome do arquivo para registro dos logs
@@ -17,33 +20,11 @@ logger = logging.getLogger(__name__)
 # Encapsulamento das credenciais do banco de dados Postgres
 DatabaseConfig = os.getenv('POSTGRES_URL', 'postgres')
 
-# Map de erros para um except mais bem tratado
-DatabaseErrorMap = {
-    errors.UniqueViolation:             (409, 'Usuário já cadastrado'),
-    errors.ForeignKeyViolation:         (400, 'Chave estrangeira inválida'),
-    errors.NotNullViolation:            (400, 'Campo obrigatório faltando'),
-    errors.CheckViolation:              (400, 'Violação de regra CHECK'),
-    errors.NumericValueOutOfRange:      (400, 'Valor numérico fora do limite'),
-    errors.InvalidTextRepresentation:   (400, 'Tipo de dado inválido'),
-    errors.UndefinedColumn:             (400, 'Tipo de dado inválido')
-}
-
 def IfNull(valor, default='N/A'):
     if not valor:
         return default
 
     return valor
-
-# Função que lida com os exeptions, associando-os ao item relativo dentro do map de erros
-def HandleExceptions(e):
-    for errType, (status, message) in DatabaseErrorMap.items():
-        if isinstance(e, errType):
-            return  CreateError(status, message)
-
-    if isinstance(e, psycopg.DatabaseError):
-        return  CreateError(500, 'Erro interno do servidor')
-
-    return  CreateError(500, 'Erro inesperado')
 
 # Inicializa uma variável global para o pool de conexões
 connectionPool = None
@@ -60,21 +41,22 @@ def CreatePool():
 
         logger.debug('Pool de conexões Criado')
 
-    except (Exception, psycopg.DatabaseError):
-        logger.exception('Erro ao criar pool de conexões')
+    except Exception as e:
         # em caso de erro retorna o pool como None
         connectionPool = None
+        raise databaseErrors(e)
 
 def RequestPermissionsDB(id):
     # Valida se o Pool de Conexões foi criado
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     # Valida se o id recebido é uma string
     if not isinstance(id, str):
-        logger.error('Valor id em CheckPermission precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
+        raise InvalidField('id')
 
     conn = None
     cursor = None
@@ -91,24 +73,24 @@ def RequestPermissionsDB(id):
 
                 # Retorna o resultado da query
                 result = cursor.fetchone()
-                return CreateResponse(result, 200)
+                return result
 
     # Registra qualquer erro com a consulta
     except Exception as e:
-        logger.exception('Erro ao checar permissão do usuário')
-        return HandleExceptions(e)
+        raise databaseErrors(e)
 
 # Função para listar todos os clientes
 def GetClients(id, role, offset):
     # Valida se existe um pool criado
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     # Valida se o id recebido é uma string
     if not isinstance(id, str):
-        logger.error('Valor id em GetClients precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
+        raise InvalidField('ID do cliente')
 
     conn = None
     cursor = None
@@ -173,20 +155,19 @@ def GetClients(id, role, offset):
                 return response
 
     except Exception as e:
-        logger.error('Erro com a função GetClients', exc_info=True)
-        return HandleExceptions(e)
+        raise databaseErrors(e)
 
 
 def GetUniqueContact(contactId, id, role):
     # Valida se o Pool de Conexões foi criado
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
-
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
     # Valida se o id recebido é uma string
     if not isinstance(id, str):
-        logger.error('Valor id em GetClients precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
+        raise InvalidField(field='id')
 
     conn = None
     cursor = None
@@ -209,28 +190,29 @@ def GetUniqueContact(contactId, id, role):
                 # Retorna o resultado da query
                 result = cursor.fetchone()
                 if not result:
-                    return CreateError(404, 'Nenhum contato encontrado')
+                    raise ClientNotFound()
 
-                response = CreateResponse(result, 200)
-
+                response = {
+                    'data': result
+                }
                 return response
 
     # Registra qualquer erro com a consulta
     except Exception as e:
-        logger.exception('Erro com a função GetUniqueContact')
-        return HandleExceptions(e)
-
+        raise databaseErrors(e)
         
 def InsertNewContactDB(data):
      # Valida se o Pool de Conexões foi criado
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+         raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     # Valida se o id recebido é uma string
-    if not isinstance(data['userid'], str):
-        logger.error('Valor id em InsertNewContactDB precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
+    id = data['userid']
+    if not (id, str):
+        raise InvalidField(field=id)
 
     conn = None
     cursor = None
@@ -295,8 +277,8 @@ def InsertNewContactDB(data):
                 resultContacts = cursor.fetchone()
 
                 if not resultContacts:
-                    logger.error('Usuário já cadastrado')
-                    return CreateError(409, 'Usuário já cadastrado')
+                    raise DuplicateClientError()
+
                 conn.commit()
 
                 cursor.execute(queryAdress, (
@@ -308,24 +290,25 @@ def InsertNewContactDB(data):
                     "id" : clientId
                 }
 
-                response = CreateResponse(200, data)
+                response = {
+                    'data': data
+                }
 
                 return response
 
     # Registra qualquer erro com a consulta
     except Exception as e:
-        logger.exception('Erro com a função GetUniqueContact')
-        return HandleExceptions(e)
+        return handle_exception(e)
 
 def UpdateContactDB(id, body):
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+         raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     if not isinstance(id, str):
-        logger.error('Valor id em UpdateContactDB precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
-
+        raise InvalidField(field=id)
     try:
         with connectionPool.connection() as conn:
             with conn.cursor() as cursor:
@@ -351,24 +334,25 @@ def UpdateContactDB(id, body):
 
                 results = cursor.fetchone()
                 if not results:
-                    logger.info('Usuário já cadastrado')
-                    return CreateError(409, 'Outro usuário já possui essas informações')
+                    raise DuplicateClientError()
 
                 conn.commit()
-                return CreateResponse(201, 'Usuário atualizado com sucesso')
+                return {
+                    'data': 'Usuário cadastrado com sucesso',
+                }
 
     except Exception as e:
-        logger.error('Erro com a função UpdateContactDB', exc_info=True)
-        return HandleExceptions(e)
+        raise databaseErrors(e)
 
 def DeleteContactDB(id):
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     if not isinstance(id, str):
-        logger.error('Valor id em InsertNewContactDB precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
+        raise InvalidField(field=id)
 
     try:
         with connectionPool.connection() as conn:
@@ -383,24 +367,27 @@ def DeleteContactDB(id):
                 conn.commit()
                 if cursor.rowcount <=0:
                     logger.error('Erro ao deletar contato da tabela contatos')
-                    return CreateError(500, 'Erro interno do servidor')
+                    raise AppError()
 
-                return CreateResponse(200, 'Usuário excluído com sucesso')
+                data = {
+                    'data': 'Usuário excluído com sucesso'
+                }
+                return data
 
     except Exception as e:
-        logger.exception('Erro com a função DeleteContactDB')
-        return HandleExceptions(e)
+        raise databaseErrors(e)
 
 
 
 def SearchContactDB(id, text, role):
     if not connectionPool:
-        logger.error('Pool de Conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     if not isinstance(id, str):
-        logger.error('Valor id em InsertNewContactDB precisa ser uma string')
-        return CreateError(400, 'Formato inválido')
+        raise InvalidField(field=id)
 
     try:
         with connectionPool.connection() as conn:
@@ -448,19 +435,24 @@ def SearchContactDB(id, text, role):
                 result = cursor.fetchall()
 
                 if not result:
-                    return CreateResponse([], 200)
+                    return {
+                        'data': []
+                    }
 
-                return CreateResponse(result, 200)
+                return {
+                    'data': result
+                }
 
     except Exception as e:
-        logger.exception('Erro ao buscar termo de pesquisa na função SearchContactDB')
-        return HandleExceptions(e)
+        raise databaseErrors(e)
 #############################################################################
 
 def list_services_db(offset, id, role):
     if not connectionPool:
-        logger.error('Pool de conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     conn = None
     cursor = None
@@ -491,7 +483,9 @@ def list_services_db(offset, id, role):
                     'services': []
                 }
                 if not services:
-                    return CreateResponse(response, 200)
+                    return {
+                        'data': response
+                    }
 
                 cursor.execute(count, (id,))
                 count_query = cursor.fetchone()
@@ -509,16 +503,19 @@ def list_services_db(offset, id, role):
                     'total': total
                 }
 
-                return CreateResponse(data, 200)
+                return {
+                    'data': data
+                }
 
     except Exception as e:
-        logger.error('Erro com a função list_services_db', exc_info=True)
-        return HandleExceptions(e)
+        return databaseErrors(e)
 
 def insert_service_db(data):
     if not connectionPool:
-        logger.error('Pool de conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     conn = None
     cursor = None
@@ -548,21 +545,24 @@ def insert_service_db(data):
 
                 result = cursor.fetchone()
                 if not result:
-                    logger.error('Serviço já cadastrado')
-                    return CreateError(409, 'Usuário já cadastrado')
+                    raise DuplicateServiceError()
+
                 conn.commit()
 
-                response = CreateResponse(result[0], 200)
+                response = {
+                    'data': result[0]
+                }
                 return response
 
     except Exception as e:
-        logger.exception('Erro com a função insert_service_db')
-        return HandleExceptions(e)
+        raise databaseErrors(e)
 
 def get_unique_service_db(serviceId, AccessID, role):
     if not connectionPool:
-        logger.error('Pool de conexões não inicializado', exc_info=True)
-        return CreateError(500, 'Erro interno do servidor')
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
 
     conn = None
     cursor = None
@@ -584,11 +584,11 @@ def get_unique_service_db(serviceId, AccessID, role):
                 cursor.execute(query, (serviceId, AccessID))
                 result = cursor.fetchone()
                 if not result:
-                    return CreateError(404, 'Serviço não encontrado')
+                    raise ServiceNotFound()
 
-                return CreateResponse(result, 200)
+                return {
+                    'data': result
+                }
 
     except Exception as e:
-        logger.exception('Erro com a função get_unique_service_db')
-        return HandleExceptions(e)
-
+        raise databaseErrors(e)

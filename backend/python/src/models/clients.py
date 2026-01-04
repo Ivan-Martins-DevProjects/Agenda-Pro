@@ -3,9 +3,10 @@ import logging
 from dotenv import load_dotenv
 from dataclasses import dataclass
 from typing import Optional
-from pydantic import BaseModel, EmailStr, ValidationError, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 
-from src.validation import errors
+from src.errors.authErrors import UserNotPermited
+from src.errors.mainErrors import InvalidField
 from src.internal import database
 from src.validation.checkTypes import isNumber
 
@@ -24,57 +25,67 @@ class ServiceLayer:
         response = database.GetUniqueContact(contactID, userID, role)
         return response
 
-    def services_errors(self, e):
-        error_list = {
-            ValidationError: (400, 'Requisição inválida')
-        }
-
-        for errType, (status, message) in error_list.items():
-            if isinstance(e, errType):
-                return errors.CreateError(status, message)
-
-        return errors.CreateError(500, 'Erro inesperado do servidro')
-
 
 class ClientsRepository:
     def ListClients(self, offset, ID, Role):
         # Busca os clientes referentes a role do usuário no banco de dados
-        clientes = database.GetClients(ID, Role, offset)
+        try:
+            clientes = database.GetClients(ID, Role, offset)
+            return clientes
 
-        return clientes
+        except Exception:
+            raise
 
     def GetContact(self, ClientID, ID, Role):
-        response = database.GetUniqueContact(
-            contactId= ClientID,
-            id= ID,
-            role= Role
-        )
+        try:
+            response = database.GetUniqueContact(
+                contactId=ClientID,
+                id=ID,
+                role=Role
+            )
 
-        return response
+            return response
+        except Exception:
+            raise
 
     def NewContact(self, data):
-        response = database.InsertNewContactDB(data)
-        return response
+        try:
+            response = database.InsertNewContactDB(data)
+            return response
+        except Exception:
+            raise
 
     def UpdateContact(self, ContactID, data):
-        response = database.UpdateContactDB(ContactID, data)
-        return response
+        try:
+            response = database.UpdateContactDB(ContactID, data)
+            return response
+        except Exception:
+            raise
 
     def DeleteContact(self, id):
-        response = database.DeleteContactDB(id)
-        return response
+        try:
+            response = database.DeleteContactDB(id)
+            return response
+        except Exception:
+            raise
 
     def SearchContact(self, id, text, role):
-        response = database.SearchContactDB(
-            id=id,
-            text=text,
-            role=role
-        )
-        return response
+        try:
+            response = database.SearchContactDB(
+                id=id,
+                text=text,
+                role=role
+            )
+            return response
+        except Exception:
+            raise
 
     def InsertNewContact(self, data):
-        response = database.InsertNewContactDB(data)
-        return response
+        try:
+            response = database.InsertNewContactDB(data)
+            return response
+        except Exception:
+            raise
 
 
 class Clients(BaseModel):
@@ -96,7 +107,7 @@ class Clients(BaseModel):
     @classmethod
     def check_telefone(cls, value):
         if isNumber(value) is False:
-            raise ValueError('Telefone Inválido')
+            raise InvalidField(field='Telefone')
         return value
 
 # Classe responsável por criar e validar permissões do usuário
@@ -108,13 +119,8 @@ class User:
     Instance: Optional[str] = None
     IsConnected: Optional[str] = None
     Role: Optional[str] = None
-    Permissions: Optional[str] = None
+    Permissions: Optional[dict] = None
     
-    def set_scope(self, scope):
-        if scope not in self.Permissions:
-            return errors.CreateError(401, 'Usuário não autorizado')
-        return None
-
     def true_id(self):
         if self.Role == 'admin':
             return self.BussinesID
@@ -123,7 +129,7 @@ class User:
 
     def is_permitted(self, scope):
         if scope not in self.Permissions:
-            return errors.CreateError(409, 'Usuário não autorizado')
+            raise UserNotPermited()
 
         return True
 
@@ -134,72 +140,85 @@ class ClientsServices:
         self.services = ServiceLayer()
 
     def grant_access(self, scope):
-        ID = self.user.true_id()
-        checkScope = self.user.set_scope(scope)
-        if checkScope is not None:
-            return checkScope
+        try:
+            ID = self.user.true_id()
+            self.user.is_permitted(scope)
 
-        return ID
+            return ID
+        except Exception:
+            raise
 
     def validate_user_from_contact(self, contactID, ID):
-        response = self.repo.GetContact(
-            ClientID=contactID,
-            ID=ID,
-            Role=self.user.Role
-        )
-        if response['status'] == 'error':
-            return response
+        try:
+            self.repo.GetContact(
+                ClientID=contactID,
+                ID=ID,
+                Role=self.user.Role
+            )
 
-        return True
+            return True
+        except Exception:
+            raise
 
     def insert_new_contact(self, data):
         try:
             Clients(**data)
-            response = self.repo.InsertNewContact(data)
-        except Exception as e:
-            logger.error('Payload da função insert_new_contact mal formatado', exc_info=True)
-            return self.services.services_errors(e)
-
-        response = self.repo.InsertNewContact(data)
-        return response
+            self.repo.InsertNewContact(data)
+        except Exception:
+            raise
 
     def get_all_clients(self, offset, ID):
-        clients = self.repo.ListClients(
-            offset=offset * 10,
-            ID=ID,
-            Role=self.user.Role
-        )
-        return errors.CreateResponse(clients, 200)
+        try:
+            clients = self.repo.ListClients(
+                offset=offset * 10,
+                ID=ID,
+                Role=self.user.Role
+            )
+            return {
+                'data': clients
+            }
+
+        except Exception:
+            raise
+
 
     def get_unique_contact(self, contactId, UserID):
-        response = self.repo.GetContact(
-            ClientID=contactId,
-            ID=UserID,
-            Role=self.user.Role
-        )
-        return response
+        try:
+            response = self.repo.GetContact(
+                ClientID=contactId,
+                ID=UserID,
+                Role=self.user.Role
+            )
+            return response
+        except Exception:
+            raise
 
     def update_contact(self, contactID, data):
         try:
             Clients(**data)
-        except Exception as e:
-            logger.error('erro ao validar body recebido na função update_contact', exc_info=True)
-            return self.services.services_errors(e)
+            response = self.repo.UpdateContact(
+                ContactID=contactID,
+                data=data
+            )
+            return response
 
-        response = self.repo.UpdateContact(
-            ContactID=contactID,
-            data=data
-        )
-        return response
+        except Exception:
+            raise
 
     def delete_contact(self, contactID):
-        response = self.repo.DeleteContact(id=contactID)
-        return response
+        try:
+            response = self.repo.DeleteContact(id=contactID)
+            return response
+        except Exception:
+            raise
 
     def search_contact(self,id, text):
-        response = self.repo.SearchContact(
-            id=id,
-            text=text,
-            role=self.user.Role
-        )
-        return response
+        try:
+            response = self.repo.SearchContact(
+                id=id,
+                text=text,
+                role=self.user.Role
+            )
+            return response
+        except Exception:
+            raise

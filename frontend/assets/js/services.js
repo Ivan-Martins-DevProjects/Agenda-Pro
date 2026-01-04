@@ -35,10 +35,10 @@ async function ListServicesAPI(offset) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
         } else if (!response.ok) {
-            throw new Error(clientes.message)
+            throw new Error(services)
         }
 
-        return services.data
+        return services
 
     } catch (error) {
         ErrorModal(error, 'Erro ao listar Serviços')
