@@ -357,7 +357,7 @@ export default async function LoadServices() {
     document.dispatchEvent(ActionComplete)
 
     if (services.length > 1) {
-        const MaxPage = Math.ceil(response.total / 10)
+        const MaxPage = Math.ceil(response.total / 12)
         CreatePagination(1, MaxPage)
     }
 
@@ -375,7 +375,7 @@ export async function ListNextPageServices(start, offset, last) {
     RenderServices(services)
     LoadServicesListener()
 
-    const MaxPage = Math.ceil(response.total / 10)
+    const MaxPage = Math.ceil(response.total / 12)
     CreatePagination(start, MaxPage)
     nextPage(offset, last)
     return

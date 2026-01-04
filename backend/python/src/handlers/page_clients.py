@@ -95,6 +95,7 @@ class ClientsHandler:
             body = self.req_data.body
             contact_data = {
                 "userid": str(user.ID),
+                "respName": user.Nome,
                 "bussinesId": user.BussinesID,
                 "contactID": str(uuid.uuid4()),
                 "nome": body.get('nome'),
@@ -110,7 +111,8 @@ class ClientsHandler:
                 "visitas": body.get('visitas'),
             }
 
-            clientsServices.insert_new_contact(contact_data)
+            response = clientsServices.insert_new_contact(contact_data)
+            return response
 
         except Exception:
             raise

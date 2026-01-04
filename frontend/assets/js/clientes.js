@@ -258,7 +258,7 @@ async function EditClientsListener(event, closest) {
     // Requisita os dados detalhados do cliente
     const response = await RequestUniqueContact(id)
     // Renderiza o modal com os dados do cliente
-    RenderModalContact(response.data, id)
+    RenderModalContact(response, id)
     // Dispara evento para indicar que a ação de busca foi concluída
     // document.dispatchEvent(ActionComplete)
 }
@@ -554,7 +554,7 @@ async function ListNextPageClients(start, offset, last){
 
     // Atualiza a lista de clientes com os novos dados
     todosClientes = response.clientes
-    renderClients(response.data.clientes)
+    renderClients(todosClientes)
 
 
     // Recalcula o número total de páginas
@@ -927,12 +927,12 @@ async function SearchClientAPI(input) {
             window.location.replace(`${FrontendURL}/login.html`)
         } else if (!response.ok){
             alert('Erro ao buscar usuário')
-            throw new Error(content.message)
+            throw new Error(content)
         }
 
         const resposta = await response.json()
 
-        return resposta.data
+        return resposta
 
     } catch (error) {
         console.log(error)

@@ -163,7 +163,8 @@ class ClientsServices:
     def insert_new_contact(self, data):
         try:
             Clients(**data)
-            self.repo.InsertNewContact(data)
+            response = self.repo.InsertNewContact(data)
+            return response
         except Exception:
             raise
 

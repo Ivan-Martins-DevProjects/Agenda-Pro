@@ -5,8 +5,8 @@ from flask_cors import CORS
 from src.internal import database
 from src.errors.mainErrors import AppError, NullableField, handle_exception
 from src.requests.request_builder import RequestBuilder
-from src.validation import *
 from src.handlers import dashboard, page_clients, page_services
+from src.validation.logging_conf import SetupLogging
 
 # Setup para mensagens de Logs
 SetupLogging()
@@ -24,11 +24,11 @@ CORS(app, resources={
 
 logger = logging.getLogger(__name__)
 
-@app.route("/api/dashboard", methods=['POST'])
-def data():
-    resultado = dashboard.main()
-
-    return jsonify(resultado)
+# @app.route("/api/dashboard", methods=['POST'])
+# def data():
+#     resultado = dashboard.main()
+#
+#     return jsonify(resultado)
 
 @app.route('/api/clients', methods=['GET'])
 def list_contacts_api():
@@ -51,6 +51,7 @@ def list_contacts_api():
 
     except Exception as e:
         response = handle_exception(e)
+        logger.debug(response['status'])
         return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
 
 

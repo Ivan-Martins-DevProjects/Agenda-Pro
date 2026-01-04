@@ -277,7 +277,7 @@ def InsertNewContactDB(data):
                 resultContacts = cursor.fetchone()
 
                 if not resultContacts:
-                    raise DuplicateClientError()
+                    raise DuplicateClientError(message=resultContacts)
 
                 conn.commit()
 
@@ -475,7 +475,7 @@ def list_services_db(offset, id, role):
                     WHERE userid = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
 
-                cursor.execute(query, (id, 10, int(offset)))
+                cursor.execute(query, (id, 12, int(offset)))
                 services = cursor.fetchall()
 
                 response = {
