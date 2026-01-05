@@ -2,34 +2,49 @@ import logging
 import uuid
 
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from dataclasses import dataclass
+from typing import Optional
 
+from src.errors.mainErrors import AppError, InvalidField
 from src.internal import database
 
 logger = logging.getLogger(__name__)
 load_dotenv()
 
-class Services(BaseModel):
+@dataclass
+class Services():
     id: str
-    userID: str
-    bussinesID: str
-    nome: str
-    description: str
+    userId: str
+    bussinesId: str
+    title: str
     price: int
     duration: int
+    respName: str
+    description: Optional[str] = None
+
+    def __post_init__(self):
+        if len(self.title) < 5:
+            raise InvalidField(field='Título')
+
+        if int(self.price) < 0:
+            raise InvalidField(
+                field='Preço'
+            )
+
+        if int(self.duration) < 0:
+            raise InvalidField(
+                message='Duração não pode ser menor que 0'
+            )
+
+        if self.description and len(self.description) < 10:
+            raise InvalidField(
+                message='Descrição não pode ter menos que 10 caracteres'
+            )
 
 class ServicesControl:
     def __init__(self, User) -> None:
         self.user = User
         self.repo = ServicesRepository()
-
-    def grant_access(self, scope):
-        ID = self.user.true_id()
-        checkScope = self.user.set_scope(scope)
-        if checkScope is not None:
-            return checkScope
-
-        return ID
 
     def list_all_services(self, offset, ID):
         services = self.repo.list_services(
@@ -45,9 +60,15 @@ class ServicesControl:
         data['respName'] = self.user.Nome
         data['id'] = uuid.uuid4()
 
+        Services(**data)
+
         response = self.repo.insert_service(
             data=data
         )
+        return response
+
+    def delete_service(self, id):
+        response = self.repo.delete_service(id)
         return response
 
     def get_unique_service(self, serviceId, AccessID):
@@ -71,7 +92,18 @@ class ServicesRepository:
         response = database.insert_service_db(
             data
         )
+        if not response:
+            raise AppError(
+                logger_message='Nenhuma resposta recebida da função insert_service_db'
+            )
+        return response
 
+    def delete_service(self, id):
+        response = database.delete_service(id)
+        if not response:
+            raise AppError(
+                logger_message='Nenhuma resposta recebida da função DeleteContactDB'
+            )
         return response
 
     def get_unique_service(self, id, AccessID, role):

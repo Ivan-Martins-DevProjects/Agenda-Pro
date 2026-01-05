@@ -174,12 +174,43 @@ def create_service_api():
 
         response = handler.insert_service()
         if not response:
-            raise AppError(logger_message='Erro ao capturar resposta do handler')
+            raise AppError(
+                message='Erro ao capturar resposta do handler',
+                logger_message='Erro ao capturar resposta do handler'
+            )
 
         return jsonify(response.get('data')), 200
     except Exception as e:
         response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        data = {
+            'message': response.get('error', 'Erro interno ao gerar resposta'),
+            'code': response.get('code', 'Erro interno ao captar erro'),
+        }
+        return jsonify(data), response.get('status', 500)
+
+@app.route('/api/services/delete', methods=['DELETE'])
+def delete_service_api():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        handler = page_services.ServicesHandler(req_data)
+
+        response = handler.delete_service()
+        if not response:
+            raise AppError(
+                message='Erro ao capturar resposta',
+                logger_message='handler delete_service não retornou nenhuma resposta'
+            )
+
+        return '', 200
+
+    except Exception as e:
+        response = handle_exception(e)
+        data = {
+            'message': response.get('error', 'Erro interno ao gerar resposta'),
+            'code': response.get('code', 'Erro interno ao captar erro'),
+        }
+        return jsonify(data), response.get('status', 500)
+
 
 @app.route('/api/services/unique', methods=['GET']) 
 def get_unique_service_api():
@@ -192,6 +223,7 @@ def get_unique_service_api():
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
         return jsonify(response.get('data')), 200
+
     except Exception as e:
         response = handle_exception(e)
         return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)

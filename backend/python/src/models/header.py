@@ -29,11 +29,11 @@ class AuthHeader:
             check = jwt.AuthServices(token)
             user = check.Autenticar()
             if not user:
-                raise AppError
+                raise AppError(logger_message='Erro ao criar classe User')
 
             hasPermission = user.is_permitted(scope)
             if hasPermission is False:
-                raise UserNotPermited
+                raise UserNotPermited()
 
             self.AccessID = user.true_id()
             self.user = user

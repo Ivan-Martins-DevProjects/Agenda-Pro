@@ -16,7 +16,7 @@ def databaseErrors(e):
     for errType, funcType in maps.items():
         if isinstance(e, errType):
             raise funcType()
-        elif isinstance(e, Exception):
+        elif isinstance(e, AppError):
             raise e
 
-    raise AppError(message='Erro interno do servidor', logger_level=logging.error)
+    raise AppError(logger_message='Erro interno do servidor', logger_level=logging.error)

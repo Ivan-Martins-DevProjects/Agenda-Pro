@@ -29,63 +29,42 @@ class ServiceLayer:
 class ClientsRepository:
     def ListClients(self, offset, ID, Role):
         # Busca os clientes referentes a role do usuário no banco de dados
-        try:
-            clientes = database.GetClients(ID, Role, offset)
-            return clientes
+        clientes = database.GetClients(ID, Role, offset)
+        return clientes
 
-        except Exception:
-            raise
 
     def GetContact(self, ClientID, ID, Role):
-        try:
-            response = database.GetUniqueContact(
-                contactId=ClientID,
-                id=ID,
-                role=Role
-            )
+        response = database.GetUniqueContact(
+            contactId=ClientID,
+            id=ID,
+            role=Role
+        )
 
-            return response
-        except Exception:
-            raise
+        return response
 
     def NewContact(self, data):
-        try:
-            response = database.InsertNewContactDB(data)
-            return response
-        except Exception:
-            raise
+        response = database.InsertNewContactDB(data)
+        return response
 
     def UpdateContact(self, ContactID, data):
-        try:
-            response = database.UpdateContactDB(ContactID, data)
-            return response
-        except Exception:
-            raise
+        response = database.UpdateContactDB(ContactID, data)
+        return response
 
     def DeleteContact(self, id):
-        try:
-            response = database.DeleteContactDB(id)
-            return response
-        except Exception:
-            raise
+        response = database.DeleteContactDB(id)
+        return response
 
     def SearchContact(self, id, text, role):
-        try:
-            response = database.SearchContactDB(
-                id=id,
-                text=text,
-                role=role
-            )
-            return response
-        except Exception:
-            raise
+        response = database.SearchContactDB(
+            id=id,
+            text=text,
+            role=role
+        )
+        return response
 
     def InsertNewContact(self, data):
-        try:
-            response = database.InsertNewContactDB(data)
-            return response
-        except Exception:
-            raise
+        response = database.InsertNewContactDB(data)
+        return response
 
 
 class Clients(BaseModel):
@@ -139,87 +118,54 @@ class ClientsServices:
         self.repo = ClientsRepository()
         self.services = ServiceLayer()
 
-    def grant_access(self, scope):
-        try:
-            ID = self.user.true_id()
-            self.user.is_permitted(scope)
-
-            return ID
-        except Exception:
-            raise
-
     def validate_user_from_contact(self, contactID, ID):
-        try:
-            self.repo.GetContact(
-                ClientID=contactID,
-                ID=ID,
-                Role=self.user.Role
-            )
+        self.repo.GetContact(
+            ClientID=contactID,
+            ID=ID,
+            Role=self.user.Role
+        )
 
-            return True
-        except Exception:
-            raise
+        return True
 
     def insert_new_contact(self, data):
-        try:
-            Clients(**data)
-            response = self.repo.InsertNewContact(data)
-            return response
-        except Exception:
-            raise
+        Clients(**data)
+        response = self.repo.InsertNewContact(data)
+        return response
 
     def get_all_clients(self, offset, ID):
-        try:
-            clients = self.repo.ListClients(
-                offset=offset * 10,
-                ID=ID,
-                Role=self.user.Role
-            )
-            return {
-                'data': clients
-            }
-
-        except Exception:
-            raise
-
+        clients = self.repo.ListClients(
+            offset=offset * 10,
+            ID=ID,
+            Role=self.user.Role
+        )
+        return {
+            'data': clients
+        }
 
     def get_unique_contact(self, contactId, UserID):
-        try:
-            response = self.repo.GetContact(
-                ClientID=contactId,
-                ID=UserID,
-                Role=self.user.Role
-            )
-            return response
-        except Exception:
-            raise
+        response = self.repo.GetContact(
+            ClientID=contactId,
+            ID=UserID,
+            Role=self.user.Role
+        )
+        return response
 
     def update_contact(self, contactID, data):
-        try:
-            Clients(**data)
-            response = self.repo.UpdateContact(
-                ContactID=contactID,
-                data=data
-            )
-            return response
-
-        except Exception:
-            raise
+        Clients(**data)
+        response = self.repo.UpdateContact(
+            ContactID=contactID,
+            data=data
+        )
+        return response
 
     def delete_contact(self, contactID):
-        try:
-            response = self.repo.DeleteContact(id=contactID)
-            return response
-        except Exception:
-            raise
+        response = self.repo.DeleteContact(id=contactID)
+        return response
 
     def search_contact(self,id, text):
-        try:
-            response = self.repo.SearchContact(
-                id=id,
-                text=text,
-                role=self.user.Role
-            )
-            return response
-        except Exception:
-            raise
+        response = self.repo.SearchContact(
+            id=id,
+            text=text,
+            role=self.user.Role
+        )
+        return response

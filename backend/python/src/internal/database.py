@@ -65,7 +65,7 @@ def RequestPermissionsDB(id):
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
             # Obtém a conexão do pool de conexões
-                logger.debug('Conexão obtida do pool')
+                logger.debug('RequestPermissionsDB Acionado')
 
                 # Define a query e a executa
                 query = 'SELECT * FROM roles WHERE user_id = %s'
@@ -365,9 +365,8 @@ def DeleteContactDB(id):
                 
                 cursor.execute(query_2, (id,))
                 conn.commit()
-                if cursor.rowcount <=0:
-                    logger.error('Erro ao deletar contato da tabela contatos')
-                    raise AppError()
+                if cursor.rowcount <= 0:
+                    raise AppError(message='Erro ao deletar contato da tabela contatos')
 
                 data = {
                     'data': 'Usuário excluído com sucesso'
@@ -475,7 +474,7 @@ def list_services_db(offset, id, role):
                     WHERE userid = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
 
-                cursor.execute(query, (id, 12, int(offset)))
+                cursor.execute(query, (id, 10, int(offset)))
                 services = cursor.fetchall()
 
                 response = {
@@ -523,13 +522,14 @@ def insert_service_db(data):
     try:
         with connectionPool.connection() as conn:
             with conn.cursor() as cursor:
-                userId = data.get('userId')
-                bussinesId = data.get('bussinesId')
-                id = data.get('id')
-                respName = data.get('respName')
-                title = data.get('title')
-                description = data.get('description')
-                price = int(data.get('price')) * 100
+                userId = data['userId']
+                bussinesId = data['bussinesId']
+                id = data['id']
+                respName = data['respName']
+                title = data['title']
+                description = data['description']
+                Unpackprice = int(data['price'])
+                price = int(Unpackprice * 10)
                 duration = data.get('duration')
 
                 query = """
@@ -556,6 +556,33 @@ def insert_service_db(data):
 
     except Exception as e:
         raise databaseErrors(e)
+
+def delete_service(serviceId):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                query = """DELETE FROM services WHERE id = %s"""
+
+                cursor.execute(query, (serviceId,))
+                conn.commit()
+                if cursor.rowcount <= 0:
+                    raise AppError(message='Erro ao deletar usuário')
+
+                response = 'Usuário excluído com sucesso'
+                return response
+
+    except Exception as e:
+        raise databaseErrors(e)
+
 
 def get_unique_service_db(serviceId, AccessID, role):
     if not connectionPool:

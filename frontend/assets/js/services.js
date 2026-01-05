@@ -1,4 +1,4 @@
-// ==============================================================================
+// =============================================================================r
 // IMPORTAÇÕES
 // ==============================================================================
 import { api_url, token } from "./index.js"
@@ -63,7 +63,7 @@ async function NewServiceAPI(data) {
         const resposta = await response.json()
 
         // Nota: Mantido a lógica original de '!response.status === 401'
-        if (!response.status === 401) {
+        if (response.status === 401) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
             return
@@ -71,7 +71,8 @@ async function NewServiceAPI(data) {
             if (NewServiceModal) {
                 NewServiceModal.close()
             }
-            throw new Error(resposta.message)
+            ErrorModal(resposta.code, resposta.message)
+            throw new Error(resposta.code)
         }
 
         NewServiceModal.close()
@@ -80,8 +81,32 @@ async function NewServiceAPI(data) {
         return
 
     } catch (error) {
-        ErrorModal(undefined, 'Erro ao cadastrar novo serviço')
-        console.log(error);
+        console.log('Erro ao cadastrar novo usuário');
+        return
+    }
+}
+
+async function DeleteServiceAPI(id) {
+    try {
+        const response = await fetch(`${api_url}/api/services/delete?id=${id}`, {
+            method: 'DELETE',
+            headers: {'Authorization': token}
+        })
+
+        if (response.status === 401) {
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+            return
+        } else if (!response.ok) {
+            ErrorModal(response.code, response.message)
+            throw new Error(response.code)
+        }
+
+        alert('Usuário excluído com sucesso')
+        return
+
+    } catch (error) {
+        console.warn(error);
         return
     }
 }
@@ -220,7 +245,6 @@ function RenderServices(services) {
     services.forEach(item => {
         // Card Main Container
         const main = document.createElement('div')
-        main.dataset.id = item.id
         main.className = 'container'
 
         // Card Header
@@ -265,11 +289,20 @@ function RenderServices(services) {
 
         const editBtn = document.createElement('button')
         editBtn.className = 'btn-services-edit'
+        editBtn.dataset.id = item.id
         editBtn.textContent = 'Editar'
 
         const excludeBtn = document.createElement('button')
+        excludeBtn.dataset.id = item.id
         excludeBtn.className = 'btn-services-exclude'
         excludeBtn.textContent = 'Excluir'
+        excludeBtn.addEventListener('click', DeleteServiceListener)
+        ServicesListeners.push({
+            var: '.btn-services-exclude',
+            type: 'click',
+            func: DeleteServiceListener
+        })
+
 
         footer.appendChild(editBtn)
         footer.appendChild(excludeBtn)
@@ -291,6 +324,21 @@ function RenderServices(services) {
 function NewServiceListener() {
     NewServiceModal.showModal()
     document.dispatchEvent(OpenModal)
+}
+
+
+async function DeleteServiceListener(event){
+    const deleteBtn = event.target
+    const id = deleteBtn.dataset.id
+
+    const confirm = window.confirm('Deseja continuar?')
+    if (!confirm){
+        return
+    } else {
+        await DeleteServiceAPI(id)
+        LoadServices()
+        return
+    }
 }
 
 /**
@@ -329,13 +377,13 @@ function LoadServicesListener() {
 
     const NewServiceBtn = document.querySelector('.new-service')
     NewServiceBtn.addEventListener('click', NewServiceListener)
-
     ServicesListeners.push({
         var: '.new-service',
         type: 'click',
         func: NewServiceListener
     })
-}
+
+    }
 
 // ==============================================================================
 // FUNÇÕES PRINCIPAIS DE CONTROLE E EXPORTAÇÃO
@@ -357,7 +405,7 @@ export default async function LoadServices() {
     document.dispatchEvent(ActionComplete)
 
     if (services.length > 1) {
-        const MaxPage = Math.ceil(response.total / 12)
+        const MaxPage = Math.ceil(response.total / 10)
         CreatePagination(1, MaxPage)
     }
 
@@ -375,7 +423,7 @@ export async function ListNextPageServices(start, offset, last) {
     RenderServices(services)
     LoadServicesListener()
 
-    const MaxPage = Math.ceil(response.total / 12)
+    const MaxPage = Math.ceil(response.total / 10)
     CreatePagination(start, MaxPage)
     nextPage(offset, last)
     return
