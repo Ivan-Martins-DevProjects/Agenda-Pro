@@ -71,12 +71,12 @@ O desenvolvimento avança com foco na modularidade do frontend, segurança e arq
 - banco de dados já está populado com dados fictícios (Mock Data) para facilitar a manipulação e testes imediatos das funcionalidades durante o desenvolvimento.
 
 ---
-## 🔹 Funcionalidades Planejadas
-Fluxo da processo de login:
-![Fluxo de Login]("images/Fluxo de Login.png")
+## 🔹 Diagramas
+### Fluxo da processo de login:
+![Fluxo de Login](images/Fluxo%20de%20Login.png)
 
-Fluxo do processo de listagem de todos os clientes:
-![Fluxo de Listagem de Clientes]("images/Fluxo ListClients.png")
+### Fluxo do processo de listagem de todos os clientes:
+![Fluxo de Listagem de Clientes](images/Fluxo%20ListClients.png)
 
 ---
 
