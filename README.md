@@ -72,6 +72,15 @@ O desenvolvimento avança com foco na modularidade do frontend, segurança e arq
 
 ---
 ## 🔹 Funcionalidades Planejadas
+Fluxo da processo de login:
+![Fluxo de Login]("images/Fluxo de Login.png")
+
+Fluxo do processo de listagem de todos os clientes:
+![Fluxo de Listagem de Clientes]("images/Fluxo ListClients.png")
+
+---
+
+## 🔹 Funcionalidades Planejadas
 - **Cadastro de Clientes:**
   Adição de contatos que serão sincronizados automaticamente com o WhatsApp.
 
@@ -97,13 +106,6 @@ O desenvolvimento avança com foco na modularidade do frontend, segurança e arq
 - **Comunicação em Tempo Real:** WebSockets
 
 ---
-
-## 🔹 Status do Projeto
-O projeto está **em desenvolvimento inicial**.
-Nenhuma funcionalidade está plenamente operante até o momento, mas a arquitetura já está definida e a plataforma está sendo estruturada para suportar todas as funcionalidades planejadas.
-
----
-
 ## 🔹 Contato
 Para informações ou dúvidas:
 📧 Email: Ivan_G.Martins@outlook.com
