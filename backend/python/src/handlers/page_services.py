@@ -112,3 +112,35 @@ class ServicesHandler:
             raise AppError(logger_message='Nenhum informação recebida de get_unique_service')
         return response
         
+    def edit_service(self):
+        controlers = set_service_header_params(self.req_data, 'read_services')
+        if not controlers:
+            raise AppError(logger_message='Erro ao definir controlers', status=500)
+
+        servicesControl = controlers.servicesControl
+        if not servicesControl:
+            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers', status=500)
+
+        id = self.req_data.params.get('id')
+        if not id:
+            raise BadRequest(
+                field='id',
+                logger_message='Parâmetro ID não encontrado'
+            )
+
+        body = self.req_data.body
+        if not body:
+            raise BadRequest(
+                field='Payload',
+                logger_message=f'Payload incorreto ou vazio: {body}'
+            )
+
+        response = servicesControl.edit_service(
+            serviceId=id,
+            data=body
+        )
+        if not response:
+            raise AppError(logger_message='Nenhum informação recebida de get_unique_service')
+
+        return response
+

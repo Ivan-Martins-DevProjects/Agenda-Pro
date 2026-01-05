@@ -10,7 +10,8 @@ import ErrorModal from "./index.js"
 // ==============================================================================
 const ServicesListeners = []
 const NewServiceModal = document.querySelector('.new-service-modal')
-const OpenModal = new Event('new-service-modal-open')
+const OpenNewServiceModal = new Event('new-service-modal-open')
+const OpenEditServiceModal = new Event('edit-service-modal-open')
 
 // ==============================================================================
 // FUNÇÕES DE API (REQUISIÇÕES AO SERVIDOR)
@@ -35,13 +36,14 @@ async function ListServicesAPI(offset) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
         } else if (!response.ok) {
-            throw new Error(services)
+            ErrorModal(services.message, services.code)
+            throw new Error(services.code)
         }
 
         return services
 
     } catch (error) {
-        ErrorModal(error, 'Erro ao listar Serviços')
+        console.warn(error);
         return
     }
 }
@@ -71,7 +73,7 @@ async function NewServiceAPI(data) {
             if (NewServiceModal) {
                 NewServiceModal.close()
             }
-            ErrorModal(resposta.code, resposta.message)
+            ErrorModal(resposta.message, resposta.code)
             throw new Error(resposta.code)
         }
 
@@ -93,13 +95,15 @@ async function DeleteServiceAPI(id) {
             headers: {'Authorization': token}
         })
 
+        resposta = await response.json()
+
         if (response.status === 401) {
             alert('Acesso não autorizado')
             window.location.replace(`${FrontendURL}/login.html`)
             return
         } else if (!response.ok) {
-            ErrorModal(response.code, response.message)
-            throw new Error(response.code)
+            ErrorModal(resposta.message, resposta.code)
+            throw new Error(resposta.code)
         }
 
         alert('Usuário excluído com sucesso')
@@ -109,6 +113,65 @@ async function DeleteServiceAPI(id) {
         console.warn(error);
         return
     }
+}
+
+async function GetUniqueServiceAPI(id){
+    try {
+        const response = await fetch(`${api_url}/api/services/unique?id=${id}`, {
+            method: 'GET',
+            headers: {'Authorization': token}
+        })
+
+        const resposta = await response.json()
+
+        if (response.status === 401) {
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+            return
+        } else if (!response.ok) {
+            ErrorModal(resposta.message, resposta.code)
+            throw new Error(response.code)
+        }
+
+        return resposta.data
+
+    } catch (error) {
+        console.warn(error);
+        return
+    }
+}
+
+async function EditServiceAPI(data, id) {
+    try {
+        const response = await fetch(`${api_url}/api/services/edit?id=${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify(data)
+        })
+
+        const resposta = await response.json()
+
+        if (response.status === 401) {
+            alert('Acesso não autorizado')
+            window.location.replace(`${FrontendURL}/login.html`)
+            return
+        } else if (!response.ok) {
+            ErrorModal(resposta.message, resposta.code)
+            throw new Error(resposta.code)
+        }
+
+        alert('Contato editado com sucesso')
+        NewServiceModal.close()
+        LoadServices()
+
+    } catch (error) {
+        console.warn(error);
+        return
+    }
+
 }
 
 // ==============================================================================
@@ -170,18 +233,69 @@ function InfoNewService() {
     }
 }
 
+function RenderEditServiceModal(data){
+    const modal = document.querySelector('.new-service-modal')
+    const title = document.querySelector('.new-service-title h2')
+    title.textContent = 'Editar Serviço'
 
+    const name = document.querySelector('.new-service-input-title')
+    name.value = data.title
+
+    const description = document.querySelector('.new-service-input-description')
+    description.value = data.description
+
+    const price = document.querySelector('.new-service-input-price')
+    price.value = data.price / 100
+
+    const duration = document.querySelector('.new-service-input-duration')
+    duration.value = data.duration
+
+    modal.showModal()
+    document.dispatchEvent(OpenEditServiceModal)
+}
 /**
  * Gerencia o fluxo de criação: coleta dados e chama a API.
  */
 async function CreateNewService(event) {
     event.preventDefault()
     const data = await InfoNewService()
-    console.log(data);
     if (!data) { return }
 
     NewServiceAPI(data)
     return
+}
+
+async function GetUniqueServiceListener(event){
+    event.preventDefault()
+
+    const editBtn = event.target
+    const id = editBtn.dataset.id
+    const confirmBtn = NewServiceModal.querySelector('.new-service-confirm')
+    confirmBtn.dataset.id = id
+    const data = await GetUniqueServiceAPI(id)
+
+    RenderEditServiceModal(data)
+    EditServiceModalListeners()
+}
+
+async function EditServiceListener(event) {
+    event.preventDefault()
+    const confirmBtn = event.target
+    const id = confirmBtn.dataset.id
+
+    const title = NewServiceModal.querySelector('.new-service-input-title')
+    const description = NewServiceModal.querySelector('.new-service-input-description')
+    const price = NewServiceModal.querySelector('.new-service-input-price')
+    const duration = NewServiceModal.querySelector('.new-service-input-duration')
+
+    const data = {
+        title: title.value,
+        description: description.value,
+        price: price.value * 100,
+        duration: duration.value
+    }
+
+    EditServiceAPI(data, id)
 }
 
 // ==============================================================================
@@ -291,6 +405,12 @@ function RenderServices(services) {
         editBtn.className = 'btn-services-edit'
         editBtn.dataset.id = item.id
         editBtn.textContent = 'Editar'
+        editBtn.addEventListener('click', GetUniqueServiceListener)
+        ServicesListeners.push({
+            var: '.btn-services-edit',
+            type: 'click',
+            func: GetUniqueServiceListener
+        })
 
         const excludeBtn = document.createElement('button')
         excludeBtn.dataset.id = item.id
@@ -323,7 +443,26 @@ function RenderServices(services) {
  */
 function NewServiceListener() {
     NewServiceModal.showModal()
-    document.dispatchEvent(OpenModal)
+    document.dispatchEvent(OpenNewServiceModal)
+}
+
+function EditServiceModalListeners() {
+    const modal = document.querySelector('.new-service-modal')
+    modal.addEventListener('cancel', exit)
+
+    function exit(event) {
+        event.preventDefault()
+        editBtn.removeEventListener('click', EditServiceListener)
+        exitBtn.removeEventListener('click', exit)
+        modal.removeEventListener('cancel', exit)
+        modal.close()
+    }
+
+    const editBtn = modal.querySelector('.new-service-confirm')
+    editBtn.addEventListener('click', EditServiceListener)
+
+    const exitBtn = modal.querySelector('.new-service-exit')
+    exitBtn.addEventListener('click', exit)
 }
 
 
@@ -374,13 +513,19 @@ function LoadServicesListener() {
     })
 
     document.addEventListener('new-service-modal-open', NewServiceModalListeners)
-
     const NewServiceBtn = document.querySelector('.new-service')
     NewServiceBtn.addEventListener('click', NewServiceListener)
     ServicesListeners.push({
         var: '.new-service',
         type: 'click',
         func: NewServiceListener
+    })
+
+    document.addEventListener('edit-service-modal-open', EditServiceModalListeners)
+    ServicesListeners.push({
+        var: '.new-service',
+        type: 'click',
+        func: EditServiceModalListeners
     })
 
     }

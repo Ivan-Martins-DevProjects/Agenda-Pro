@@ -13,30 +13,30 @@ load_dotenv()
 
 @dataclass
 class Services():
-    id: str
-    userId: str
-    bussinesId: str
+    id: str 
     title: str
+    description: str
     price: int
     duration: int
-    respName: str
-    description: Optional[str] = None
+    respName: Optional[str] = None
+    userId: Optional[str] = None
+    bussinesId: Optional[str] = None
 
     def __post_init__(self):
-        if len(self.title) < 5:
+        if not self.title or len(self.title) < 5:
             raise InvalidField(field='Título')
 
-        if int(self.price) < 0:
+        if not self.price or int(self.price) < 0:
             raise InvalidField(
                 field='Preço'
             )
 
-        if int(self.duration) < 0:
+        if not self.duration or int(self.duration) < 0:
             raise InvalidField(
                 message='Duração não pode ser menor que 0'
             )
 
-        if self.description and len(self.description) < 10:
+        if not self.description or len(self.description) < 10:
             raise InvalidField(
                 message='Descrição não pode ter menos que 10 caracteres'
             )
@@ -79,6 +79,13 @@ class ServicesControl:
         )
         return response
 
+    def edit_service(self, serviceId, data):
+        data['id'] = serviceId
+        Services(**data)
+
+        response = self.repo.edit_service(data)
+        return response
+
 class ServicesRepository:
     def list_services(self, offset, ID, Role):
         response = database.list_services_db(
@@ -115,3 +122,6 @@ class ServicesRepository:
 
         return response
         
+    def edit_service(self, data):
+        response = database.edit_service_db(data)
+        return response

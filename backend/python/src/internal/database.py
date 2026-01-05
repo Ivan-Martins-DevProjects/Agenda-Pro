@@ -619,3 +619,45 @@ def get_unique_service_db(serviceId, AccessID, role):
 
     except Exception as e:
         raise databaseErrors(e)
+
+def edit_service_db(data):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                id = data['id']
+                title = data['title']
+                description = data['description']
+                price = data['price']
+                duration = data['duration']
+
+                query = """
+                UPDATE services
+                SET title = %s,
+                    description = %s,
+                    price = %s,
+                    duration = %s
+                WHERE id = %s
+                """
+
+                cursor.execute(query, (title, description, price, duration, id))
+                conn.commit()
+                confirm = cursor.rowcount
+                if confirm < 0:
+                    raise AppError(
+                        message='Erro ao registrar alteração no serviço',
+                        logger_message='edit_service_db não alterou nenhuma row'
+                    )
+
+                return 'Serviço editado com sucesso'
+
+    except Exception as e:
+        raise databaseErrors(e)
