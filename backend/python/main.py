@@ -19,8 +19,7 @@ app = Flask(__name__)
 
 # Configuração de cors da aplicação
 CORS(app, resources={
-    r"/api/*": {"origins": ["http://0.0.0.0:7000", "http://localhost:7000", "http://127.0.0.1:7000"]}
-})
+    r"/api/*": {"origins": ["http://0.0.0.0:7000", "http://localhost:7000", "http://127.0.0.1:7000"]} })
 
 logger = logging.getLogger(__name__)
 

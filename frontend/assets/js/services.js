@@ -165,7 +165,6 @@ async function EditServiceAPI(data, id) {
 
         alert('Contato editado com sucesso')
         NewServiceModal.close()
-        LoadServices()
 
     } catch (error) {
         console.warn(error);
@@ -291,7 +290,7 @@ async function EditServiceListener(event) {
     const data = {
         title: title.value,
         description: description.value,
-        price: price.value * 100,
+        price: price.value,
         duration: duration.value
     }
 
