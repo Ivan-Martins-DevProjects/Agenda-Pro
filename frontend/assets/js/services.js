@@ -177,6 +177,23 @@ async function EditServiceAPI(data, id) {
 // FUNÇÕES DE COLETA E PROCESSAMENTO DE DADOS
 // ==============================================================================
 
+function ClearNewServiceModal() {
+    const title = NewServiceModal.querySelector('.new-service-title h2')
+    title.textContent = 'Cadastrar Novo Serviço'
+
+    const fields = [
+    '.new-service-input-title', '.new-service-input-description',
+    '.new-service-input-price', '.new-service-input-duration'
+    ]
+
+    fields.forEach(item => {
+        const element = NewServiceModal.querySelector(item)
+        if (element) {
+            element.value = ''
+        }
+    })
+}
+
 /**
  * Coleta os dados inseridos no modal de novo serviço.
  */
@@ -257,6 +274,7 @@ function RenderEditServiceModal(data){
  */
 async function CreateNewService(event) {
     event.preventDefault()
+
     const data = await InfoNewService()
     if (!data) { return }
 
@@ -441,6 +459,7 @@ function RenderServices(services) {
  * Abre o modal de novo serviço.
  */
 function NewServiceListener() {
+    ClearNewServiceModal()
     NewServiceModal.showModal()
     document.dispatchEvent(OpenNewServiceModal)
 }
