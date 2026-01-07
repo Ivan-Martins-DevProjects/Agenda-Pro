@@ -121,7 +121,9 @@ function PageServices(btn) {
 
 function PageAppointments(btn) {
     ClearActiveSideMenu(btn)
-    PageInConstruction()
+    // PageInConstruction()
+    const dialog = document.getElementById('bookingDialog');
+    dialog.showModal()
     return
 }
 

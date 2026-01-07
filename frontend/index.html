@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="assets/css/clientes.css">
     <link rel="stylesheet" href="assets/css/services.css">
     <link rel="stylesheet" href="assets/css/cadastroCliente.css">
+    <link rel="stylesheet" href="assets/css/modalAppointments.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
@@ -264,9 +265,97 @@
         </div>
     </dialog>
 
+    <!-- Modal de cadastro de agendamentos -->
+    <dialog class="appointment-modal-container" id="bookingDialog">
+        <div class="appointment-modal-body">
+            <!-- Lado Esquerdo: Calendário -->
+            <div class="appointment-calendar-section">
+                <div class="appointment-calendar-header">
+                    <h2 id="currentMonthYear">Outubro 2023</h2>
+                    <div class="appointment-nav-buttons">
+                        <button class="appointment-nav-btn" id="prevMonth" aria-label="Mês anterior">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button class="appointment-nav-btn" id="nextMonth" aria-label="Próximo mês">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
 
+                <div class="appointment-calendar-grid">
+                    <div class="appointment-day-label">D</div>
+                    <div class="appointment-day-label">S</div>
+                    <div class="appointment-day-label">T</div>
+                    <div class="appointment-day-label">Q</div>
+                    <div class="appointment-day-label">Q</div>
+                    <div class="appointment-day-label">S</div>
+                    <div class="appointment-day-label">S</div>
+                </div>
+                <div class="appointment-calendar-grid" id="calendarDays">
+                    <!-- Dias serão gerados via JS -->
+                </div>
+            </div>
+
+            <!-- Lado Direito: Detalhes e Formulário -->
+            <div class="appointment-details-section">
+                <div>
+                    <div class="appointment-details-header">
+                        <h3>Novo Agendamento</h3>
+                        <p>Preencha os dados para confirmar.</p>
+                    </div>
+
+                    <form id="bookingForm">
+                        <div class="appointment-form-group">
+                            <label for="contactName">Nome do Contato</label>
+                            <input type="text" id="contactName" class="appointment-form-control" placeholder="Ex: João Silva" required>
+                        </div>
+
+                        <div class="appointment-form-group">
+                            <label for="serviceSelect">Serviço</label>
+                            <select id="serviceSelect" class="appointment-form-control" required>
+                                <option value="" disabled selected>Selecione um serviço</option>
+                                <!-- Opções geradas via JS -->
+                            </select>
+                        </div>
+
+                        <!-- Linha para Data e Hora -->
+                        <div class="appointment-form-row">
+                            <div class="appointment-form-group">
+                                <label for="dateDisplay">Data</label>
+                                <input type="text" id="dateDisplay" class="appointment-form-control" placeholder="Selecione no calendário" readonly required>
+                            </div>
+                            <div class="appointment-form-group">
+                                <label for="timeInput">Horário</label>
+                                <input type="time" id="timeInput" class="appointment-form-control" required>
+                            </div>
+                        </div>
+
+                        <!-- Seção de Valor Esperado (Backend vai preencher) -->
+                        <div class="appointment-form-group">
+                            <label>Valor Esperado</label>
+                            <div class="appointment-price-section">
+                                <span class="appointment-price-label">Total</span>
+                                <!-- Campo hidden para enviar ao backend, e um span para exibir -->
+                                <input type="hidden" id="priceValue" name="price" value="0">
+                                <div class="appointment-price-value">
+                                    <span>R$</span> <span id="displayPriceText">0,00</span>
+                                </div>
+                            </div>
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">O valor será calculado pelo sistema.</small>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="appointment-action-buttons">
+                    <button type="button" class="appointment-btn appointment-btn-outline" id="cancelBtn">Cancelar</button>
+                    <button type="submit" form="bookingForm" class="appointment-btn appointment-btn-primary" id="confirmBtn">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
     <script type="module" src="assets/js/index.js"></script>
     <script type="module" src="assets/js/clientes.js"></script>
     <script type="module" src="assets/js/services.js"></script>
+    <script type="module" src="assets/js/modalAppointments.js"></script>
 </body>
 </html>
