@@ -698,6 +698,46 @@ export function nextPage(page, last) {
  * Renderiza a tabela de clientes com base nos dados fornecidos
  * @param {Array} clientes - Array de objetos contendo os dados dos clientes
  */
+function iniciais(nome) {
+  return nome
+    .split(" ")
+    .map(p => p[0])
+    .join("")
+    .toUpperCase();
+}
+
+
+function formatarTelefone(valor) {
+  if (!valor) return "";
+
+  // Remove tudo que não for número
+  let numeros = valor.replace(/\D/g, "");
+
+  // Remove DDI 55 se existir
+  if (numeros.startsWith("55")) {
+    numeros = numeros.slice(2);
+  }
+
+  // Telefone celular (11 dígitos)
+  if (numeros.length === 11) {
+    return numeros.replace(
+      /^(\d{2})(\d{5})(\d{4})$/,
+      "($1) $2-$3"
+    );
+  }
+
+  // Telefone fixo (10 dígitos)
+  if (numeros.length === 10) {
+    return numeros.replace(
+      /^(\d{2})(\d{4})(\d{4})$/,
+      "($1) $2-$3"
+    );
+  }
+
+  // Caso não reconhecido
+  return valor;
+}
+
 function renderClients(clientes) {
     // Clona o conteúdo do template para manipulação
     const template = document.getElementById('cliente-template').content.cloneNode(true);
@@ -741,9 +781,10 @@ function renderClients(clientes) {
         // Preenche os dados do cliente na linha
         info.textContent = cliente.name;
         clone.querySelector('.cliente-email').textContent = cliente.email;
-        clone.querySelector('.cliente-numero').textContent = cliente.phone
+        clone.querySelector('.cliente-numero').textContent = formatarTelefone(cliente.phone)
         clone.querySelector('.cliente-responsavel').textContent = cliente.resp;
         clone.querySelector('.cliente-contato').textContent = cliente.last_contact
+        clone.querySelector('.client-avatar').textContent = iniciais(cliente.name)
 
         // Aplica estilos de status com base no valor retornado pela API
         const status = clone.querySelector('.status')

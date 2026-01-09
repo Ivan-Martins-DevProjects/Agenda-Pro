@@ -322,134 +322,132 @@ async function EditServiceListener(event) {
 /**
  * Renderiza a lista de serviços na tela.
  */
+
 function RenderServices(services) {
-    const content = document.querySelector('.content')
+    const content = document.querySelector('.content');
+    content.innerHTML = '';
 
-    content.innerHTML = ''
-
-    if (services.length === 0) {
-        const h1 = document.createElement('h1')
-        h1.textContent = 'Nenhum serviço encontrado'
-        h1.style.marginTop = '15%'
-        h1.style.marginLeft = '35%'
-        content.appendChild(h1) // Corrigido para adicionar ao DOM (lógica sugerida, embora o original não fizesse append)
-        return
+    // --- Caso não haja serviços ---
+    if (!services.length) {
+        const h1 = document.createElement('h1');
+        h1.textContent = 'Nenhum serviço encontrado';
+        h1.className = 'no-services'; // você pode definir CSS para centralizar
+        content.appendChild(h1);
+        return;
     }
 
-    const header = document.createElement('div')
-    header.style.display = 'flex'
-    header.style.justifyContent = 'space-between'
-    header.style.width = '100%'
-    header.style.maxWidth = '900px'
-    header.style.margin = '1rem auto 2rem 0'
+    // --- HEADER ---
+    const header = document.createElement('div');
+    header.className = 'services-header'; // usa CSS responsivo
 
-    // Header Section
-    const TitleDiv = document.createElement('div')
-    const headerTitle = document.createElement('h2')
-    headerTitle.style.margin = '0'
-    headerTitle.textContent = 'Serviços Cadastrados'
-    TitleDiv.appendChild(headerTitle)
+    // Título
+    const titleDiv = document.createElement('div');
+    const logoTitle = document.createElement('i')
+    logoTitle.className = 'fas fa-briefcase fa-2x'
+    logoTitle.style.color = '#1582BD'
 
-    const DivSearch = document.createElement('div')
-    const searchbar = document.createElement('input')
-    searchbar.style.width = '300px'
-    searchbar.className = 'search-input'
-    searchbar.placeholder = 'Pesquise aqui'
-    DivSearch.appendChild(searchbar)
 
-    const btnDiv = document.createElement('div')
-    const headerBtn = document.createElement('button')
-    headerBtn.style.marginLeft = '350px'
-    headerBtn.style.width = '200px'
-    headerBtn.className = 'new-service'
-    headerBtn.textContent = '+ Novo cadastro'
-    btnDiv.appendChild(headerBtn)
+    const headerTitle = document.createElement('h2');
+    headerTitle.textContent = 'Meus Serviços';
+    titleDiv.className = 'services-header-title'
+    titleDiv.appendChild(logoTitle);
+    titleDiv.appendChild(headerTitle);
 
-    header.appendChild(TitleDiv)
-    header.appendChild(DivSearch)
-    header.appendChild(btnDiv)
-    content.appendChild(header)
+    // Search
+    const searchDiv = document.createElement('div');
+    const searchInput = document.createElement('input');
+    searchInput.className = 'search-input';
+    searchInput.placeholder = 'Pesquise aqui';
+    searchDiv.appendChild(searchInput);
 
-    const containers = document.createElement('div')
-    containers.className = 'services-containers'
+    // Botão Novo Serviço
+    const btnDiv = document.createElement('div');
+    const newServiceBtn = document.createElement('button');
+    newServiceBtn.className = 'new-service';
+    newServiceBtn.textContent = '+ Novo cadastro';
+    btnDiv.appendChild(newServiceBtn);
+
+    // Append ao header
+    header.appendChild(titleDiv);
+    header.appendChild(searchDiv);
+    header.appendChild(btnDiv);
+
+    content.appendChild(header);
+
+    // --- GRID DE CARDS ---
+    const containers = document.createElement('div');
+    containers.className = 'services-containers';
 
     services.forEach(item => {
-        // Card Main Container
-        const main = document.createElement('div')
-        main.className = 'container'
+        // Card principal
+        const card = document.createElement('div');
+        card.className = 'services-container';
 
-        // Card Header
-        const cardHeader = document.createElement('div')
-        cardHeader.className = 'services-card-header'
+        // Header do Card
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'services-card-header';
+        const h3 = document.createElement('h3');
+        h3.textContent = item.title;
+        cardHeader.appendChild(h3);
+        card.appendChild(cardHeader);
 
-        const h3 = document.createElement('h3')
-        h3.textContent = item.title
+        // Corpo do Card
+        const cardBody = document.createElement('div');
+        cardBody.className = 'services-card-body';
+        const desc = document.createElement('p');
+        desc.textContent = item.description;
+        cardBody.appendChild(desc);
+        card.appendChild(cardBody);
 
-        cardHeader.appendChild(h3)
-        main.appendChild(cardHeader)
+        // Preço e duração
+        const info = document.createElement('div');
+        info.className = 'services-card-price-duration';
+        const price = document.createElement('span');
+        price.className = 'services-price';
+        price.textContent = `R$ ${(item.price / 100).toFixed(2).replace('.', ',')}`;
 
-        // Card Description
-        const body = document.createElement('div')
-        body.className = 'services-card-body'
+        const clock = document.createElement('i')
+        clock.className = 'fas fa-clock'
+        clock.style.marginRight = '5px'
 
-        const p = document.createElement('p')
-        p.textContent = item.description
+        const durationDiv = document.createElement('div')
+        durationDiv.className = 'services-duration';
 
-        body.appendChild(p)
-        main.appendChild(body)
+        const duration = document.createElement('span');
+        duration.textContent = `${item.duration} min`;
+        durationDiv.appendChild(clock)
+        durationDiv.appendChild(duration);
+        info.appendChild(price);
+        info.appendChild(durationDiv)
+        card.appendChild(info);
 
-        // Card Price and Duration
-        const info = document.createElement('div')
-        info.className = 'services-card-price-duration'
+        // Footer com botões
+        const footer = document.createElement('div');
+        footer.className = 'services-card-footer';
 
-        const price = document.createElement('span')
-        price.className = 'services-price'
-        price.textContent = 'R$ ' + item.price / 100 + ',00'
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-services-edit';
+        editBtn.dataset.id = item.id;
+        editBtn.textContent = 'Editar';
+        editBtn.addEventListener('click', GetUniqueServiceListener);
 
-        const duration = document.createElement('span')
-        duration.className = 'services-duration'
-        duration.textContent = item.duration + ' min'
+        const excludeBtn = document.createElement('button');
+        excludeBtn.className = 'btn-services-exclude';
+        excludeBtn.dataset.id = item.id;
+        excludeBtn.textContent = 'Excluir';
+        excludeBtn.addEventListener('click', DeleteServiceListener);
 
-        info.appendChild(price)
-        info.appendChild(duration)
-        main.appendChild(info)
+        footer.appendChild(editBtn);
+        footer.appendChild(excludeBtn);
+        card.appendChild(footer);
 
-        // Card Footer Buttons
-        const footer = document.createElement('div')
-        footer.className = 'services-card-footer'
-
-        const editBtn = document.createElement('button')
-        editBtn.className = 'btn-services-edit'
-        editBtn.dataset.id = item.id
-        editBtn.textContent = 'Editar'
-        editBtn.addEventListener('click', GetUniqueServiceListener)
-        ServicesListeners.push({
-            var: '.btn-services-edit',
-            type: 'click',
-            func: GetUniqueServiceListener
-        })
-
-        const excludeBtn = document.createElement('button')
-        excludeBtn.dataset.id = item.id
-        excludeBtn.className = 'btn-services-exclude'
-        excludeBtn.textContent = 'Excluir'
-        excludeBtn.addEventListener('click', DeleteServiceListener)
-        ServicesListeners.push({
-            var: '.btn-services-exclude',
-            type: 'click',
-            func: DeleteServiceListener
-        })
-
-
-        footer.appendChild(editBtn)
-        footer.appendChild(excludeBtn)
-        main.appendChild(footer)
-
-        containers.appendChild(main)
+        // Adiciona card ao grid
+        containers.appendChild(card);
     });
 
-    content.appendChild(containers)
+    content.appendChild(containers);
 }
+
 
 // ==============================================================================
 // GERENCIAMENTO DE EVENTOS (LISTENERS)

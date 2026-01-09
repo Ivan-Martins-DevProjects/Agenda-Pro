@@ -11,10 +11,116 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
     <style>
+.appointments-container {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
 
+.appointments-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.appointment-container {
+    border: 1px solid #ccc;
+    width: 250px;
+    padding: 0 1rem 1rem;
+}
+
+.appointment-container-header {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+    gap: 5rem;
+    border-bottom: solid 1px #ccc;
+}
+
+.appointment-container-info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding: 5px 0 15px;
+    border-bottom: solid 1px #ccc;
+}
+
+.appointment-container-info-client {
+    display: flex;
+    flex-direction: column;
+}
+
+.appointment-client {
+    margin-left: 0.8rem;
+    margin-bottom: 5px;
+    font-size: 25px;
+}
+
+.appointment-resp {
+    border-radius: 15px;
+    padding: 0.4rem 0.5rem;
+    color: #fff;
+    background-color: #1c75d8db;
+    font-weight: bold;
+}
+
+.appointment-container-info-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.appointment-container-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+}
     </style>
         <body>
-
+            <div class="appointments-container">
+                <div class="appointments-header">
+                    <div class="appointments-title">
+                        <h2>Meus Agendamentos</h2>
+                    </div>
+                    <div class="appointments-search-bar">
+                        <i class="fas fa-search" style="margin-right: 10px;"></i>
+                        <input id="search-bar" type="text" placeholder="Pesquise aqui..."/>
+                    </div>
+                    <div class="appointments-header-btn">
+                        <button>Novo Agendamento</button>
+                    </div>
+                </div>
+                <div class="appointments-body">
+                    <div class="appointment-container">
+                        <div class="appointment-container-header">
+                            <div class="appointment-container-title">
+                                <h3>Coloração</h3>
+                            </div>
+                            <div class="appointment-container-status">
+                                <span>Confirmado</span>
+                            </div>
+                        </div>
+                        <div class="appointment-container-info">
+                            <div class="appointment-container-info-client">
+                                <div class="appointment-client">Ivan Martins</div>
+                                <div class="appointment-resp">Manu Oliveira</div>
+                            </div>
+                            <div class="appointment-container-info-date">
+                                <div class="appointment-date">12 Out</div>
+                                <div class="appointment-hour">12:00</div>
+                            </div>
+                        </div>
+                        <div class="appointment-container-footer">
+                            <button>Confirmar</button>
+                            <button>Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </body>
     <script>
 

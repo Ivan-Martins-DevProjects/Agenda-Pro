@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/clientes.css">
     <link rel="stylesheet" href="assets/css/services.css">
+    <link rel="stylesheet" href="assets/css/appointments.css">
     <link rel="stylesheet" href="assets/css/cadastroCliente.css">
     <link rel="stylesheet" href="assets/css/modalAppointments.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -14,6 +15,12 @@
 </head>
 <body>
     <header class="top-bar">
+        <!-- 1. Adicione este botão de Menu -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <div class="app">
             <div class="app-icon"></div>
             <div class="app-name">Agenda Pro</div>
@@ -24,7 +31,7 @@
         </div>
         <div class="user-dropdown" id="userDropdown">
             <div class="user-info">
-                <i class="fas fa-user-circle fa-3x" style="margin-right: 20px;"></i>
+                <i class="fas fa-user-circle fa-2x" style="margin-right: 20px;"></i>
                 <div class="user-info-text">
                     <span class="user-name">Ivan Martins</span>
                     <span class="user-role">Administrador</span>
@@ -61,43 +68,45 @@
     </div>
             <!-- 🧩 Template de Cliente -->
             <template id="cliente-template">
-                <div class="page-header">
-                        <h1 class="page-title">Meus Clientes</h1>
-                </div>
-
-                <div class="autocomplete-container">
-                        <input
-                        type="text"
-                        class="search-input"
-                        placeholder="Pesquisar cliente..."
-                        id="input-client-field">
-                <div class="input-client-dropdown" id="input-client-dropdown"></div>
-                <div>
-                    <button class="btn-new-contact" id="new-contact">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Cliente
-                    </button>
-                </div>
-
+                <div class="clients-page-header">
+                    <div class="clients-page-title">
+                        <i class="fas fa-users fa-3x"></i>
+                        <div>Meus Clientes</div>
+                    </div>
+                    <div class="autocomplete-container">
+                            <input
+                            type="text"
+                            class="search-input"
+                            placeholder="Pesquisar cliente..."
+                            id="input-client-field">
+                    </div>
+                    <div class="input-client-dropdown" id="input-client-dropdown"></div>
+                    <div>
+                        <button class="btn-new-contact" id="new-contact">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Cliente
+                        </button>
+                    </div>
                 </div>
 
                 <table id="client-table" class="client-table">
                     <thead>
                         <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Telefone</th>
-                            <th>Status</th>
-                            <th>Último contato</th>
-                            <th>Responsável</th>
-                            <th>Ações</th>
+                            <th>NOME</th>
+                            <th>EMAIL</th>
+                            <th>TELEFONE</th>
+                            <th>STATUS</th>
+                            <th>ÚLTIMO CONTATO</th>
+                            <th>RESPONSÁVEL</th>
+                            <th>AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
                                 <div class="client-info", style="z-index: 1000;">
-                                    <span class="cliente-nome" data-client-id=""></span>
+                                    <div class="client-avatar">JS</div>
+                                    <span style="font-weight: 550;" class="cliente-nome" data-client-id=""></span>
                                 </div>
                             </td>
                             <td class="cliente-email"></td>
@@ -106,13 +115,66 @@
                             <td class="cliente-contato"></td>
                             <td class="cliente-responsavel"></td>
                             <td class="actions">
-                                <button class="edit-contact" id="edit-contact">Editar</button>
-                                <button class="exclude-contact" id="exclude-contact">Excluir</button>
+                                <button class="edit-contact" id="edit-contact">
+                                    <i class="fas fa-pen"></i>Editar
+                                </button>
+                                <button class="exclude-contact" id="exclude-contact">
+                                    <i class="fas fa-trash"></i>Excluir
+                                </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </template>
+
+        <template class="appointments-template">
+            <div class="appointments-container">
+                <div class="appointments-header">
+                    <div class="appointments-title">
+                        <h2>Meus Agendamentos</h2>
+                    </div>
+
+                    <div class="appointments-header-actions">
+                        <div class="appointments-search-bar">
+                            <i class="fas fa-search"></i>
+                            <input id="search-bar" type="text" placeholder="Pesquisar cliente ou serviço..."/>
+                        </div>
+                        <div class="appointments-header-btn">
+                            <button>+ Novo Agendamento</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="appointments-body">
+                    <div class="appointment-container">
+                        <div class="appointment-container-header">
+                            <div class="appointment-container-title">
+                                <h3>Coloração</h3>
+                            </div>
+                            <div class="appointment-container-status">
+                                <span>Confirmado</span>
+                            </div>
+                        </div>
+
+                        <div class="appointment-container-info">
+                            <div class="appointment-client-info">
+                                <div class="appointment-client">Ivan Martins</div>
+                                <div class="appointment-resp">Resp: Manu Oliveira</div>
+                            </div>
+                            <div class="appointment-date-info">
+                                <div class="appointment-date">12 Out</div>
+                                <div class="appointment-hour">12:00</div>
+                            </div>
+                        </div>
+
+                        <div class="appointment-container-footer">
+                            <button class="appointment-footer-detail">Detalhes</button>
+                            <button class="appointment-footer-cancel">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
 
             <dialog class="new-service-modal">
                 <div class="new-service-header">
@@ -353,9 +415,26 @@
             </div>
         </div>
     </dialog>
+
+    <!-- Overlay para escurecer o fundo quando o menu abre -->
+<div class="overlay" id="overlay"></div>
     <script type="module" src="assets/js/index.js"></script>
     <script type="module" src="assets/js/clientes.js"></script>
     <script type="module" src="assets/js/services.js"></script>
     <script type="module" src="assets/js/modalAppointments.js"></script>
+    <script charset="utf-8">
+    const menuToggle = document.getElementById('menuToggle');
+    const sideMenu = document.querySelector('.side-menu');
+    const overlay = document.getElementById('overlay');
+
+    function toggleMenu() {
+        sideMenu.classList.toggle('open');
+        overlay.classList.toggle('active');
+        menuToggle.classList.toggle('active'); // Anima ícone
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+    </script>
 </body>
 </html>

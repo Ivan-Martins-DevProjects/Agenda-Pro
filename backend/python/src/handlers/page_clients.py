@@ -1,7 +1,6 @@
 import logging
 import uuid
 
-
 from src.errors.mainErrors import AppError
 from src.models.header import AuthHeader
 
@@ -9,11 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 def set_clients_header_params(req_data, scope):
-            header = AuthHeader()
-            header.header_handler(req_data, scope)
-            
-            controlers = header.header_client_services()
-            return controlers
+    header = AuthHeader()
+    header.header_handler(req_data, scope)
+    
+    controlers = header.header_client_services()
+    return controlers
 
 
 class ClientsHandler:
