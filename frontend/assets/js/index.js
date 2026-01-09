@@ -1,3 +1,4 @@
+import {RenderAppointments} from './appointments.js'
 import {carregarClientes, CloseModalRemoveListeners} from './clientes.js'
 import LoadServices from './services.js'
 
@@ -121,9 +122,29 @@ function PageServices(btn) {
 
 function PageAppointments(btn) {
     ClearActiveSideMenu(btn)
+
+    const appointments = [
+        {
+            service: "Coloração",
+            status: "Confirmado",
+            client: "Ivan Martins",
+            resp: "Manu Oliveira",
+            date: "12 Out",
+            hour: "12:00"
+        },
+        {
+            service: "Corte Masculino",
+            status: "Cancelado",
+            client: "Carlos Silva",
+            resp: "Ana Souza",
+            date: "15 Out",
+            hour: "14:30"
+        }
+    ]
+    RenderAppointments(appointments)
     // PageInConstruction()
-    const dialog = document.getElementById('bookingDialog');
-    dialog.showModal()
+    // const dialog = document.getElementById('bookingDialog');
+    // dialog.showModal()
     return
 }
 
