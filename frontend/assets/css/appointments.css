@@ -12,11 +12,16 @@
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
 }
 
+.appointments-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+}
 .appointments-title h2 {
     margin: 0;
     font-size: 1.5rem;
@@ -27,7 +32,7 @@
 .appointments-header-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 30px;
 }
 
 /* Barra de Pesquisa */
@@ -60,11 +65,30 @@
     color: var(--text-main);
 }
 
+.appointments-google button {
+    background-color: #fff;
+    padding: 15px 15px;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 16px;
+    height: 50px;
+    color: #6da3fb;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.appointments-google button:hover {
+    border: 1px solid #6da3fb;
+    transform: translateY(-3px);
+}
+
 /* Botão Novo Agendamento */
 .appointments-header-btn button {
     height: 50px;
-    background-color: #f7f7f7;
-    color: #000;
+    background-color: #397EEF;
+    color: #fff;
     border: none;
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
@@ -76,10 +100,9 @@
 }
 
 .appointments-header-btn button:hover {
-  background: #0E90D9;
-  color: #fff;
   font-weight: bold;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  filter: brightness(1.2);
   transform: translateY(-5px);
 }
 
@@ -96,7 +119,6 @@
     background-color: var(--bg-card);
     border-radius: 12px;
     border: 1px solid var(--border);
-    box-shadow: var(--shadow);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
@@ -104,8 +126,8 @@
 }
 
 .appointment-container:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-7px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* Cabeçalho do Cartão */
@@ -147,7 +169,15 @@
 .appointment-client-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+}
+
+.appointment-client-name {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-left: 5px;
 }
 
 .appointment-client {
@@ -162,12 +192,14 @@
     color: var(--text-muted);
     background: #f3f4f6;
     align-self: flex-start;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 6px 8px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
 }
 
 .appointment-date-info {
     text-align: right;
+    gap: 15px;
 }
 
 .appointment-date {
@@ -178,7 +210,7 @@
 }
 
 .appointment-hour {
-    font-size: 1.25rem;
+    font-size: 30px;
     font-weight: 700;
     color: #2F5DA9;
     margin-top: 2px;
@@ -203,21 +235,25 @@
 }
 
 /* Estilo Botão Confirmar */
-.appointment-container-footer button:first-child {
-    color: black;
-}
-.appointment-container-footer button:first-child:hover {
-    background-color: #2F5DA9;
+.appointment-footer-detail {
     color: white;
+    background-color: #3870CB;
+}
+
+.appointment-footer-detail:hover {
+    filter: brightness(1.2);
+    transform: translateY(-3px);
 }
 
 /* Estilo Botão Cancelar */
-.appointment-container-footer button:last-child {
-    color: black;
-}
-.appointment-container-footer button:last-child:hover {
+.appointment-footer-cancel {
     background-color: #E63F3F;
     color: white;
+}
+
+.appointment-footer-cancel:hover {
+    filter: brightness(1.2);
+    transform: translateY(-3px);
 }
 
 /* Ajuste Mobile */

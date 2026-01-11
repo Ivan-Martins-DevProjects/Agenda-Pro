@@ -136,7 +136,7 @@ function PageAppointments(btn) {
             service: "Corte Masculino",
             status: "Cancelado",
             client: "Carlos Silva",
-            resp: "Ana Souza",
+            resp: "",
             date: "15 Out",
             hour: "14:30"
         }
