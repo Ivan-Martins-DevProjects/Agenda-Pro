@@ -1,5 +1,6 @@
 import logging
 from src.errors.mainErrors import AppError
+from src.models.appointments import AppointmentsControl
 from src.models.clients import ClientsServices
 from src.models.services import ServicesControl
 from src.security import jwt
@@ -47,4 +48,8 @@ class AuthHeader:
 
     def header_services_control(self):
         self.servicesControl = ServicesControl(self.user)
+        return self
+
+    def header_appointments_control(self):
+        self.appointmentsControl = AppointmentsControl(self.user)
         return self

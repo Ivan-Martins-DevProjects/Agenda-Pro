@@ -5,7 +5,7 @@ from flask_cors import CORS
 from src.internal import database
 from src.errors.mainErrors import AppError, NullableField, handle_exception
 from src.requests.request_builder import RequestBuilder
-from src.handlers import dashboard, page_clients, page_services
+from src.handlers import page_clients, page_services, page_appointments
 from src.validation.logging_conf import SetupLogging
 
 # Setup para mensagens de Logs
@@ -234,6 +234,26 @@ def edit_contact_api():
         handler = page_services.ServicesHandler(req_data)
 
         response = handler.edit_service()
+        if not response:
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        response = handle_exception(e)
+        data = {
+            'message': response.get('error', 'Erro interno ao gerar resposta'),
+            'code': response.get('code', 'Erro interno ao captar erro'),
+        }
+        return jsonify(data), response.get('status', 500)
+
+@app.route('/api/appointments', methods=['GET'])
+def list_appointments():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        handler = page_appointments.AppointmentsHandler(req_data)
+
+        response = handler.list_appointments()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 

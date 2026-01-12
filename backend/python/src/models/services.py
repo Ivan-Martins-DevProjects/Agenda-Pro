@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 @dataclass
-class Services():
+class Services:
     id: str 
     title: str
     description: str
@@ -23,20 +23,20 @@ class Services():
     bussinesId: Optional[str] = None
 
     def __post_init__(self):
-        if not self.title or len(self.title) < 5:
+        if len(self.title) < 5:
             raise InvalidField(field='Título')
 
-        if not self.price or int(self.price) < 0:
+        if int(self.price) < 0:
             raise InvalidField(
                 field='Preço'
             )
 
-        if not self.duration or int(self.duration) < 0:
+        if int(self.duration) < 0:
             raise InvalidField(
                 message='Duração não pode ser menor que 0'
             )
 
-        if not self.description or len(self.description) < 10:
+        if len(self.description) < 10:
             raise InvalidField(
                 message='Descrição não pode ter menos que 10 caracteres'
             )

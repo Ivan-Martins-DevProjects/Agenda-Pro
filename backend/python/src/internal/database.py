@@ -507,7 +507,7 @@ def list_services_db(offset, id, role):
                 }
 
     except Exception as e:
-        return databaseErrors(e)
+        raise databaseErrors(e)
 
 def insert_service_db(data):
     if not connectionPool:
@@ -658,6 +658,72 @@ def edit_service_db(data):
                     )
 
                 return 'Serviço editado com sucesso'
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+##################################################################################
+#################### APPOINTMENTS
+##################################################################################
+def list_all_appointments_db(offset, id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+    
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                if role == 'admin':
+                    query = """
+                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
+                    FROM appointments
+                    WHERE bussines_id = %s
+                    LIMIT %s OFFSET %s
+                    """
+                    count = "SELECT COUNT(*) AS total FROM appointments WHERE bussines_id = %s"
+                else:
+                    query = """
+                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
+                    FROM appointments
+                    WHERE user_id = %s
+                    LIMIT %s OFFSET %s
+                    """
+                    count = "SELECT COUNT(*) AS total FROM appointments WHERE user_id = %s"
+
+                cursor.execute(query, (id, 10, int(offset)))
+                results = cursor.fetchall()
+
+                if not results:
+                    return {
+                    'total': 0,
+                    'appointments': []
+                    }
+
+                cursor.execute(count, (id,))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                appointments_list = []
+                for result in results:
+                    result['date'] = result['date'].isoformat()
+                    result['time_begin'] = result['time_begin'].isoformat()[:5]
+                    result['time_end'] = result['time_end'].isoformat()[:5]
+                    appointments_list.append(result)
+
+                data = {
+                    'appointments': appointments_list,
+                    'total': total
+                }
+
+                return data
 
     except Exception as e:
         raise databaseErrors(e)
