@@ -1,6 +1,5 @@
 .appointments-container {
     max-width: 100%;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -108,9 +107,9 @@
 
 /* --- GRID DE AGENDAMENTOS --- */
 .appointments-body {
+    margin-top: 2rem;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    height: 150px;
     gap: 1.5rem;
 }
 

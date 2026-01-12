@@ -357,7 +357,7 @@ function RenderServices(services) {
     const searchDiv = document.createElement('div');
     const searchInput = document.createElement('input');
     searchInput.className = 'search-input';
-    searchInput.placeholder = 'Pesquise aqui';
+    searchInput.placeholder = 'Pesquisar serviço...';
     searchDiv.appendChild(searchInput);
 
     // Botão Novo Serviço

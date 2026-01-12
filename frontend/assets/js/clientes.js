@@ -608,8 +608,13 @@ async function GetAllClients(offset) {
  * @param {number} start - Número da primeira página a ser exibida
  * @param {number} MaxPage - Número total de páginas disponíveis
  */
-export function CreatePagination(start, MaxPage){
-    const container = document.querySelector('.content')
+export function CreatePagination(start, MaxPage, where){
+    let container
+    if (!where) {
+        container = document.querySelector('.content')
+    } else {
+        container = document.querySelector(where)
+    }
     // Cria o elemento nav que conterá os botões de paginação
     const nav = document.createElement('nav')
     nav.className = 'pagination-clients'

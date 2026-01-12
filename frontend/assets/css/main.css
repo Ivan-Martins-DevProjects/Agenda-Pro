@@ -36,6 +36,7 @@ body {
 
 .content {
     flex: 1;
+    flex-direction: column;
     margin-left: 1rem;
     margin-top: 1rem;
     background-color: #fff;
@@ -43,7 +44,7 @@ body {
     box-shadow: 3px 3px 50px #acb3c4;
     border: 1px solid #f1f1f1;
     padding: 2rem;
-    overflow-y: none;
+    overflow-y: auto;
 
 }
 
