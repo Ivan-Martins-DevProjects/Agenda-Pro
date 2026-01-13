@@ -1,6 +1,7 @@
-import { api_url, token } from './index.js'
-import { ListNextPageServices } from './services.js';
-import ErrorModal from './index.js'
+import { api_url, token } from '../../index/js/index.js'
+import { ListNextPageServices } from '../../services/js/services.js';
+import { ListNextPageAppointments } from '../../appointments/js/appointments.js';
+import ErrorModal from '../../index/js/index.js'
 
 // Seleciona todos os elementos com a classe 'menu-link' para manipulação do menu de navegação
 const menuLinks = document.querySelectorAll('.menu-link')
@@ -380,6 +381,14 @@ export async function PaginationListener(event) {
 
         case 'Serviços':
             caller = ListNextPageServices
+            break;
+
+        case 'Agendamentos':
+            caller = ListNextPageAppointments
+            break
+
+        default:
+            break
     }
     let active
     let last
@@ -404,6 +413,9 @@ export async function PaginationListener(event) {
 
     // Identifica qual botão foi clicado
     const botao = event.target.closest('button')
+    if (!botao) {
+        return
+    }
 
     // Executa a ação correspondente ao botão clicado
     switch (botao.className) {

@@ -1,9 +1,9 @@
 // =============================================================================r
 // IMPORTAÇÕES
 // ==============================================================================
-import { api_url, token } from "./index.js"
-import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "./clientes.js"
-import ErrorModal from "./index.js"
+import { api_url, token } from "../../index/js/index.js"
+import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "../../clients/js/clientes.js"
+import ErrorModal from "../../index/js/index.js"
 
 // ==============================================================================
 // CONSTANTES E VARIÁVEIS GLOBAIS

@@ -4,12 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda PRO</title>
-    <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="stylesheet" href="assets/css/clientes.css">
-    <link rel="stylesheet" href="assets/css/services.css">
-    <link rel="stylesheet" href="assets/css/appointments.css">
-    <link rel="stylesheet" href="assets/css/cadastroCliente.css">
-    <link rel="stylesheet" href="assets/css/modalAppointments.css">
+    <link rel="stylesheet" href="assets/index/css/main.css">
+    <link rel="stylesheet" href="assets/clients/css/clientes.css">
+    <link rel="stylesheet" href="assets/services/css/services.css">
+    <link rel="stylesheet" href="assets/appointments/css/appointments.css">
+    <link rel="stylesheet" href="assets/clients/css/cadastroCliente.css">
+    <link rel="stylesheet" href="assets/appointments/css/modalAppointments.css">
+    <link rel="stylesheet" href="assets/appointments/css/detailAppointments.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
@@ -135,18 +136,43 @@
                 </div>
 
                 <div class="appointments-header-actions">
-                    <div class="appointments-search-bar">
-                        <i class="fas fa-search"></i>
-                        <input id="search-bar" type="text" placeholder="Pesquisar agendamento..."/>
-                    </div>
                     <div class="appointments-google">
-                        <button>
+                        <button class="google-btn">
                             <i class="fab fa-google" style="margin-right: 5px;"></i>
                             Sincronizar Agenda
                         </button>
                     </div>
                     <div class="appointments-header-btn">
                         <button>+ Novo Agendamento</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="appointments-subheader">
+                 <div class="appointments-search-bar">
+                    <i class="fas fa-search"></i>
+                    <input id="appointments-search-bar" type="text" placeholder="Pesquisar agendamento..."/>
+                </div>
+                <div class="custom-filter">
+                    <div class="filter-trigger">
+                        <i class="fas fa-filter"></i>
+                        <span class="selected-text">Nenhum</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-value="">Nenhum</div>
+                        <div class="filter-option" data-value="pendente">
+                            <span class="status-dot" style="background: #f59e0b;"></span> Pendentes
+                        </div>
+                        <div class="filter-option" data-value="confirmado">
+                            <span class="status-dot" style="background: #10b981;"></span> Confirmados
+                        </div>
+                        <div class="filter-option" data-value="cancelado">
+                            <span class="status-dot" style="background: #ef4444;"></span> Cancelados
+                        </div>
+                        <div class="filter-option" data-value="hoje">Hoje</div>
+                        <div class="filter-option" data-value="semana">Esta semana</div>
+                        <div class="filter-option" data-value="mes">Este Mês</div>
                     </div>
                 </div>
             </div>
@@ -178,7 +204,6 @@
 
                     <div class="appointment-container-footer">
                         <button class="appointment-footer-detail">Detalhes</button>
-                        <button class="appointment-footer-cancel">Cancelar</button>
                     </div>
                 </div>
             </div>
@@ -381,11 +406,16 @@
                         </div>
 
                         <div class="appointment-form-group">
-                            <label for="serviceSelect">Serviço</label>
-                            <select id="serviceSelect" class="appointment-form-control" required>
-                                <option value="" disabled selected>Selecione um serviço</option>
-                                <!-- Opções geradas via JS -->
-                            </select>
+                            <div>
+                                <label for="serviceSelect">Serviço</label>
+                                <select id="serviceSelect" class="appointment-form-control" required>
+                                    <option value="" disabled selected>Selecione um serviço</option>
+                                </select>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <label for="ServiceSelect">Observações</label>
+                                <input type="text" id="description" class="appointment-form-control" placeholder="Detalhes..."/>
+                            </div>
                         </div>
 
                         <!-- Linha para Data e Hora -->
@@ -424,12 +454,75 @@
         </div>
     </dialog>
 
+    <dialog class="appointment-detail-modal">
+        <div class="appointment-detail-container">
+            <div class="appointment-detail-header">
+                <div class="detail-header-title">
+                    <h2>Detalhes do Agendamento</h2>
+                </div>
+            </div>
+
+            <div class="appointment-detail-body">
+                <div class="detail-row">
+                    <span class="detail-label">Cliente:</span>
+                    <span class="detail-value">Ivan Martins</span>
+                    <input type="text" class="detail-input" value="Ivan Martins" disabled>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Serviço:</span>
+                    <span class="detail-value">Coloração</span>
+                    <input id="service" type="text" class="detail-input" value="Coloração">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Data:</span>
+                    <span class="detail-value">12 de Outubro, 2023</span>
+                    <input id="date" type="date" class="detail-input" value="2023-10-12">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Hora:</span>
+                    <span class="detail-value">12:00</span>
+                    <input id="hour" type="time" class="detail-input" value="12:00">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Preço:</span>
+                    <span class="detail-value">R$50,00</span>
+                    <input id="price" type="text" class="detail-input" value="50,00">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">Confirmado</span>
+                    <select class="detail-select" id="status">
+                        <option value="Confirmado" selected>Confirmado</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="detail-row" style="align-items: flex-start;">
+                    <span class="detail-label">Obs:</span>
+                    <span class="detail-value">Prefere procedimento sem amônia</span>
+                    <textarea class="detail-textarea">Prefere procedimento sem amônia</textarea>
+                </div>
+            </div>
+
+            <div class="appointment-detail-footer">
+                <button class="appointment-detail-close">Fechar</button>
+                <button class="appointment-detail-edit">Editar</button>
+            </div>
+        </div>
+    </dialog>
+
     <!-- Overlay para escurecer o fundo quando o menu abre -->
 <div class="overlay" id="overlay"></div>
-    <script type="module" src="assets/js/index.js"></script>
-    <script type="module" src="assets/js/clientes.js"></script>
-    <script type="module" src="assets/js/services.js"></script>
-    <script type="module" src="assets/js/modalAppointments.js"></script>
+    <script type="module" src="assets/index/js/index.js"></script>
+    <script type="module" src="assets/clients/js/clientes.js"></script>
+    <script type="module" src="assets/services/js/services.js"></script>
+    <script type="module" src="assets/appointments/js/modalAppointments.js"></script>
     <script charset="utf-8">
     const menuToggle = document.getElementById('menuToggle');
     const sideMenu = document.querySelector('.side-menu');

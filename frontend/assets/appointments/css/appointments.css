@@ -15,6 +15,157 @@
     border-bottom: 1px solid var(--border);
 }
 
+.appointments-subheader {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    margin-top: 10px;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.custom-filter {
+    margin-top: 1rem;
+    align-items: center;
+    position: relative;
+    min-width: 200px;
+    user-select: none;
+}
+
+.filter-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px 10px 36px;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+    color: #374151;
+}
+
+.filter-trigger:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+}
+
+.custom-filter .fa-filter {
+    pointer-events: none;
+}
+
+.arrow-icon {
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.custom-filter.active .arrow-icon {
+    transform: rotate(180deg);
+}
+
+custom-filter.active .filter-trigger {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.filter-options {
+    position: absolute;
+    top: 110%; /* Logo abaixo do botão */
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+
+    /* Animação suave */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+
+    /* Scroll se for muito alta */
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.custom-filter.active .filter-options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Cada item da lista */
+.filter-option {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #374151;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaço para ícones opcionais nas opções */
+}
+
+.filter-option:last-child {
+    border-bottom: none;
+}
+
+.filter-option:hover {
+    background-color: #f3f4f6;
+    color: #4f46e5;
+}
+
+/* Estado selecionado */
+.filter-option.selected {
+    background-color: #eef2ff; /* Fundo azul bem claro */
+    color: #4338ca;
+    font-weight: 600;
+}
+
+/* Opcional: Ícones dentro das opções (exemplo: bolinha colorida para status) */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.appointments-search-bar {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 500px;
+  height: 40px;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid #ddd;
+  transition: all 0.8s ease-in;
+  margin-left: 40%;
+}
+
+.appointments-search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-primary, #fff);
+  font-size: 0.95rem;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.appointments-search-bar:hover {
+  border-color: var(--text-secondary);
+}
+
+.appointments-search-bar:focus-within {
+  border-color: var(--text-secondary);
+}
+
 .appointments-title {
     display: flex;
     flex-direction: row;

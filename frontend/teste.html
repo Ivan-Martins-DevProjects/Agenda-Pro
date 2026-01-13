@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,124 +6,292 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendamento de Serviços</title>
 
-    <!-- Fonte Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
+
     <style>
-.appointments-container {
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-.appointments-header {
-    display: flex;
-    justify-content: space-between;
-}
+        .btn-open {
+            padding: 10px 20px;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
 
-.appointment-container {
-    border: 1px solid #ccc;
-    width: 250px;
-    padding: 0 1rem 1rem;
-}
+        .appointment-detail-modal {
+            border: none;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 0;
+        }
 
-.appointment-container-header {
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    justify-content: center;
-    gap: 5rem;
-    border-bottom: solid 1px #ccc;
-}
+        .appointment-detail-modal::backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
 
-.appointment-container-info {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-top: 15px;
-    padding: 5px 0 15px;
-    border-bottom: solid 1px #ccc;
-}
+        .appointment-detail-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
 
-.appointment-container-info-client {
-    display: flex;
-    flex-direction: column;
-}
+        .appointment-detail-header {
+            background-color: #f9fafb;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 12px 12px 0 0;
+        }
 
-.appointment-client {
-    margin-left: 0.8rem;
-    margin-bottom: 5px;
-    font-size: 25px;
-}
+        .detail-header-title h2 {
+            margin: 0;
+            color: #111827;
+            font-size: 1.25rem;
+        }
 
-.appointment-resp {
-    border-radius: 15px;
-    padding: 0.4rem 0.5rem;
-    color: #fff;
-    background-color: #1c75d8db;
-    font-weight: bold;
-}
+        .appointment-detail-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
 
-.appointment-container-info-date {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-}
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
 
-.appointment-container-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-top: 20px;
-}
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+            min-width: 100px;
+        }
+
+        .detail-value {
+            color: #1f2937;
+            flex-grow: 1;
+            text-align: right;
+        }
+
+        .detail-input,
+        .detail-select,
+        .detail-textarea {
+            display: none;
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            text-align: left;
+            margin-left: auto;
+            max-width: 60%;
+        }
+
+        .detail-textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .appointment-detail-footer {
+            padding: 1rem 1.5rem;
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .appointment-detail-close {
+            background-color: white;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .appointment-detail-edit {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        .appointment-detail-close:hover {
+            background-color: #f3f4f6;
+        }
+
+        .appointment-detail-edit:hover {
+            background-color: #4338ca;
+        }
+
+        .appointment-detail-modal.is-editing .detail-value {
+            display: none;
+        }
+
+        .appointment-detail-modal.is-editing .detail-input,
+        .appointment-detail-modal.is-editing .detail-select,
+        .appointment-detail-modal.is-editing .detail-textarea {
+            display: block;
+        }
+
+        .appointment-detail-modal.is-editing .detail-row {
+            flex-wrap: wrap;
+        }
     </style>
-        <body>
-            <div class="appointments-container">
-                <div class="appointments-header">
-                    <div class="appointments-title">
-                        <h2>Meus Agendamentos</h2>
-                    </div>
-                    <div class="appointments-search-bar">
-                        <i class="fas fa-search" style="margin-right: 10px;"></i>
-                        <input id="search-bar" type="text" placeholder="Pesquise aqui..."/>
-                    </div>
-                    <div class="appointments-header-btn">
-                        <button>Novo Agendamento</button>
-                    </div>
-                </div>
-                <div class="appointments-body">
-                    <div class="appointment-container">
-                        <div class="appointment-container-header">
-                            <div class="appointment-container-title">
-                                <h3>Coloração</h3>
-                            </div>
-                            <div class="appointment-container-status">
-                                <span>Confirmado</span>
-                            </div>
-                        </div>
-                        <div class="appointment-container-info">
-                            <div class="appointment-container-info-client">
-                                <div class="appointment-client">Ivan Martins</div>
-                                <div class="appointment-resp">Manu Oliveira</div>
-                            </div>
-                            <div class="appointment-container-info-date">
-                                <div class="appointment-date">12 Out</div>
-                                <div class="appointment-hour">12:00</div>
-                            </div>
-                        </div>
-                        <div class="appointment-container-footer">
-                            <button>Confirmar</button>
-                            <button>Cancelar</button>
-                        </div>
-                    </div>
+</head>
+<body>
+    <button class="btn btn-open">Abrir Agendamento</button>
+
+    <dialog class="appointment-detail-modal">
+        <div class="appointment-detail-container">
+            <div class="appointment-detail-header">
+                <div class="detail-header-title">
+                    <h2>Detalhes do Agendamento</h2>
                 </div>
             </div>
-        </body>
-    <script>
 
+            <div class="appointment-detail-body">
+                <div class="detail-row">
+                    <span class="detail-label">Cliente:</span>
+                    <span class="detail-value">Ivan Martins</span>
+                    <input type="text" class="detail-input" value="Ivan Martins" disabled>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Serviço:</span>
+                    <span class="detail-value">Coloração</span>
+                    <input type="text" class="detail-input" value="Coloração">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Data:</span>
+                    <span class="detail-value">12 de Outubro, 2023</span>
+                    <input type="date" class="detail-input" value="2023-10-12">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Hora:</span>
+                    <span class="detail-value">12:00</span>
+                    <input type="time" class="detail-input" value="12:00">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Preço:</span>
+                    <span class="detail-value">R$50,00</span>
+                    <input type="text" class="detail-input" value="50,00">
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">Confirmado</span>
+                    <select class="detail-select">
+                        <option value="Confirmado" selected>Confirmado</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="detail-row" style="align-items: flex-start;">
+                    <span class="detail-label">Obs:</span>
+                    <span class="detail-value">Prefere procedimento sem amônia</span>
+                    <textarea class="detail-textarea">Prefere procedimento sem amônia</textarea>
+                </div>
+            </div>
+
+            <div class="appointment-detail-footer">
+                <button class="appointment-detail-close">Fechar</button>
+                <button class="appointment-detail-edit">Editar</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        const btnOpen = document.querySelector('.btn-open');
+        const modal = document.querySelector('.appointment-detail-modal');
+        const btnClose = document.querySelector('.appointment-detail-close');
+        const btnEdit = document.querySelector('.appointment-detail-edit');
+
+        let isEditing = false;
+
+        btnOpen.addEventListener('click', () => {
+            modal.showModal();
+        });
+
+        btnClose.addEventListener('click', () => {
+            if (isEditing) {
+                cancelEdit();
+            }
+            modal.close();
+        });
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                if (isEditing) cancelEdit();
+                modal.close();
+            }
+        });
+
+        btnEdit.addEventListener('click', () => {
+            if (!isEditing) {
+                enterEditMode();
+            } else {
+                saveChanges();
+            }
+        });
+
+        function enterEditMode() {
+            modal.classList.add('is-editing');
+            btnEdit.textContent = 'Salvar';
+            btnEdit.style.backgroundColor = '#10b981';
+            isEditing = true;
+        }
+
+        function saveChanges() {
+            const rows = document.querySelectorAll('.detail-input')
+            rows.forEach(item => {
+                console.log(item.value)
+            })
+            exitEditMode();
+        }
+
+        function cancelEdit() {
+            exitEditMode();
+        }
+
+        function exitEditMode() {
+            modal.classList.remove('is-editing');
+            btnEdit.textContent = 'Editar';
+            btnEdit.style.backgroundColor = '#4f46e5';
+            isEditing = false;
+        }
     </script>
+</body>
 </html>
+

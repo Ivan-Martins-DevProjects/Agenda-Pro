@@ -1,6 +1,6 @@
-import {LoadAppointmentsPage, RenderAppointments} from './appointments.js'
-import {carregarClientes, CloseModalRemoveListeners} from './clientes.js'
-import LoadServices from './services.js'
+import {LoadAppointmentsPage, RenderAppointments} from '../../appointments/js/appointments.js'
+import {carregarClientes, CloseModalRemoveListeners} from '../../clients/js/clientes.js'
+import LoadServices from '../../services/js/services.js'
 
 // Obtém referência ao botão do Dashboard no menu lateral
 const btnDashboard = document.getElementById('page-dashboard')
@@ -51,7 +51,7 @@ function ClearActiveSideMenu(btn) {
 function MainMenuListeners(event) {
     const btn = event.target.closest('.menu-link') // Verifica o elemento clicado mais próximo com a classe 'menu-link'
     if (!btn) {
-        console.error('Botão menu-link não encontrado');
+        return
     }
     // Redireciona para a função correspondente ao botão clicado
     switch (btn.id) {

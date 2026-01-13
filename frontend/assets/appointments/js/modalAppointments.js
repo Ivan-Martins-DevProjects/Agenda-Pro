@@ -1,6 +1,6 @@
-import {api_url, token} from "./index.js"
-import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "./clientes.js"
-import ErrorModal from "./index.js"
+import {api_url, token} from "../../index/js/index.js"
+import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "../../clients/js/clientes.js"
+import ErrorModal from "../../index/js/index.js"
 //
 // --- 1. DADOS DE SERVIÇOS (Desacoplado do HTML) ---
 // Simulando dados que viriam do seu backend
