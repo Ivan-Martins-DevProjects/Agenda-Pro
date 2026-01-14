@@ -690,7 +690,7 @@ export function CreatePagination(start, MaxPage, where){
  */
 export function nextPage(page, last) {
     const pages = document.querySelector('.pagination-clients')
-    const buttons = pages.querySelectorAll('.pagination-button')
+    const buttons = pages.querySelectorAll('.pagination-clients button')
     const lastButton = pages.querySelector('.pagination-last-button')
 
     // Remove a classe 'active' de todos os botões
@@ -706,7 +706,6 @@ export function nextPage(page, last) {
         return
     }
 
-    // Se for a última página, marca o botão da última página como ativo
     lastButton.classList.add('active')
     return
 }

@@ -1,3 +1,4 @@
+import { LoadAppointmentsPage } from "./appointments.js";
 
 export function FilterDropboxActive(event) {
     const filterContainer = document.querySelector('.custom-filter')
@@ -6,15 +7,25 @@ export function FilterDropboxActive(event) {
 }
 
 export function ItemsDropbox(event) {
+    event.stopPropagation();
+    const options = document.querySelectorAll('.filter-option')
+    options.forEach(item => {
+        item.classList.remove('selected')
+    })
+
+    const option = event.target
+    option.classList.add('selected')
+
+    const selectedText = document.querySelector('.selected-text')
+    selectedText.textContent = option.textContent.trim()
+    selectedText.dataset.type = option.dataset.type
+    selectedText.dataset.value = option.dataset.value
+
     const filterContainer = document.querySelector('.custom-filter')
-    e.stopPropagation();
+    filterContainer.classList.remove('active')
 
-    options.forEach(opt => opt.classList.remove('selected'));
-    option.classList.add('selected');
-    selectedText.textContent = option.textContent.trim();
-    filterContainer.classList.remove('active');
-
-    const filter = option.getAttribute('data-value')
-    LoadAppointmentsPage(filter)
+    const filter = selectedText.dataset.value
+    const filterType = selectedText.dataset.type
+    LoadAppointmentsPage(filter, filterType)
 }
 

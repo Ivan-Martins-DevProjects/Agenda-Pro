@@ -253,7 +253,11 @@ def list_appointments():
         req_data = RequestBuilder.from_flask(request)
         handler = page_appointments.AppointmentsHandler(req_data)
 
-        response = handler.list_appointments()
+        if not req_data.params.get('filterType'):
+            response = handler.list_appointments()
+        else:
+            response = handler.list_filter_appointments()
+
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 

@@ -27,7 +27,7 @@ class AppointmentsHandler:
 
         appointmentsControl = controlers.appointmentsControl
         if not appointmentsControl:
-            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers')
+            raise AppError(logger_message='Erro ao extrair instância appointmentsControl de controlers')
 
         offset = int(self.req_data.params.get('offset'))
         if offset < 0:
@@ -35,6 +35,32 @@ class AppointmentsHandler:
 
         appointments_list = appointmentsControl.list_all_appointments(offset)
         if not appointments_list:
-            raise AppError(logger_message='Nenhum informação recebida de list_all_services')
+            raise AppError(logger_message='Nenhum informação recebida de list_all_appointments')
+
+        return appointments_list
+
+    def list_filter_appointments(self):
+        controlers = set_appointments_header_params(self.req_data, 'read_appointments')
+        if not controlers:
+            raise AppError(logger_message='Erro ao definir controlers')
+
+        appointmentsControl = controlers.appointmentsControl
+        if not appointmentsControl:
+            raise AppError(logger_message='Erro ao extrair instância appointmentsControl de controlers')
+
+        offset = int(self.req_data.params.get('offset'))
+        if offset < 0:
+            raise BadRequest(logger_message='Offset Inválido')
+
+        filter_value = self.req_data.params.get('value')
+        if not filter_value:
+            raise BadRequest(logger_message='Parâmetros incompletos')
+
+        appointments_list = appointmentsControl.list_filter_appointments(
+            offset=offset,
+            filter=filter_value
+        )
+        if not appointments_list:
+            raise AppError(logger_message='Nenhum informação recebida de list_filter_appointments')
 
         return appointments_list

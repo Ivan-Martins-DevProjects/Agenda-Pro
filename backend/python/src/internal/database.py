@@ -9,7 +9,7 @@ from psycopg_pool import ConnectionPool
 
 from ..errors.databaseErrors import databaseErrors
 from ..errors.clientsErrors import ClientNotFound, DuplicateClientError
-from ..errors.mainErrors import AppError, InvalidField, handle_exception
+from ..errors.mainErrors import AppError, BadRequest, InvalidField, handle_exception
 from ..errors.servicesErrors import DuplicateServiceError, ServiceNotFound
 
 load_dotenv()
@@ -727,3 +727,155 @@ def list_all_appointments_db(offset, id, role):
 
     except Exception as e:
         raise databaseErrors(e)
+
+def list_filter_appointments_db(offset, id, field_type, field, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+    
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                column_name = sql.SQL(field_type)
+
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field='Role')
+
+                query = sql.SQL("""
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
+                FROM appointments
+                WHERE {0} = %s
+                AND {1} = %s
+                LIMIT %s OFFSET %s
+                """).format(role_column, column_name)
+
+                count = sql.SQL(
+               "SELECT COUNT(*) AS total FROM appointments WHERE {0} = %s AND {1} = %s"
+                ).format(role_column, column_name)
+
+                cursor.execute(query, (id, field.lower(), 10, int(offset)))
+                results = cursor.fetchall()
+                if not results:
+                    return {
+                    'total': 0,
+                    'appointments': []
+                    }
+
+                cursor.execute(count, (id, field.lower()))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                appointments_list = []
+                for result in results:
+                    result['date'] = result['date'].isoformat()
+                    result['time_begin'] = result['time_begin'].isoformat()[:5]
+                    result['time_end'] = result['time_end'].isoformat()[:5]
+                    appointments_list.append(result)
+
+                data = {
+                    'appointments': appointments_list,
+                    'total': total
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+def list_filter_time_appointments_db(offset, id, field_type, field, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                interval = sql.SQL(field_type)
+
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                if field_type == 'day':
+                    where_value = sql.SQL("""
+                                          date >= date_trunc({type_field}, CURRENT_DATE)
+                                          AND date < date_trunc({type_field}, CURRENT_DATE) + INTERVAL '1 {interval}'
+                                          """).format(
+                                              type_field=field_type,
+                                              interval=interval
+                                          )
+                else:
+                    where_value = sql.SQL("""
+                                          date >= date_trunc({type_field}, CURRENT_DATE)
+                                          AND date < date_trunc({type_field}, CURRENT_DATE) + INTERVAL '1 {interval}'
+                                          """).format(
+                                              type_field=field_type,
+                                              interval=interval
+                                          )
+
+                query = sql.SQL("""
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
+                FROM appointments
+                WHERE {0} = %s
+                AND {1}
+                ORDER BY date, time_begin
+                LIMIT %s OFFSET %s
+                """).format(role_column, where_value)
+
+                count = sql.SQL(
+               "SELECT COUNT(*) AS total FROM appointments WHERE {0} = %s AND {1}"
+                ).format(role_column, where_value)
+
+                # logger.debug(count.as_string(conn))
+                cursor.execute(query, (id, 10, int(offset)))
+                results = cursor.fetchall()
+                if not results:
+                    return {
+                    'total': 0,
+                    'appointments': []
+                    }
+
+                cursor.execute(count, (id,))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                appointments_list = []
+                for result in results:
+                    result['date'] = result['date'].isoformat()
+                    result['time_begin'] = result['time_begin'].isoformat()[:5]
+                    result['time_end'] = result['time_end'].isoformat()[:5]
+                    appointments_list.append(result)
+
+                data = {
+                    'appointments': appointments_list,
+                    'total': total
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+

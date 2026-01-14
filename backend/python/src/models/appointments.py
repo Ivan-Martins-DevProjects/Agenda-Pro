@@ -3,6 +3,7 @@ import logging
 
 from dotenv import load_dotenv
 
+from src.errors.mainErrors import BadRequest
 from src.internal import database
 
 
@@ -33,6 +34,45 @@ class AppointmentsControl:
         )
         return appointments
 
+    def list_filter_appointments(self, offset, filter):
+        allowed_status = {
+            'pendente': 'status',
+            'confirmado': 'status',
+            'cancelado': 'status'
+        }
+
+        allowed_dates = {
+            'hoje': ('day', 'date'),
+            'semana': ('week', 'date'),
+            'mes': ('month', 'date'),
+        }
+
+        if filter in allowed_status:
+            internal_value = allowed_status[filter]
+            appointments = self.repo.list_filter_appointments_repo(
+                offset=offset,
+                id=self.user.true_id(),
+                field_type=internal_value,
+                field=filter,
+                role=self.user.Role
+            )
+            return appointments
+
+        elif filter in allowed_dates:
+            internal_field = allowed_dates[filter][0]
+            internal_value = allowed_dates[filter][1]
+            appointments = self.repo.list_filter_time_appointments_repo(
+                offset=offset,
+                id=self.user.true_id(),
+                field_type=internal_field,
+                field=internal_value,
+                role=self.user.Role
+            )
+            return appointments
+
+        else:
+            raise BadRequest(field='Fitlro')
+
 class AppointmentsRepository:
     def list_appointments(self, offset, ID, role):
         response = database.list_all_appointments_db(
@@ -41,3 +81,24 @@ class AppointmentsRepository:
             role=role
         )
         return response
+
+    def list_filter_appointments_repo(self, offset, id, field_type, field, role):
+        response = database.list_filter_appointments_db(
+            offset=offset,
+            id=id,
+            field_type=field_type,
+            field=field,
+            role=role
+        )
+        return response
+
+    def list_filter_time_appointments_repo(self, offset, id, field_type, field, role):
+        response = database.list_filter_time_appointments_db(
+            offset=offset,
+            id=id,
+            field_type=field_type,
+            field=field,
+            role=role
+        )
+        return response
+
