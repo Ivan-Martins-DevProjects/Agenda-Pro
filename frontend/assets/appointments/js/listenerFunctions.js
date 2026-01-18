@@ -1,4 +1,6 @@
-import { LoadAppointmentsPage } from "./appointments.js";
+import { LoadAppointmentsPage, RenderSavedService, RenderServicesListNewAppointment } from "./appointments.js";
+
+let timer
 
 export function FilterDropboxActive(event) {
     const filterContainer = document.querySelector('.custom-filter')
@@ -29,3 +31,43 @@ export function ItemsDropbox(event) {
     LoadAppointmentsPage(filter, filterType)
 }
 
+export function ServiceInputListener(event) {
+    const conteudo = event.target.value
+    clearTimeout(timer)
+
+    const data = [
+        {
+            'name': 'Coloração'
+        },
+        {
+            'name': 'Corte'
+        }
+    ]
+
+    const serviceList = document.querySelectorAll('.service-option')
+    if (serviceList) {
+        serviceList.forEach(item => {
+            item.remove()
+        })
+    }
+
+    timer = setTimeout(() => {
+        RenderServicesListNewAppointment(data)
+    }, 1000)
+}
+
+export function CloseServiceList() {
+    const listServices = document.querySelectorAll('.service-option')
+    if (listServices) {
+        listServices.forEach(item => {
+            item.remove()
+        })
+    }
+}
+
+export function SaveServiceInModal(event) {
+    const element = event.target.closest('.service-option')
+    const span = element.querySelector('span')
+
+    RenderSavedService(span.textContent)
+}

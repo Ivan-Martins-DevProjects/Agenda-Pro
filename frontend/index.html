@@ -202,8 +202,21 @@
                         </div>
                     </div>
 
+                    <div class="appointment-price-info">
+                        <div class="appointment-price">R$ 50,00</div>
+                        <div class="appointment-service-duration">
+                            <i class="fas fa-clock" style="margin-right: 5px; color: #ccc;"></i>
+                            <span>120 min</span>
+                        </div>
+                    </div>
+
                     <div class="appointment-container-footer">
                         <button class="appointment-footer-detail">Detalhes</button>
+                        <div class="appointment-container-footer-status">
+                            <button class="appointment-footer-confirmado">Confirmar</button>
+                            <button class="appointment-footer-pendente">Aguardar</button>
+                            <button class="appointment-footer-cancelado">Cancelar</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -402,16 +415,16 @@
                     <form id="bookingForm">
                         <div class="appointment-form-group">
                             <label for="contactName">Nome do Contato</label>
-                            <input type="text" id="contactName" class="appointment-form-control" placeholder="Ex: João Silva" required>
+                            <input type="text" id="contactName" class="appointment-form-control" placeholder="Ex: João Silva">
                         </div>
 
                         <div class="appointment-form-group">
-                            <div>
+                            <div class="appointment-form-group-service">
                                 <label for="serviceSelect">Serviço</label>
-                                <select id="serviceSelect" class="appointment-form-control" required>
-                                    <option value="" disabled selected>Selecione um serviço</option>
-                                </select>
+                                <input type="text" id="serviceSelect" class="appointment-form-control" placeholder="Selecione um serviço"/>
+                                <div class="service-list"></div>
                             </div>
+                            <div class="list-selected-services"></div>
                             <div style="margin-top: 15px;">
                                 <label for="ServiceSelect">Observações</label>
                                 <input type="text" id="description" class="appointment-form-control" placeholder="Detalhes..."/>
@@ -422,11 +435,11 @@
                         <div class="appointment-form-row">
                             <div class="appointment-form-group">
                                 <label for="dateDisplay">Data</label>
-                                <input type="text" id="dateDisplay" class="appointment-form-control" placeholder="Selecione no calendário" readonly required>
+                                <input type="text" id="dateDisplay" class="appointment-form-control" placeholder="Selecione no calendário" readonly>
                             </div>
                             <div class="appointment-form-group">
                                 <label for="timeInput">Horário</label>
-                                <input type="time" id="timeInput" class="appointment-form-control" required>
+                                <input type="time" id="timeInput" class="appointment-form-control">
                             </div>
                         </div>
 
@@ -463,48 +476,48 @@
             </div>
 
             <div class="appointment-detail-body">
-                <div class="detail-row">
-                    <span class="detail-label">Cliente:</span>
-                    <span class="detail-value">Ivan Martins</span>
+                <div class="detail-row" id="appointment-detail-name">
+                    <div class="detail-label">Cliente:</div>
+                    <span class="detail-value" >Ivan Martins</span>
                     <input type="text" class="detail-input" value="Ivan Martins" disabled>
                 </div>
 
-                <div class="detail-row">
-                    <span class="detail-label">Serviço:</span>
+                <div class="detail-row" id="appointment-detail-service">
+                    <div class="detail-label">Serviço:</div>
                     <span class="detail-value">Coloração</span>
                     <input id="service" type="text" class="detail-input" value="Coloração">
                 </div>
 
-                <div class="detail-row">
-                    <span class="detail-label">Data:</span>
+                <div class="detail-row" id="appointment-detail-date">
+                    <div class="detail-label">Data:</div>
                     <span class="detail-value">12 de Outubro, 2023</span>
                     <input id="date" type="date" class="detail-input" value="2023-10-12">
                 </div>
 
-                <div class="detail-row">
-                    <span class="detail-label">Hora:</span>
+                <div class="detail-row" id="appointment-detail-hour">
+                    <div class="detail-label">Hora:</div>
                     <span class="detail-value">12:00</span>
                     <input id="hour" type="time" class="detail-input" value="12:00">
                 </div>
 
-                <div class="detail-row">
-                    <span class="detail-label">Preço:</span>
+                <div class="detail-row" id="appointment-detail-price">
+                    <div class="detail-label">Preço:</div>
                     <span class="detail-value">R$50,00</span>
                     <input id="price" type="text" class="detail-input" value="50,00">
                 </div>
 
-                <div class="detail-row">
-                    <span class="detail-label">Status:</span>
+                <div class="detail-row" id="appointment-detail-status">
+                    <div class="detail-label">Status:</div>
                     <span class="detail-value">Confirmado</span>
                     <select class="detail-select" id="status">
-                        <option value="Confirmado" selected>Confirmado</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Cancelado">Cancelado</option>
+                        <option value="confirmado" selected>Confirmado</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
 
-                <div class="detail-row" style="align-items: flex-start;">
-                    <span class="detail-label">Obs:</span>
+                <div class="detail-row" style="align-items: flex-start;" id="appointment-detail-obs">
+                    <div class="detail-label">Obs:</div>
                     <span class="detail-value">Prefere procedimento sem amônia</span>
                     <textarea class="detail-textarea">Prefere procedimento sem amônia</textarea>
                 </div>

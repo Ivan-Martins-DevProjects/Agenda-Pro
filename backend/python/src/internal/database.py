@@ -679,25 +679,23 @@ def list_all_appointments_db(offset, id, role):
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 if role == 'admin':
-                    query = """
-                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
-                    FROM appointments
-                    WHERE bussines_id = %s
-                    LIMIT %s OFFSET %s
-                    """
-                    count = "SELECT COUNT(*) AS total FROM appointments WHERE bussines_id = %s"
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
                 else:
-                    query = """
-                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
-                    FROM appointments
-                    WHERE user_id = %s
-                    LIMIT %s OFFSET %s
-                    """
-                    count = "SELECT COUNT(*) AS total FROM appointments WHERE user_id = %s"
+                    raise BadRequest(field='Role')
+
+                query = sql.SQL("""
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                FROM appointments
+                WHERE {0} = %s
+                LIMIT %s OFFSET %s
+                """).format(role_column)
+
+                count = sql.SQL("SELECT COUNT(*) AS total FROM appointments WHERE {0} = %s").format(role_column)
 
                 cursor.execute(query, (id, 10, int(offset)))
                 results = cursor.fetchall()
-
                 if not results:
                     return {
                     'total': 0,
@@ -715,7 +713,6 @@ def list_all_appointments_db(offset, id, role):
                 for result in results:
                     result['date'] = result['date'].isoformat()
                     result['time_begin'] = result['time_begin'].isoformat()[:5]
-                    result['time_end'] = result['time_end'].isoformat()[:5]
                     appointments_list.append(result)
 
                 data = {
@@ -751,7 +748,7 @@ def list_filter_appointments_db(offset, id, field_type, field, role):
                     raise BadRequest(field='Role')
 
                 query = sql.SQL("""
-                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
                 FROM appointments
                 WHERE {0} = %s
                 AND {1} = %s
@@ -781,7 +778,6 @@ def list_filter_appointments_db(offset, id, field_type, field, role):
                 for result in results:
                     result['date'] = result['date'].isoformat()
                     result['time_begin'] = result['time_begin'].isoformat()[:5]
-                    result['time_end'] = result['time_end'].isoformat()[:5]
                     appointments_list.append(result)
 
                 data = {
@@ -834,7 +830,7 @@ def list_filter_time_appointments_db(offset, id, field_type, field, role):
                                           )
 
                 query = sql.SQL("""
-                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, time_end, status
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
                 FROM appointments
                 WHERE {0} = %s
                 AND {1}
@@ -866,12 +862,65 @@ def list_filter_time_appointments_db(offset, id, field_type, field, role):
                 for result in results:
                     result['date'] = result['date'].isoformat()
                     result['time_begin'] = result['time_begin'].isoformat()[:5]
-                    result['time_end'] = result['time_end'].isoformat()[:5]
                     appointments_list.append(result)
 
                 data = {
                     'appointments': appointments_list,
                     'total': total
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+def get_unique_appointment_db(appointment_id, user_id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                query = sql.SQL("""
+                SELECT id, client_name, user_name, service_name, date, time_begin, status, price, status, obs
+                FROM appointments
+                WHERE {0} = %s
+                AND id = %s
+                """).format(role_column)
+
+                # logger.debug(count.as_string(conn))
+                cursor.execute(query, (user_id, appointment_id))
+                result = cursor.fetchone()
+                if not result:
+                    raise BadRequest(message='Nao foi possivel concluir a operaçao')
+
+                raw_date = result['date'] = result['date'].isoformat()
+                date_obj = datetime.fromisoformat(raw_date)
+                formated_date = date_obj.strftime('%d-%m-%Y')
+                formated_time = result['time_begin'] = result['time_begin'].isoformat()[:5] if result['time_begin'] else None
+
+                data = {
+                    'name': result['client_name'],
+                    'service': result['service_name'],
+                    'raw_date': raw_date,
+                    'date': formated_date,
+                    'hour': formated_time,
+                    'price': int(result['price']) / 100,
+                    'status': result['status'].title(),
+                    'obs': result['obs']
                 }
 
                 return data

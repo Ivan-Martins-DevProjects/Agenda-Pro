@@ -266,6 +266,7 @@ custom-filter.active .filter-trigger {
 
 /* --- CARTÃO DE AGENDAMENTO --- */
 .appointment-container {
+    cursor: pointer;
     background-color: var(--bg-card);
     border-radius: 12px;
     border: 1px solid var(--border);
@@ -285,7 +286,9 @@ custom-filter.active .filter-trigger {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .appointment-container-title h3 {
@@ -310,10 +313,42 @@ custom-filter.active .filter-trigger {
     display: flex;
     justify-content: space-between;
     align-items: flex-end; /* Alinha a data com o texto */
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
     padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
     flex-grow: 1;
+}
+
+.appointment-price-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    background-color: #F1F3F4;
+    height: 60px;
+}
+
+.appointment-price-info div{
+    color: #10B37D;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.appointment-price-info span{
+    font-weight: bold;
+    color: #00000078;
+    font-size: 18px;
+}
+
+.appointment-service-duration {
+    display: flex;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 8px 8px;
+    align-items: center;
+    border-radius: 20px;
 }
 
 .appointment-client-info {
@@ -369,23 +404,74 @@ custom-filter.active .filter-trigger {
 /* Rodapé (Botões) */
 .appointment-container-footer {
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     gap: 10px;
 }
 
-.appointment-container-footer button {
+.appointment-container-footer-status {
+    display: flex;
+    flex-direction: row;
+    gap: 3px;
+}
+
+.appointment-container-footer-status button{
+    color: transparent;
+    width: 10px;
+    border-radius: 50%;
+    border: none;
+    transition: all 0.5s;
+}
+
+.appointment-footer-confirmado {
+    background-color: #22ae57;
+}
+
+.appointment-footer-confirmado:hover {
+    width: 100px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.appointment-footer-pendente {
+    background-color: #E2E680;
+}
+
+.appointment-footer-pendente:hover {
+    width: 100px;
+    border-radius: 8px;
+    color: #070707b0;
+    font-weight: bold;
+}
+
+.appointment-footer-cancelado {
+    background-color: #E63F3F;
+}
+
+.appointment-footer-cancelado:hover {
+    width: 100px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.appointment-container-footer  {
     flex: 1;
+   }
+
+/* Estilo Botão Confirmar */
+.appointment-footer-detail {
     padding: 0.6rem;
     border-radius: 6px;
     border: none;
     font-size: 0.9rem;
     font-weight: bold;
     cursor: pointer;
+    width: 300px;
     font-family: inherit;
     transition: all 0.2s;
-}
-
-/* Estilo Botão Confirmar */
-.appointment-footer-detail {
     color: white;
     background-color: #3870CB;
 }

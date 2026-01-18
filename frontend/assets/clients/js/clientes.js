@@ -627,6 +627,9 @@ export function CreatePagination(start, MaxPage, where){
     } else {
         container = document.querySelector(where)
     }
+    if (MaxPage === 1) {
+        return
+    }
     // Cria o elemento nav que conterá os botões de paginação
     const nav = document.createElement('nav')
     nav.className = 'pagination-clients'

@@ -270,3 +270,23 @@ def list_appointments():
             'code': response.get('code', 'Erro interno ao captar erro'),
         }
         return jsonify(data), response.get('status', 500)
+
+@app.route('/api/appointments/unique', methods=['GET'])
+def get_unique_appointment():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        handler = page_appointments.AppointmentsHandler(req_data)
+
+        response = handler.get_unique_appointment()
+        if not response:
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        response = handle_exception(e)
+        data = {
+            'message': response.get('error', 'Erro interno ao gerar resposta'),
+            'code': response.get('code', 'Erro interno ao captar erro'),
+        }
+        return jsonify(data), response.get('status', 500)

@@ -64,3 +64,22 @@ class AppointmentsHandler:
             raise AppError(logger_message='Nenhum informação recebida de list_filter_appointments')
 
         return appointments_list
+
+    def get_unique_appointment(self):
+        controlers = set_appointments_header_params(self.req_data, 'read_appointments')
+        if not controlers:
+            raise AppError(logger_message='Erro ao definir controlers')
+
+        appointmentsControl = controlers.appointmentsControl
+        if not appointmentsControl:
+            raise AppError(logger_message='Erro ao extrair instância appointmentsControl de controlers')
+
+        appointment_id = self.req_data.params.get('id')
+        if not appointment_id:
+            raise BadRequest(field='ID')
+
+        response = appointmentsControl.get_unique_appointment(appointment_id)
+        if not response:
+            raise AppError(logger_message='Nenhum informação recebida de get_unique_appointment')
+
+        return response

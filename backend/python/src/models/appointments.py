@@ -73,6 +73,14 @@ class AppointmentsControl:
         else:
             raise BadRequest(field='Fitlro')
 
+    def get_unique_appointment(self, appointment_id):
+        response = self.repo.get_unique_appointment_repo(
+            appointment_id=appointment_id,
+            id=self.user.true_id(),
+            role=self.user.Role
+        )
+        return response
+
 class AppointmentsRepository:
     def list_appointments(self, offset, ID, role):
         response = database.list_all_appointments_db(
@@ -102,3 +110,10 @@ class AppointmentsRepository:
         )
         return response
 
+    def get_unique_appointment_repo(self, appointment_id, id, role):
+        response = database.get_unique_appointment_db(
+            appointment_id=appointment_id,
+            user_id=id,
+            role=role
+        )
+        return response
