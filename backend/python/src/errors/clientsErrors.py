@@ -4,15 +4,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ClientNotFound(AppError):
-    code = 'CLIENT_NOT_FOUND'
+    default_code = 'CLIENT_NOT_FOUND'
     default_message = 'Contato não encontrado'
     default_logger_level = None
     default_logger_message = None
-    status = 404
+    default_status = 404
 
 class DuplicateClientError(AppError):
-    code = 'DUPLICATE_CLIENT_ERROR'
+    default_code = 'DUPLICATE_CLIENT_ERROR'
     default_message = 'Cliente já cadastrado'
     default_logger_level = None
     default_logger_message = None
-    status = 409
+    default_status = 409
+
+class InaccessibleClient(AppError):
+    default_code = 'INACCESSIBLE_CLIENT'
+    default_message = 'Você não tem autorização para acessar esse clients'
+    default_logger_level = None
+    default_logger_message = None
+    default_status = 409

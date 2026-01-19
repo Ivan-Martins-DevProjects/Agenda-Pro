@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,22 +22,37 @@ class AppError(Exception):
 
         super().__init__(self.message)
 
-def handle_exception(e: Exception):
-    if isinstance(e, AppError):
-        if e.logger_level:
-            logger.log(e.logger_level, str(e.logger_message), exc_info=e)
-        return {
-            'error': e.message,
-            'code': e.code,
-            'status': e.status
-        }
+@dataclass
+class HandleException:
+    error: Any # Classe Exception ou AppError
 
-    else:
-        logger.exception('Erro insesperado')
-        return {
-            'error': 'Erro interno',
-            'status': 500
+    code: Any | None = None
+    status: Any | None = None
+    message: Any | None = None
+
+    def __post_init__(self):
+        e = self.error
+
+        if isinstance(e, AppError):
+            if e.logger_level:
+                logger.log(e.logger_level, str(e.logger_message), exc_info=e)
+
+            self.code = e.code
+            self.status = e.status
+            self.message = e.message
+            
+        else:
+            logger.exception('Erro Inesperado')
+            self.code = 'INTERNAL_SERVER_ERROR'
+            self.status = 500
+            self.message = 'Erro Interno'
+
+    def generate_data(self):
+        data = {
+            'message': self.message,
+            'code': self.code
         }
+        return data
 
 class InvalidField(AppError):
     default_message = 'Campo inválido'
