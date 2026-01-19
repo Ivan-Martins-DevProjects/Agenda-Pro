@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VE9K4oJ7qpdudNdYTCAzTRW6cRo9nbZlL8tMCQ37TLnLkevT2i15QgWucVNAnkG
+\restrict bYQAF4yKEHA6s6SGxo3nEeEhdBaTD1A4bbxDLxskJKfjfLdtWRn4CBKyHGUyzIl
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -21,6 +21,32 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: appointments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.appointments (
+    id character varying(255) NOT NULL,
+    user_id character varying(255),
+    service_id character varying(255),
+    client_id character varying(255),
+    date date,
+    time_begin time without time zone,
+    status character varying(20) DEFAULT 'pendente'::character varying,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    bussines_id character varying(255),
+    client_name character varying(100),
+    user_name character varying(255),
+    service_name character varying(255),
+    price integer,
+    obs text,
+    duration integer
+);
+
+
+ALTER TABLE public.appointments OWNER TO postgres;
 
 --
 -- Name: bussines; Type: TABLE; Schema: public; Owner: postgres
@@ -86,11 +112,32 @@ CREATE TABLE public.roles (
     read_appointments boolean,
     write_appointments boolean,
     delete_contact boolean,
-    read_services boolean
+    read_services boolean,
+    write_services boolean,
+    delete_services boolean
 );
 
 
 ALTER TABLE public.roles OWNER TO postgres;
+
+--
+-- Name: services; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.services (
+    id character varying(255) NOT NULL,
+    user_id character varying(255),
+    bussines_id character varying(255),
+    title character varying(50),
+    description text,
+    price numeric,
+    duration numeric,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    resp_name character varying(100)
+);
+
+
+ALTER TABLE public.services OWNER TO postgres;
 
 --
 -- Name: services_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -105,24 +152,6 @@ CREATE SEQUENCE public.services_id_seq
 
 
 ALTER TABLE public.services_id_seq OWNER TO postgres;
-
---
--- Name: services; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.services (
-    id character varying(255) DEFAULT nextval('public.services_id_seq'::regclass) NOT NULL,
-    user_id character varying(255),
-    bussines_id character varying(255),
-    name character varying(50),
-    description text,
-    price integer,
-    duration integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.services OWNER TO postgres;
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
@@ -144,6 +173,54 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
+-- Data for Name: appointments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.appointments (id, user_id, service_id, client_id, date, time_begin, status, created_at, updated_at, bussines_id, client_name, user_name, service_name, price, obs, duration) FROM stdin;
+01744f09-ebde-49c4-977c-74a266e0f0c4	usr_2	srv_2	cli_2	2025-12-30	10:45:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Daniela Lima	Julia (Manicure)	Limpeza de Pele Profunda	9000	Cliente frequente	120
+27ac227a-eb18-4d46-9f2f-db13963157b1	usr_3	srv_3	cli_3	2025-12-16	19:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	\N	Roberto (Estilista)	Selagem	18000	Cansaço muscular nos ombros	120
+79a1e808-cb6d-44ad-a0a0-431fba4da014	usr_4	srv_4	cli_4	2026-01-18	11:30:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Fernanda Oliveira	Roberto (Estilista)	Manicure Completa	4500	Resenha de casamento	120
+7a9c920b-16e8-4027-abeb-21d2f2a0fa02	usr_5	srv_5	cli_5	2025-12-25	11:45:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Maria Clara Gomes	Patricia (Colorista)	Coloração	15000	Cliente tem alergia a amônia	120
+f00858b6-6ba2-45a2-abdf-9b77430656f0	usr_1	srv_6	cli_6	2025-12-20	10:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Juliana Santos	Fernanda (Esteticista)	Hidratação Capilar	8000	Pacote de 5 sessões (2/5)	120
+f9813d7b-30a3-4981-8adf-8bda800448a1	usr_2	srv_7	cli_7	2025-12-29	12:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Ana Silva	Marcos (Barbeiro)	Progressiva	20000	Primeira vez no salão	120
+01fb459f-ef33-4310-bcd6-62f3115f23b1	usr_3	srv_8	cli_8	2025-12-20	14:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Tatiane Mendes	Roberto (Estilista)	Corte de Cabelo Masculino	5000	Traçado degradê	120
+6f02323c-ed6c-46c8-b537-9b666fea9583	usr_4	srv_9	cli_9	2026-02-03	09:15:00	cancelado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Maria Clara Gomes	Fernanda (Esteticista)	Limpeza de Pele Profunda	9000	Traçado degradê	120
+660b8eba-29a5-413f-84c4-534eda263c67	usr_5	srv_10	cli_10	2026-01-06	10:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Lucas Ferreira	Roberto (Estilista)	Hidratação Capilar	8000	Cuidado com a região da nuca	120
+a4b2cf16-994b-4f31-8864-48eb680c74fd	usr_1	srv_11	cli_11	2026-02-03	13:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Victor Hugo	Marcos (Barbeiro)	Corte de Cabelo Masculino	5000	Cliente tem alergia a amônia	120
+9a31fb65-e57a-4832-9c27-c009f2be30bf	usr_2	srv_12	cli_12	2026-02-01	12:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Beatriz Rodrigues	Patricia (Colorista)	Progressiva	20000	Chegar 10 minutos antes	120
+09704717-04e1-4296-b25e-56d64e9b4b4f	usr_2	srv_1	cli_17	2025-12-22	09:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Juliana Santos	Julia (Manicure)	Pedicure Spa	6000	Pacote de 5 sessões (2/5)	120
+f2adab23-246e-4c1b-b287-917817158753	usr_3	srv_2	cli_18	2026-01-10	16:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Pedro Henrique	Roberto (Estilista)	Progressiva	20000	Primeira vez no salão	120
+1d0284cc-4b87-4301-9ea3-4dcdf275d2aa	usr_4	srv_3	cli_19	2026-01-23	09:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Eduardo Pereira	Roberto (Estilista)	Corte Feminino	6500	Cliente frequente	120
+5592f071-5360-4071-afe7-f65d11434e26	usr_5	srv_4	cli_20	2026-01-02	12:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Lucas Ferreira	Fernanda (Esteticista)	Barba Modelada	3500	Cuidado com a região da nuca	120
+2b5cd6f6-89c6-4da7-8bcb-c613cf3f70b0	usr_1	srv_5	cli_1	2026-01-20	09:00:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Pedro Henrique	Roberto (Estilista)	Selagem	18000	Primeira vez no salão	120
+363cc69f-f4c2-4b51-a114-a16762ec34d2	usr_5	srv_1	cli_5	2026-01-20	18:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Fernanda Oliveira	Fernanda (Esteticista)	Coloração	15000	Cliente tem alergia a amônia	120
+5559d923-596c-49ef-bd0e-e632d0df40f7	usr_1	srv_2	cli_6	2026-01-27	18:00:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Helena Martins	Fernanda (Esteticista)	Barba Modelada	3500	Prefere tons mais claros	120
+fe9e1ddb-fcfa-4eab-94e9-35f712d1abfc	usr_2	srv_3	cli_7	2026-01-27	12:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Helena Martins	Roberto (Estilista)	Massagem Relaxante	12000	Pacote de 5 sessões (2/5)	120
+ae35b9d0-a45f-4a23-ab75-49da1f28e222	usr_3	srv_4	cli_8	2025-12-19	15:00:00	cancelado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Carlos Souza	Roberto (Estilista)	Corte de Cabelo Masculino	5000	Resenha de casamento	120
+87b851a9-aa22-44e7-b8d1-5fd504e22209	usr_4	srv_5	cli_9	2025-12-31	10:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Eduardo Pereira	Lucas (Massagista)	Massagem Relaxante	12000	Cuidado com a região da nuca	120
+530f5076-ef39-4bf8-b546-f0980be22cc6	usr_5	srv_6	cli_10	2026-01-20	17:00:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Lucas Ferreira	Lucas (Massagista)	Pezinho e Acabamento	2500	Resenha de casamento	120
+3c6b4b31-f082-48fd-a551-f8b4e29c1249	usr_1	srv_7	cli_11	2026-01-24	18:00:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Raquel Moreira	Fernanda (Esteticista)	Massagem Relaxante	12000	Cliente tem alergia a amônia	120
+2dacd6ce-7dbf-4d6f-be8f-6f738a3cfd47	usr_2	srv_8	cli_12	2025-12-20	10:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Igor Almeida	\N	Selagem	18000	Cliente tem alergia a amônia	120
+4b8e19c6-3a02-4883-9c79-581750e0f17c	usr_3	srv_9	cli_13	2026-01-12	12:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Lucas Ferreira	Julia (Manicure)	Barba Modelada	3500	Cansaço muscular nos ombros	120
+358a19b9-2a86-4879-ad95-4439de8ec083	usr_3	srv_1	cli_13	2026-01-02	09:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	\N	Roberto (Estilista)	Corte de Cabelo Masculino	5000	Traçado degradê	120
+fff492a7-1cba-4aff-9bcb-62df40ef2cd7	usr_4	srv_2	cli_14	2026-01-26	17:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Pedro Henrique	Lucas (Massagista)	Progressiva	20000	\N	120
+b65a8a61-1423-42ee-980c-1c7469726fca	usr_5	srv_3	cli_15	2026-01-03	11:15:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Gabriel Rocha	Lucas (Massagista)	Progressiva	20000	Pacote de 5 sessões (2/5)	120
+d89b3aa7-6373-494b-86c5-3891d25d283b	usr_1	srv_4	cli_16	2026-01-07	10:00:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Igor Almeida	\N	Barba Modelada	3500	Resenha de casamento	120
+2e77ebfe-7961-4f2a-bdb5-11e5248fa2b1	usr_2	srv_5	cli_17	2025-12-18	11:00:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Olivia Dias	Julia (Manicure)	Selagem	18000	Cliente frequente	120
+1f09ba6c-80d4-41dc-8d03-cdf26a3868b5	usr_3	srv_6	cli_18	2026-01-30	17:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Carlos Souza	Fernanda (Esteticista)	Barba Modelada	3500	Cansaço muscular nos ombros	120
+73772985-9be6-47e2-aa1c-64e05d4f6048	usr_4	srv_7	cli_19	2025-12-30	13:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Carlos Souza	Julia (Manicure)	Selagem	18000	Cliente frequente	120
+166a295a-d120-4a10-92cc-447b379bb513	usr_5	srv_8	cli_20	2026-01-20	11:00:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Bruno Costa	Roberto (Estilista)	Coloração	15000	Prefere tons mais claros	120
+6ca7fda2-5414-4568-ae50-4509c9cc49a1	usr_1	srv_9	cli_1	2026-01-28	12:45:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Helena Martins	Roberto (Estilista)	Massagem Relaxante	12000	Prefere tons mais claros	120
+c92238c0-0b30-4e42-855a-cc21bb3440c2	usr_2	srv_10	cli_2	2026-01-19	15:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Raquel Moreira	Roberto (Estilista)	Pedicure Spa	6000	Cuidado com a região da nuca	120
+04ee7837-c7a5-4070-8075-b67f6ef4b90a	usr_3	srv_11	cli_3	2025-12-28	11:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Lucas Ferreira	Lucas (Massagista)	Pezinho e Acabamento	2500	\N	120
+61ba5aef-dc0a-4677-b569-9ad6534ec0fa	usr_4	srv_12	cli_4	2026-01-19	08:30:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Helena Martins	Roberto (Estilista)	Manicure Completa	4500	Cliente frequente	120
+c46e591e-25f7-4017-be66-5627dc3466b1	usr_4	srv_10	cli_14	2026-01-02	13:45:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Carlos Souza	Roberto (Estilista)	Coloração	15000	\N	120
+3db5a718-c34c-4f07-952a-c0f5d2fb67dd	usr_5	srv_11	cli_15	2026-01-08	09:00:00	pendente	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Pedro Henrique	Roberto (Estilista)	Manicure Completa	4500	Primeira vez no salão	120
+ba094060-5def-410e-ba11-532fe2c59efd	usr_1	srv_12	cli_16	2026-01-16	09:15:00	confirmado	2026-01-14 20:49:19.055542	2026-01-14 20:49:19.055542	Agenda PRO	Gabriel Rocha	Patricia (Colorista)	Progressiva	20000	Cliente tem alergia a amônia	120
+\.
+
+
+--
 -- Data for Name: bussines; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -157,9 +234,6 @@ COPY public.bussines (id, nome, email, telefone) FROM stdin;
 --
 
 COPY public.contacts (userid, clientid, nome, email, last_contact, status, telefone, visitas, gasto, obs, resp_name, bussines_id, search, cpf) FROM stdin;
-1	client_3	Cliente 3	cliente3@email.com	2025-12-13 13:32:03.33706	ativo	11990000003	0	3452	Observação do cliente 3	Responsável 3	Agenda PRO	cliente 3	00000000003
-1	client_5	Cliente 5	cliente5@email.com	2025-12-13 13:32:03.33706	ativo	11990000005	0	3995	Observação do cliente 5	Responsável 5	Agenda PRO	cliente 5	00000000005
-1	client_6	Cliente 6	cliente6@email.com	2025-12-13 13:32:03.33706	ativo	11990000006	1	123	Observação do cliente 6	Responsável 6	Agenda PRO	cliente 6	00000000006
 1	86844956-f366-433a-bb39-9bdd76558b04	Ivan Martins	Ivan_g.Martins@outlook.com	2025-12-13 01:55:08.693604	ativo	11952923369	0	0		Administrador	Agenda PRO	\N	
 1	client_26	Cliente 26	cliente26@email.com	2025-12-13 13:32:03.33706	ativo	11990000026	3	1055	Observação do cliente 26	Responsável 26	Agenda PRO	cliente 26	00000000026
 1	client_28	Cliente 28	cliente28@email.com	2025-12-13 13:32:03.33706	ativo	11990000028	4	3524	Observação do cliente 28	Responsável 28	Agenda PRO	cliente 28	00000000028
@@ -185,6 +259,7 @@ COPY public.contacts (userid, clientid, nome, email, last_contact, status, telef
 1	client_23	Cliente 23	cliente23@email.com	2025-12-13 13:32:03.33706	ativo	11990000023	5	922	Observação do cliente 23	Responsável 23	Agenda PRO	cliente 23	00000000023
 1	client_24	Cliente 24	cliente24@email.com	2025-12-13 13:32:03.33706	ativo	11990000024	9	3842	Observação do cliente 24	Responsável 24	Agenda PRO	cliente 24	00000000024
 1	client_25	Cliente 25	cliente25@email.com	2025-12-13 13:32:03.33706	ativo	11990000025	0	4307	Observação do cliente 25	Responsável 25	Agenda PRO	cliente 25	00000000025
+1	client_5	Cliente 5	cliente5@email.com	2025-12-13 13:32:03.33706	ativo	11990000005	0	3995	Observação do cliente 5	Responsável 5	Agenda PRO	cliente 5	00000000005
 \.
 
 
@@ -194,9 +269,7 @@ COPY public.contacts (userid, clientid, nome, email, last_contact, status, telef
 
 COPY public.contacts_address (clientid, rua, bairro, cidade, numero) FROM stdin;
 86844956-f366-433a-bb39-9bdd76558b04				0
-client_3	Rua Exemplo 3	Bairro 3	Cidade Exemplo	758
 client_5	Rua Exemplo 5	Bairro 5	Cidade Exemplo	304
-client_6	Rua Exemplo 6	Bairro 6	Cidade Exemplo	507
 client_7	Rua Exemplo 7	Bairro 7	Cidade Exemplo	986
 client_8	Rua Exemplo 8	Bairro 8	Cidade Exemplo	743
 client_9	Rua Exemplo 9	Bairro 9	Cidade Exemplo	217
@@ -228,8 +301,8 @@ client_32	Rua Exemplo 32	Bairro 32	Cidade Exemplo	100
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.roles (user_id, read_contacts, write_contacts, read_appointments, write_appointments, delete_contact, read_services) FROM stdin;
-1	t	t	t	t	t	t
+COPY public.roles (user_id, read_contacts, write_contacts, read_appointments, write_appointments, delete_contact, read_services, write_services, delete_services) FROM stdin;
+1	t	t	t	t	t	t	t	t
 \.
 
 
@@ -237,38 +310,34 @@ COPY public.roles (user_id, read_contacts, write_contacts, read_appointments, wr
 -- Data for Name: services; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.services (id, user_id, bussines_id, name, description, price, duration, created_at) FROM stdin;
-2	1	Agenda PRO	Corte de Cabelo Masculino	Corte tradicional com tesoura e máquina	50	30	2025-12-29 17:56:40.13281
-3	1	Agenda PRO	Barba Completa	Toalha quente, navalha e finalização	40	30	2025-12-29 17:56:40.13281
-4	1	Agenda PRO	Pezinho	Acabamento na nuca e laterais	20	15	2025-12-29 17:56:40.13281
-5	1	Agenda PRO	Hidratação	Máscara capilar profunda	60	40	2025-12-29 17:56:40.13281
-6	1	Agenda PRO	Corte Infantil	Corte para crianças até 12 anos	40	30	2025-12-29 17:56:40.13281
-7	1	Agenda PRO	Pigmentação de Barba	Design e pigmentação para barba	150	60	2025-12-29 17:56:40.13281
-8	1	Agenda PRO	Sobrancelha	Design e pinça	25	15	2025-12-29 17:56:40.13281
-9	1	Agenda PRO	Platinado	Clareamento total dos fios	300	180	2025-12-29 17:56:40.13281
-10	1	Agenda PRO	Luzes	Mechas naturais	200	120	2025-12-29 17:56:40.13281
-11	1	Agenda PRO	Tintura	Coloração completa	120	90	2025-12-29 17:56:40.13281
-12	1	Agenda PRO	Progressiva	Alisamento temporário	250	150	2025-12-29 17:56:40.13281
-13	1	Agenda PRO	Botox Capilar	Preenchimento de fios	180	60	2025-12-29 17:56:40.13281
-14	1	Agenda PRO	Corte Social	Corte rápido sem lavagem	35	20	2025-12-29 17:56:40.13281
-15	1	Agenda PRO	Massagem Capilar	Relaxamento e hidratação	50	30	2025-12-29 17:56:40.13281
-16	1	Agenda PRO	Manutenção Dread	Manutenção de dreads	100	60	2025-12-29 17:56:40.13281
-17	1	Agenda PRO	Alisamento Japonês	Química para alisar fios cacheados	350	180	2025-12-29 17:56:40.13281
-18	1	Agenda PRO	Mechas Loiras	Descoloração e tonalização	280	150	2025-12-29 17:56:40.13281
-19	1	Agenda PRO	Corte Degradê	Degradê nas laterais e nuca	45	30	2025-12-29 17:56:40.13281
-20	1	Agenda PRO	Selagem	Tratamento anti-frizz	220	120	2025-12-29 17:56:40.13281
-21	1	Agenda PRO	Corte de Pontas	Apenas remoção das pontas duplas	30	20	2025-12-29 17:56:40.13281
-22	1	Agenda PRO	Coloração Preto	Tintura preta básica	80	60	2025-12-29 17:56:40.13281
-23	1	Agenda PRO	Coloração Ruivo	Tintura vermelha intensa	90	60	2025-12-29 17:56:40.13281
-24	1	Agenda PRO	Coloração Castanho	Tintura marrom chocolate	85	60	2025-12-29 17:56:40.13281
-25	1	Agenda PRO	Henna de Sobrancelha	Tintagem natural com henna	30	20	2025-12-29 17:56:40.13281
-26	1	Agenda PRO	Limpeza de Pele	Procedimento estético facial	120	60	2025-12-29 17:56:40.13281
-27	1	Agenda PRO	Design de Sobrancelha	Correção e design de formato	35	30	2025-12-29 17:56:40.13281
-28	1	Agenda PRO	Penteado Festa	Pentear para ocasiões especiais	150	60	2025-12-29 17:56:40.13281
-29	1	Agenda PRO	Tranças	Fazer tranças no cabelo inteiro	200	120	2025-12-29 17:56:40.13281
-30	1	Agenda PRO	Coque Afro	Penteados específicos para fios crespos	80	45	2025-12-29 17:56:40.13281
-31	1	Agenda PRO	Finalização Gloss	Brilho intenso para o cabelo	90	30	2025-12-29 17:56:40.13281
-32	1	Agenda PRO	Corte Teste	Corte experimental para novos alunos	0	15	2025-12-29 17:56:40.13281
+COPY public.services (id, user_id, bussines_id, title, description, price, duration, created_at, resp_name) FROM stdin;
+10	1	Agenda PRO	Luzes	Mechas naturais	20000	120	2025-12-29 17:56:40.13281	\N
+11	1	Agenda PRO	Tintura	Coloração completa	12000	90	2025-12-29 17:56:40.13281	\N
+12	1	Agenda PRO	Progressiva	Alisamento temporário	25000	150	2025-12-29 17:56:40.13281	\N
+13	1	Agenda PRO	Botox Capilar	Preenchimento de fios	18000	60	2025-12-29 17:56:40.13281	\N
+14	1	Agenda PRO	Corte Social	Corte rápido sem lavagem	3500	20	2025-12-29 17:56:40.13281	\N
+15	1	Agenda PRO	Massagem Capilar	Relaxamento e hidratação	5000	30	2025-12-29 17:56:40.13281	\N
+16	1	Agenda PRO	Manutenção Dread	Manutenção de dreads	10000	60	2025-12-29 17:56:40.13281	\N
+18	1	Agenda PRO	Mechas Loiras	Descoloração e tonalização	28000	150	2025-12-29 17:56:40.13281	\N
+20	1	Agenda PRO	Selagem	Tratamento anti-frizz	22000	120	2025-12-29 17:56:40.13281	\N
+21	1	Agenda PRO	Corte de Pontas	Apenas remoção das pontas duplas	3000	20	2025-12-29 17:56:40.13281	\N
+22	1	Agenda PRO	Coloração Preto	Tintura preta básica	8000	60	2025-12-29 17:56:40.13281	\N
+23	1	Agenda PRO	Coloração Ruivo	Tintura vermelha intensa	9000	60	2025-12-29 17:56:40.13281	\N
+24	1	Agenda PRO	Coloração Castanho	Tintura marrom chocolate	8500	60	2025-12-29 17:56:40.13281	\N
+25	1	Agenda PRO	Henna de Sobrancelha	Tintagem natural com henna	3000	20	2025-12-29 17:56:40.13281	\N
+26	1	Agenda PRO	Limpeza de Pele	Procedimento estético facial	12000	60	2025-12-29 17:56:40.13281	\N
+27	1	Agenda PRO	Design de Sobrancelha	Correção e design de formato	3500	30	2025-12-29 17:56:40.13281	\N
+28	1	Agenda PRO	Penteado Festa	Pentear para ocasiões especiais	15000	60	2025-12-29 17:56:40.13281	\N
+30	1	Agenda PRO	Coque Afro	Penteados específicos para fios crespos	8000	45	2025-12-29 17:56:40.13281	\N
+31	1	Agenda PRO	Finalização Gloss	Brilho intenso para o cabelo	9000	30	2025-12-29 17:56:40.13281	\N
+2	1	Agenda PRO	Corte de Cabelo Masculino	Corte tradicional com tesoura e máquina	5000	30	2025-12-29 17:56:40.13281	\N
+5	1	Agenda PRO	Hidratação	Máscara capilar profunda	6000	40	2025-12-29 17:56:40.13281	\N
+3	1	Agenda PRO	Barba Completa	Toalha quente, navalha e finalização	4000	30	2025-12-29 17:56:40.13281	\N
+6	1	Agenda PRO	Corte Infantil	Corte para crianças até 12 anos	4000	30	2025-12-29 17:56:40.13281	\N
+4	1	Agenda PRO	Pezinho	Acabamento na nuca e laterais	2000	15	2025-12-29 17:56:40.13281	\N
+9	1	Agenda PRO	Platinado	Clareamento total dos fios	300	180	2025-12-29 17:56:40.13281	\N
+736f7437-f74c-4181-9572-1c9bc4da2c11	1	Agenda PRO	Corte de Cabelo Masculina	Corte tradicional com tesoura e máquina	500	30	2026-01-19 18:28:16.430954	Administrador
+8	1	Agenda PRO	Sobrancelham	Design e pinça	25	15	2025-12-29 17:56:40.13281	\N
 \.
 
 
@@ -285,7 +354,15 @@ COPY public.users (id, email, password, created_at, role, instance, isconnected,
 -- Name: services_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.services_id_seq', 32, true);
+SELECT pg_catalog.setval('public.services_id_seq', 36, true);
+
+
+--
+-- Name: appointments appointments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT appointments_pkey PRIMARY KEY (id);
 
 
 --
@@ -310,6 +387,14 @@ ALTER TABLE ONLY public.roles
 
 ALTER TABLE ONLY public.services
     ADD CONSTRAINT services_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: services services_title_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.services
+    ADD CONSTRAINT services_title_unique UNIQUE (title);
 
 
 --
@@ -364,5 +449,5 @@ ALTER TABLE ONLY public.roles
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VE9K4oJ7qpdudNdYTCAzTRW6cRo9nbZlL8tMCQ37TLnLkevT2i15QgWucVNAnkG
+\unrestrict bYQAF4yKEHA6s6SGxo3nEeEhdBaTD1A4bbxDLxskJKfjfLdtWRn4CBKyHGUyzIl
 
