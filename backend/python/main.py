@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from src.internal import database
-from src.errors.mainErrors import AppError, NullableField, handle_exception
+from src.errors.mainErrors import AppError, NullableField, HandleException
 from src.requests.request_builder import RequestBuilder
 from src.handlers import page_clients, page_services, page_appointments
 from src.validation.logging_conf import SetupLogging
@@ -33,104 +33,89 @@ logger = logging.getLogger(__name__)
 def list_contacts_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        if not req_data:
-            raise AppError('Erro ao capturar req_data')
-
-        handler = page_clients.ClientsHandler(
-            req_data=req_data
-        )
+        handler = page_clients.ListClients(req_data, 'read_contacts', 'clients')
         if not handler:
             raise AppError('Erro ao gerar Handler')
 
-        response = handler.list_contacts()
+        response = handler.list_all_clients()
         if not response:
             raise AppError('Erro ao capturar resposta da função get_clients')
 
         return jsonify(response.get('data')), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        logger.debug(response['status'])
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 
 # Rota responsável por coletar informações de um único contato
-@app.route('/api/client/<id>/info', methods=['GET'])
-def get_contact_api(id):
-    if not id:
-        raise NullableField('id')
-
+@app.route('/api/client', methods=['GET'])
+def get_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
 
-        handler = page_clients.ClientsHandler(
-            req_data=req_data,
-            clientID=id
-        )
-        response = handler.get_contact()
+        handler = page_clients.ListClients(req_data, 'read_contacts', 'clients')
+        response = handler.get_unique_client()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
-        return jsonify(response.get('data')), 200
+        return jsonify(response), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 # Rota responsável pela criação de novos clientes
 @app.route('/api/clients/create', methods=['POST'])
 def create_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
+        handler = page_clients.InsertNewClient(req_data, 'write_contacts', 'clients')
 
-        handler = page_clients.ClientsHandler(
-            req_data=req_data
-        )
         response = handler.insert_contact()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
         return jsonify(response.get('data')), 200
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
-@app.route('/api/clients/delete/<id>', methods=['DELETE'])
-def delete_contact_api(id):
+@app.route('/api/clients', methods=['DELETE'])
+def delete_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
 
-        handler = page_clients.ClientsHandler(
-            req_data=req_data,
-            clientID=id
-        )
+        handler = page_clients.DeleteClient(req_data, 'delete_contact', 'clients')
         response = handler.delete_contact()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
         
-        return jsonify(response.get('data')), 200
+        return jsonify(response), 200
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
-@app.route('/api/clients/update/<id>', methods=['PUT'])
-def EditContactAPI(id):
+@app.route('/api/clients', methods=['PUT'])
+def EditContactAPI():
     try:
         req_data = RequestBuilder.from_flask(request)
 
-        handler = page_clients.ClientsHandler(
-            req_data=req_data,
-            clientID=id
-        )
+        handler = page_clients.EditClient(req_data, 'write_contacts', 'clients')
         response = handler.update_contact()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
-        return jsonify(response.get('data')), 200
+        return jsonify(response), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/clients/search/<text>')
 def search_contact_api(text):
@@ -147,29 +132,31 @@ def search_contact_api(text):
 
         return jsonify(response.get('data')), 200
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/services', methods=['GET'])
 def list_services_api():
     try:
         req_data = RequestBuilder.from_flask(request)
+        handler = page_services.ListServices(req_data, 'read_services', 'services')
 
-        handler = page_services.ServicesHandler(req_data)
         response = handler.list_services()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
         return jsonify(response.get('data')), 200
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/services/create', methods=['POST'])
 def create_service_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.ServicesHandler(req_data)
+        handler = page_services.InsertNewService(req_data, 'write_services', 'services')
 
         response = handler.insert_service()
         if not response:
@@ -180,18 +167,15 @@ def create_service_api():
 
         return jsonify(response.get('data')), 200
     except Exception as e:
-        response = handle_exception(e)
-        data = {
-            'message': response.get('error', 'Erro interno ao gerar resposta'),
-            'code': response.get('code', 'Erro interno ao captar erro'),
-        }
-        return jsonify(data), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/services/delete', methods=['DELETE'])
 def delete_service_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.ServicesHandler(req_data)
+        handler = page_services.DeleteService(req_data, 'delete_services', 'services')
 
         response = handler.delete_service()
         if not response:
@@ -203,19 +187,16 @@ def delete_service_api():
         return '', 200
 
     except Exception as e:
-        response = handle_exception(e)
-        data = {
-            'message': response.get('error', 'Erro interno ao gerar resposta'),
-            'code': response.get('code', 'Erro interno ao captar erro'),
-        }
-        return jsonify(data), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 
 @app.route('/api/services/unique', methods=['GET']) 
 def get_unique_service_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.ServicesHandler(req_data)
+        handler = page_services.GetUniqueService(req_data, 'read_services', 'services')
 
         response = handler.get_unique_service()
         if not response:
@@ -224,14 +205,15 @@ def get_unique_service_api():
         return jsonify(response), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        return jsonify(response.get('error', 'Erro interno do servidor')), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/services/edit', methods=['PUT']) 
 def edit_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.ServicesHandler(req_data)
+        handler = page_services.EditService(req_data, 'write_services', 'services')
 
         response = handler.edit_service()
         if not response:
@@ -240,21 +222,18 @@ def edit_contact_api():
         return jsonify(response), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        data = {
-            'message': response.get('error', 'Erro interno ao gerar resposta'),
-            'code': response.get('code', 'Erro interno ao captar erro'),
-        }
-        return jsonify(data), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/appointments', methods=['GET'])
 def list_appointments():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_appointments.AppointmentsHandler(req_data)
+        handler = page_appointments.ListAppointments(req_data, 'read_appointments', 'appointments')
 
         if not req_data.params.get('filterType'):
-            response = handler.list_appointments()
+            response = handler.list_all_appointments()
         else:
             response = handler.list_filter_appointments()
 
@@ -264,18 +243,15 @@ def list_appointments():
         return jsonify(response), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        data = {
-            'message': response.get('error', 'Erro interno ao gerar resposta'),
-            'code': response.get('code', 'Erro interno ao captar erro'),
-        }
-        return jsonify(data), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
 
 @app.route('/api/appointments/unique', methods=['GET'])
 def get_unique_appointment():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_appointments.AppointmentsHandler(req_data)
+        handler = page_appointments.GetUniqueAppointment(req_data, 'read_appointments', 'appointments')
 
         response = handler.get_unique_appointment()
         if not response:
@@ -284,9 +260,6 @@ def get_unique_appointment():
         return jsonify(response), 200
 
     except Exception as e:
-        response = handle_exception(e)
-        data = {
-            'message': response.get('error', 'Erro interno ao gerar resposta'),
-            'code': response.get('code', 'Erro interno ao captar erro'),
-        }
-        return jsonify(data), response.get('status', 500)
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
