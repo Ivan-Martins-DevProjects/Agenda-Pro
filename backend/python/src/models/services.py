@@ -46,7 +46,7 @@ class ServicesControl:
         self.user = User
         self.repo = ServicesRepository()
 
-    def list_all_services(self, offset, ID):
+    def list_all_services_control(self, offset, ID):
         services = self.repo.list_services(
             offset=offset * 10,
             ID=ID,
@@ -54,7 +54,7 @@ class ServicesControl:
         )
         return services
 
-    def insert_new_service(self, data):
+    def insert_new_service_control(self, data):
         data['userId'] = self.user.ID
         data['bussinesId'] = self.user.BussinesID
         data['respName'] = self.user.Nome
@@ -67,11 +67,11 @@ class ServicesControl:
         )
         return response
 
-    def delete_service(self, id):
+    def delete_service_control(self, id):
         response = self.repo.delete_service(id)
         return response
 
-    def get_unique_service(self, serviceId, AccessID):
+    def get_unique_service_control(self, serviceId, AccessID):
         response = self.repo.get_unique_service(
             id=serviceId,
             AccessID=AccessID,
@@ -79,7 +79,7 @@ class ServicesControl:
         )
         return response
 
-    def edit_service(self, serviceId, data):
+    def edit_service_control(self, serviceId, data):
         data['id'] = serviceId
         Services(**data)
 

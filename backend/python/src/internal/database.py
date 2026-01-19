@@ -9,7 +9,7 @@ from psycopg_pool import ConnectionPool
 
 from ..errors.databaseErrors import databaseErrors
 from ..errors.clientsErrors import ClientNotFound, DuplicateClientError
-from ..errors.mainErrors import AppError, BadRequest, InvalidField, handle_exception
+from ..errors.mainErrors import AppError, BadRequest, InvalidField
 from ..errors.servicesErrors import DuplicateServiceError, ServiceNotFound
 
 load_dotenv()
@@ -179,11 +179,14 @@ def GetUniqueContact(contactId, id, role):
                 if role == 'admin':
                     query = ''' SELECT c.nome, c.email, c.telefone, c.cpf, c.visitas, c.gasto, c.obs,
                                 a.rua, a.bairro, a.cidade, a.numero FROM contacts c LEFT JOIN contacts_address a
-                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.bussines_id = %s'''
+                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.bussines_id = %s
+                                ORDER BY c.nome COLLATE "pt_BR.utf8" ASC'''
+                                
                 else:
                     query = ''' SELECT c.nome, c.email, c.telefone, c.cpf, c.visitas, c.gasto, c.obs,
                                 a.rua, a.bairro, a.cidade, a.numero FROM contacts c LEFT JOIN contacts_address a
-                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.userid = %s'''
+                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.userid = %s
+                                ORDER BY c.nome COLLATE "pt_BR.utf8" ASC'''
 
                 cursor.execute(query, (contactId, id))
 
@@ -192,10 +195,7 @@ def GetUniqueContact(contactId, id, role):
                 if not result:
                     raise ClientNotFound()
 
-                response = {
-                    'data': result
-                }
-                return response
+                return result
 
     # Registra qualquer erro com a consulta
     except Exception as e:
@@ -298,7 +298,7 @@ def InsertNewContactDB(data):
 
     # Registra qualquer erro com a consulta
     except Exception as e:
-        return handle_exception(e)
+        return databaseErrors(e)
 
 def UpdateContactDB(id, body):
     if not connectionPool:
@@ -337,9 +337,7 @@ def UpdateContactDB(id, body):
                     raise DuplicateClientError()
 
                 conn.commit()
-                return {
-                    'data': 'Usuário cadastrado com sucesso',
-                }
+                return 'Usuário cadastrado com sucesso'
 
     except Exception as e:
         raise databaseErrors(e)
@@ -368,10 +366,7 @@ def DeleteContactDB(id):
                 if cursor.rowcount <= 0:
                     raise AppError(message='Erro ao deletar contato da tabela contatos')
 
-                data = {
-                    'data': 'Usuário excluído com sucesso'
-                }
-                return data
+                return 'Usuário excluído com sucesso'
 
     except Exception as e:
         raise databaseErrors(e)
@@ -467,12 +462,14 @@ def list_services_db(offset, id, role):
                     query ="""SELECT id, title, description, price, duration
                 FROM services
                 WHERE bussines_id = %s LIMIT %s OFFSET %s"""
-                    count = "SELECT COUNT(*) AS total FROM services WHERE bussines_id = %s"
+                    count = "SELECT COUNT (*) AS total FROM services WHERE bussines_id = %s"
                 elif role == 'user':
                     query = """SELECT id, title, description, price, duration
                     FROM services
                     WHERE userid = %s LIMIT %s OFFSET %s"""
-                    count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
+                    count = "SELECT COUNT (*) AS total FROM services WHERE userid = %s"
+                else:
+                    raise AppError(logger_message="Erro ao definir query")
 
                 cursor.execute(query, (id, 10, int(offset)))
                 services = cursor.fetchall()

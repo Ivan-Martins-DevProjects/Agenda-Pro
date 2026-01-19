@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 
 from src.errors.authErrors import UserNotPermited
+from src.errors.clientsErrors import InaccessibleClient
 from src.errors.mainErrors import InvalidField
 from src.internal import database
 from src.validation.checkTypes import isNumber
@@ -119,11 +120,14 @@ class ClientsServices:
         self.services = ServiceLayer()
 
     def validate_user_from_contact(self, contactID, ID):
-        self.repo.GetContact(
-            ClientID=contactID,
-            ID=ID,
-            Role=self.user.Role
-        )
+        if self.user.Role == 'User':
+            self.repo.GetContact(
+                ClientID=contactID,
+                ID=ID,
+                Role=self.user.Role
+            )
+            if not self.repo.GetContact:
+                raise InaccessibleClient()
 
         return True
 
