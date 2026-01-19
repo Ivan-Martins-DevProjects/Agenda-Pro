@@ -2,11 +2,33 @@ import logging
 from src.errors.mainErrors import AppError
 from src.models.appointments import AppointmentsControl
 from src.models.clients import ClientsServices
+from src.models.header_handler import AppointmentsHeader, ClientsHeader, ServicesHeader
 from src.models.services import ServicesControl
 from src.security import jwt
 
 from src.errors.authErrors import UnauthorizedSession, UserNotPermited
 logger = logging.getLogger(__name__)
+
+def handle_header(req_data, scope, module):
+    modules = {
+        'clients': lambda: ClientsHeader(req_data, scope),
+        'services': lambda: ServicesHeader(req_data, scope),
+        'appointments': lambda: AppointmentsHeader(req_data, scope),
+    }
+
+    for module_name, services_factory in modules.items():
+        if module == module_name:
+            services = services_factory()
+            break
+
+    if not services:
+        raise AppError(logger_message='Módulo não encontrado')
+
+    controler = services.controler
+    if not controler:
+        raise AppError(logger_message="Erro ao definir Controlers")
+
+    return controler, services.ID
 
 class AuthHeader:
     def __init__(
