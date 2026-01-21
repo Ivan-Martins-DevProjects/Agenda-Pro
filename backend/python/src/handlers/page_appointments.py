@@ -16,6 +16,7 @@ class AppointmentsHandler:
     scope: str
     module: str
     controler: Any | None = None
+    user: Any | None = None
     ID: Any | None = None
 
     def __post_init__(self):
@@ -23,13 +24,15 @@ class AppointmentsHandler:
         if not self.controler:
             raise AppError(logger_message='Erro ao extrair controlers de appointments')
 
+        self.user = self.controler.user
+
 class ListAppointments(AppointmentsHandler):
     def list_all_appointments(self):
         offset = int(self.req_data.params.get('offset'))
         if offset < 0:
             raise BadRequest(logger_message='Offset Inválido')
 
-        appointments_list = self.controler.list_all_appointments(offset)
+        appointments_list = self.controler.list_all_appointments(offset) 
         if not appointments_list:
             raise AppError(logger_message='Nenhum informação recebida de list_all_appointments')
 
@@ -64,3 +67,29 @@ class GetUniqueAppointment(AppointmentsHandler):
              raise AppError(logger_message='Nenhum informação recebida de get_unique_appointment')
 
          return response
+
+class DeleteAppointment(AppointmentsHandler):
+    def delete_appointment(self):
+        appointment_id = self.req_data.params.get('id')
+        if not appointment_id:
+            raise BadRequest(field='ID')
+
+        response = self.controler.delete_appointment(
+            appointment_id=appointment_id,
+            id=self.ID,
+            role=self.user.Role
+        )
+        return response
+
+class UpdateAppointment(AppointmentsHandler):
+    def update_status(self):
+        appointment_id = self.req_data.params.get('id')
+        status = self.req_data.params.get('status')
+        if not appointment_id or not status:
+            raise BadRequest(field='ID')
+
+        response = self.controler.update_appointment_status(
+            appointment_id=appointment_id,
+            status=status
+        )
+        return response

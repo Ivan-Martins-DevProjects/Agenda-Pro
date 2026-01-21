@@ -1,146 +1,155 @@
 .btn-open {
-    padding: 10px 20px;
-    background-color: #4f46e5;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
+  padding: 10px 20px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
 }
 
 .appointment-detail-modal {
-    margin-top: 7%;
-    margin-left: 35%;
-    border: none;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    padding: 0;
+  margin-top: 7%;
+  margin-left: 35%;
+  border: none;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 0;
 }
 
 .appointment-detail-modal::backdrop {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
 }
 
 .appointment-detail-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .appointment-detail-header {
-    background-color: #f9fafb;
-    padding: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    border-radius: 12px 12px 0 0;
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 12px 12px 0 0;
 }
 
 .detail-header-title h2 {
-    margin: 0;
-    color: #111827;
-    font-size: 1.25rem;
+  margin: 0;
+  color: #111827;
+  font-size: 1.25rem;
 }
 
 .appointment-detail-body {
-    padding: 1.5rem;
-    overflow-y: auto;
+  padding: 1.5rem;
+  overflow-y: auto;
 }
 
 .detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.2rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .detail-row:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .detail-label {
-    font-weight: 600;
-    color: #6b7280;
-    min-width: 100px;
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 100px;
 }
 
 .detail-value {
-    color: #1f2937;
-    flex-grow: 1;
-    text-align: right;
+  color: #1f2937;
+  flex-grow: 1;
+  text-align: right;
 }
 
 .detail-input,
 .detail-select,
 .detail-textarea {
-    display: none;
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    text-align: left;
-    margin-left: auto;
-    max-width: 60%;
+  display: none;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  margin-left: auto;
+  max-width: 60%;
 }
 
 .detail-textarea {
-    resize: vertical;
-    min-height: 60px;
+  resize: vertical;
+  min-height: 60px;
 }
 
 .appointment-detail-footer {
-    padding: 1rem 1.5rem;
-    background-color: #f9fafb;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    border-radius: 0 0 12px 12px;
+  padding: 1rem 1.5rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-radius: 0 0 12px 12px;
+  transition: all 0.2s;
 }
 
 button {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  border: 1px solid transparent;
+}
+
+.appointment-detail-exclude {
+  background-color: #E63F3F;
+  color: #fff;
 }
 
 .appointment-detail-close {
-    background-color: white;
-    border-color: #d1d5db;
-    color: #374151;
+  background-color: white;
+  border-color: #d1d5db;
+  color: #374151;
 }
 
 .appointment-detail-edit {
-    background-color: #4f46e5;
-    color: white;
+  background-color: #4f46e5;
+  color: white;
 }
 
 .appointment-detail-close:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .appointment-detail-edit:hover {
-    background-color: #4338ca;
+  background-color: #4338ca;
+}
+
+.appointment-detail-exclude:hover {
+  filter: brightness(0.95);
 }
 
 .appointment-detail-modal.is-editing .detail-value {
-    display: none;
+  display: none;
 }
 
 .appointment-detail-modal.is-editing .detail-input,
 .appointment-detail-modal.is-editing .detail-select,
 .appointment-detail-modal.is-editing .detail-textarea {
-    display: block;
+  display: block;
 }
 
 .appointment-detail-modal.is-editing .detail-row {
-    flex-wrap: wrap;
+  flex-wrap: wrap;
 }
-

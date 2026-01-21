@@ -478,7 +478,6 @@ custom-filter.active .filter-trigger {
 
 .appointment-footer-detail:hover {
     filter: brightness(1.2);
-    transform: translateY(-3px);
 }
 
 /* Estilo Botão Cancelar */

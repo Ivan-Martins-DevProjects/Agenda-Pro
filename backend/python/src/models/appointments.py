@@ -81,6 +81,24 @@ class AppointmentsControl:
         )
         return response
 
+    def delete_appointment(self, appointment_id):
+        response = self.repo.delete_appointment_repo(
+            appointment_id=appointment_id,
+            id=self.user.true_id(),
+            role=self.user.Role
+        )
+        return response
+
+    def update_appointment_status(self, appointment_id, status):
+        response = self.repo.update_appointment_status_repo(
+            appointment_id=appointment_id,
+            status=status,
+            id=self.user.true_id(),
+            role=self.user.Role
+        )
+
+        return response
+
 class AppointmentsRepository:
     def list_appointments(self, offset, ID, role):
         response = database.list_all_appointments_db(
@@ -114,6 +132,23 @@ class AppointmentsRepository:
         response = database.get_unique_appointment_db(
             appointment_id=appointment_id,
             user_id=id,
+            role=role
+        )
+        return response
+
+    def delete_appointment_repo(self, appointment_id, id, role):
+        response = database.delete_appointment_db(
+            appointment_id=appointment_id,
+            id=id,
+            role=role
+        )
+        return response
+    
+    def update_appointment_status_repo(self, appointment_id, status, id, role):
+        response = database.update_appointment_status_db(
+            appointment_id=appointment_id,
+            status=status,
+            id=id,
             role=role
         )
         return response

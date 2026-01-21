@@ -1,6 +1,7 @@
 import { api_url, token } from '../../index/js/index.js'
 import { ListNextPageServices } from '../../services/js/services.js';
 import { ListNextPageAppointments } from '../../appointments/js/appointments.js';
+import * as Listeners from '../../appointments/js/listenerFunctions.js'
 import ErrorModal from '../../index/js/index.js'
 
 // Seleciona todos os elementos com a classe 'menu-link' para manipulação do menu de navegação
@@ -61,6 +62,13 @@ export function CloseModalRemoveListeners(modal, data) {
   // Remove cada event listener especificado no array data
   let element
   if (data && Array.isArray(data)) {
+    if (data.many && data.many === true) {
+      const elements = document.querySelectorAll(item.var)
+      elements.forEach(item => {
+        item.removeEventListener(item.type, item.func)
+      })
+    }
+
     data.forEach((item) => {
       element = document.querySelector(item.var)
       element.removeEventListener(item.type, item.func)

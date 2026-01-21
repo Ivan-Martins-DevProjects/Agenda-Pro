@@ -925,3 +925,72 @@ def get_unique_appointment_db(appointment_id, user_id, role):
     except Exception as e:
         raise databaseErrors(e)
 
+def delete_appointment_db(appointment_id, id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                query = sql.SQL("DELETE FROM appointments WHERE id = %s and {0} = %s").format(role_column)
+
+                cursor.execute(query, (appointment_id, id))
+                conn.commit()
+                if cursor.rowcount <= 0:
+                    raise AppError(message='Erro ao deletar usuário')
+
+                response = 'Usuário excluído com sucesso'
+                return response
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+
+def update_appointment_status_db(appointment_id, status, id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                query = sql.SQL("UPDATE appointments SET status = %s WHERE id = %s and {0} = %s RETURNING id").format(role_column)
+
+                cursor.execute(query, (status, appointment_id, id))
+                updated = cursor.fetchone()
+                logger.debug(updated)
+                if not updated:
+                    raise AppError(message='Agendamento não encontrado', status=404)
+
+                conn.commit()
+
+                response = 'Status do agendamento atualizado com sucesso'
+                return response
+
+    except Exception as e:
+        raise databaseErrors(e)

@@ -2,12 +2,14 @@ import { api_url, token } from "../../index/js/index.js"
 import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "../../clients/js/clientes.js"
 import { enterEditMode, exitEditMode, isEditing } from "./detailAppointments.js"
 import * as Listeners from "./listenerFunctions.js"
+import { AppointmentsAPI } from "./requests.js"
 import ErrorModal from "../../index/js/index.js"
 
 const detailModal = document.querySelector('.appointment-detail-modal')
 
-const appointmentsListeners = []
-const detailListeners = []
+export const appointmentsListeners = []
+export const detailListeners = []
+export const newAppointmentListeners = []
 
 export async function LoadAppointmentsPage(filter, filterType) {
   let response
@@ -29,7 +31,6 @@ export async function LoadAppointmentsPage(filter, filterType) {
     const page = document.querySelector('.pagination-clients')
     if (page) { page.remove() }
     const MaxPage = Math.ceil(response.total / 10)
-    console.log(MaxPage);
     CreatePagination(1, MaxPage)
   }
 
@@ -51,11 +52,11 @@ function LoadAppointmentsListeners() {
   })
 
   const newServiceBtn = document.querySelector('.appointments-header-btn')
-  newServiceBtn.addEventListener('click', () => {
-    const modal = document.getElementById('bookingDialog');
-    modal.showModal()
-
-    NewAppointmentListeners()
+  newServiceBtn.addEventListener('click', Listeners.OpenNewServiceModal)
+  appointmentsListeners.push({
+    var: '.appointments-header-btn',
+    type: 'click',
+    func: Listeners.OpenNewServiceModal
   })
 
   const trigger = document.querySelector('.filter-trigger');
@@ -78,6 +79,7 @@ function LoadAppointmentsListeners() {
     many: true
   })
 
+
   document.addEventListener('click', (e) => {
     const filterContainer = document.querySelector('.custom-filter');
     if (!filterContainer.contains(e.target)) {
@@ -85,40 +87,6 @@ function LoadAppointmentsListeners() {
     }
   });
 
-}
-
-async function AppointmentsAPI(offset, filter, filterType) {
-  let URL
-  if (filter) {
-    URL = `${api_url}/api/appointments?offset=${offset}&filterType=${filterType}&value=${filter}`
-  } else {
-    URL = `${api_url}/api/appointments?offset=${offset}`
-  }
-
-  try {
-    const request = await fetch(URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token
-      }
-    })
-    const response = await request.json()
-
-    if (!request.ok && request.status == 401) {
-      alert('Acesso não autorizado')
-      window.location.replace(`${FrontendURL}/login.html`)
-    } else if (!request.ok) {
-      ErrorModal(response.message, response.code)
-      throw new Error(response.code)
-    }
-
-    return response
-
-  } catch (error) {
-    console.warn(error)
-    return
-  }
 }
 
 async function RequestUniqueAppointment(id) {
@@ -276,8 +244,32 @@ export function RenderAppointmentsBody(appointments) {
     detailBtn.dataset.id = item.id;
     detailBtn.addEventListener('click', OpenDetailsModal);
 
-    const cancelBtn = card.querySelector('.appointment-footer-cancel');
-    if (cancelBtn) cancelBtn.dataset.id = item.id;
+    const confirmado = card.querySelector('.appointment-footer-confirmado')
+    confirmado.dataset.id = item.id
+    confirmado.addEventListener('click', Listeners.UpdateAppointmentStatus)
+    appointmentsListeners.push({
+      var: '.appointment-footer-confirmado',
+      type: 'click',
+      func: Listeners.UpdateAppointmentStatus
+    })
+
+    const pendente = card.querySelector('.appointment-footer-pendente')
+    pendente.dataset.id = item.id
+    pendente.addEventListener('click', Listeners.UpdateAppointmentStatus)
+    appointmentsListeners.push({
+      var: '.appointment-footer-pendente',
+      type: 'click',
+      func: Listeners.UpdateAppointmentStatus
+    })
+
+    const cancelado = card.querySelector('.appointment-footer-cancelado')
+    cancelado.dataset.id = item.id
+    cancelado.addEventListener('click', Listeners.UpdateAppointmentStatus)
+    appointmentsListeners.push({
+      var: '.appointment-footer-cancelado',
+      type: 'click',
+      func: Listeners.UpdateAppointmentStatus
+    })
 
     body.appendChild(card);
   });
@@ -379,6 +371,7 @@ export function RenderAppointments(appointments, total) {
     const detailBtn = card.querySelector('.appointment-footer-detail');
     detailBtn.dataset.id = item.id;
     detailBtn.addEventListener('click', OpenDetailsModal);
+
     const cancelBtn = card.querySelector('.appointment-footer-cancel');
     if (cancelBtn) {
       cancelBtn.dataset.id = item.id;
@@ -541,7 +534,10 @@ async function OpenDetailsModal(event) {
   RenderDetailModal(response)
 
   const editBtn = detailModal.querySelector('.appointment-detail-edit')
-  editBtn.dataset.id = event.target.dataset.id
+  editBtn.dataset.id = id
+
+  const excludeBtn = detailModal.querySelector('.appointment-detail-exclude')
+  excludeBtn.dataset.id = id
   DetailModalListeners()
 }
 
@@ -599,13 +595,6 @@ export function RenderSavedService(name) {
   listSelectedServices.style.display = 'flex'
 }
 
-function NewAppointmentListeners() {
-  const input = document.getElementById('serviceSelect')
-  input.addEventListener('input', Listeners.ServiceInputListener)
-
-  document.addEventListener('click', Listeners.CloseServiceList)
-}
-
 function DetailModalListeners() {
   detailModal.addEventListener('cancel', CloseDetailModal)
   detailListeners.push({
@@ -620,6 +609,14 @@ function DetailModalListeners() {
     var: '.appointment-detail-edit',
     type: 'click',
     func: enterEditMode
+  })
+
+  const excludeBtn = detailModal.querySelector('.appointment-detail-exclude')
+  excludeBtn.addEventListener('click', Listeners.DeleteAppointmentListener)
+  detailListeners.push({
+    var: '.appointment-detail-exclude',
+    type: 'click',
+    func: Listeners.DeleteAppointmentListener
   })
 
   const closeBtn = detailModal.querySelector('.appointment-detail-close')

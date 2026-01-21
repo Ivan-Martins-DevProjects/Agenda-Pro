@@ -1,73 +1,125 @@
-import { LoadAppointmentsPage, RenderSavedService, RenderServicesListNewAppointment } from "./appointments.js";
-
+import { CloseModalRemoveListeners } from "../../clients/js/clientes.js";
+import { appointmentsListeners, detailListeners, LoadAppointmentsPage, RenderSavedService, RenderServicesListNewAppointment } from "./appointments.js";
+import { Request, UpdateStatusAPI } from "./requests.js";
 let timer
 
 export function FilterDropboxActive(event) {
-    const filterContainer = document.querySelector('.custom-filter')
-    event.stopPropagation()
-    filterContainer.classList.toggle('active')
+  const filterContainer = document.querySelector('.custom-filter')
+  event.stopPropagation()
+  filterContainer.classList.toggle('active')
 }
 
 export function ItemsDropbox(event) {
-    event.stopPropagation();
-    const options = document.querySelectorAll('.filter-option')
-    options.forEach(item => {
-        item.classList.remove('selected')
-    })
+  event.stopPropagation();
+  const options = document.querySelectorAll('.filter-option')
+  options.forEach(item => {
+    item.classList.remove('selected')
+  })
 
-    const option = event.target
-    option.classList.add('selected')
+  const option = event.target
+  option.classList.add('selected')
 
-    const selectedText = document.querySelector('.selected-text')
-    selectedText.textContent = option.textContent.trim()
-    selectedText.dataset.type = option.dataset.type
-    selectedText.dataset.value = option.dataset.value
+  const selectedText = document.querySelector('.selected-text')
+  selectedText.textContent = option.textContent.trim()
+  selectedText.dataset.type = option.dataset.type
+  selectedText.dataset.value = option.dataset.value
 
-    const filterContainer = document.querySelector('.custom-filter')
-    filterContainer.classList.remove('active')
+  const filterContainer = document.querySelector('.custom-filter')
+  filterContainer.classList.remove('active')
 
-    const filter = selectedText.dataset.value
-    const filterType = selectedText.dataset.type
-    LoadAppointmentsPage(filter, filterType)
+  const filter = selectedText.dataset.value
+  const filterType = selectedText.dataset.type
+  LoadAppointmentsPage(filter, filterType)
 }
 
 export function ServiceInputListener(event) {
-    const conteudo = event.target.value
-    clearTimeout(timer)
+  const conteudo = event.target.value
+  clearTimeout(timer)
 
-    const data = [
-        {
-            'name': 'Coloração'
-        },
-        {
-            'name': 'Corte'
-        }
-    ]
-
-    const serviceList = document.querySelectorAll('.service-option')
-    if (serviceList) {
-        serviceList.forEach(item => {
-            item.remove()
-        })
+  const data = [
+    {
+      'name': 'Coloração'
+    },
+    {
+      'name': 'Corte'
     }
+  ]
 
-    timer = setTimeout(() => {
-        RenderServicesListNewAppointment(data)
-    }, 1000)
+  const serviceList = document.querySelectorAll('.service-option')
+  if (serviceList) {
+    serviceList.forEach(item => {
+      item.remove()
+    })
+  }
+
+  timer = setTimeout(() => {
+    RenderServicesListNewAppointment(data)
+  }, 1000)
 }
 
 export function CloseServiceList() {
-    const listServices = document.querySelectorAll('.service-option')
-    if (listServices) {
-        listServices.forEach(item => {
-            item.remove()
-        })
-    }
+  const listServices = document.querySelectorAll('.service-option')
+  if (listServices) {
+    listServices.forEach(item => {
+      item.remove()
+    })
+  }
 }
 
 export function SaveServiceInModal(event) {
-    const element = event.target.closest('.service-option')
-    const span = element.querySelector('span')
+  const element = event.target.closest('.service-option')
+  const span = element.querySelector('span')
 
-    RenderSavedService(span.textContent)
+  RenderSavedService(span.textContent)
+}
+
+export function OpenNewServiceModal() {
+  const modal = document.getElementById('bookingDialog');
+  modal.showModal()
+
+  NewAppointmentListeners()
+}
+export async function DeleteAppointmentListener(event) {
+  const id = event.target.dataset.id
+  const modal = document.querySelector('.appointment-detail-modal')
+
+  const confirm = window.confirm('Deseja continuar?')
+  if (!confirm) {
+    return
+  }
+
+  const response = await Request('/api/appointments', 'DELETE', `id=${id}`)
+  if (response) {
+    alert(response)
+  }
+  CloseModalRemoveListeners(modal, detailListeners)
+  CloseModalRemoveListeners(undefined, appointmentsListeners)
+  LoadAppointmentsPage()
+}
+
+export async function UpdateAppointmentStatus(event) {
+  const id = event.target.dataset.id
+  const rawStatus = event.target.textContent
+  let status
+  switch (rawStatus) {
+    case 'Confirmar':
+      status = 'confirmado'
+      break;
+    case 'Cancelar':
+      status = 'cancelado'
+      break;
+    case 'Aguardar':
+      status = 'pendente'
+      break;
+    default:
+      break;
+  }
+
+  const response = await UpdateStatusAPI(id, status)
+  if (response) {
+    alert(response)
+  }
+
+  CloseModalRemoveListeners(undefined, appointmentsListeners)
+  LoadAppointmentsPage()
 }

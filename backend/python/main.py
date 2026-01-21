@@ -1,6 +1,7 @@
 import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from werkzeug.wrappers import response
 
 from src.internal import database
 from src.errors.mainErrors import AppError, NullableField, HandleException
@@ -259,6 +260,40 @@ def get_unique_appointment():
 
         return jsonify(response), 200
 
+    except Exception as e:
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
+
+@app.route('/api/appointments', methods=['DELETE'])
+def delete_appointment():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        handler = page_appointments.DeleteAppointment(req_data, 'read_appointments', 'appointments')
+
+        response = handler.delete_appointment()
+        if not response:
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        error = HandleException(e)
+        data = error.generate_data()
+        return jsonify(data), error.status
+
+
+@app.route('/api/appointments/status', methods=['PUT'])
+def update_status_appointment():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        handler = page_appointments.UpdateAppointment(req_data, 'write_appointments', 'appointments')
+
+        response = handler.update_status()
+        if not response:
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
+
+        return jsonify(response), 200
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
