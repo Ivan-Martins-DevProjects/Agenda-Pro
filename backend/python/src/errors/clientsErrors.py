@@ -19,7 +19,7 @@ class DuplicateClientError(AppError):
 
 class InaccessibleClient(AppError):
     default_code = 'INACCESSIBLE_CLIENT'
-    default_message = 'Você não tem autorização para acessar esse clients'
+    default_message = 'Você não possui autorização para acessar esse clients'
     default_logger_level = None
     default_logger_message = None
     default_status = 409

@@ -1,10 +1,15 @@
+from dataclasses import dataclass
+from functools import cached_property
 import logging
+import os
+from typing import Any
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from werkzeug.wrappers import response
 
-from src.internal import database
-from src.errors.mainErrors import AppError, NullableField, HandleException
+from src.errors.mainErrors import AppError, BadRequest, HandleException
+from src.internal.main_database import DatabasePool
+from src.models.clients import User
+from src.models.header import handle_header
 from src.requests.request_builder import RequestBuilder
 from src.handlers import page_clients, page_services, page_appointments
 from src.validation.logging_conf import SetupLogging
@@ -13,8 +18,8 @@ from src.validation.logging_conf import SetupLogging
 SetupLogging()
 logger = logging.getLogger(__name__)
 
-# Criação do pool de conexões
-database.CreatePool()
+DB_INFO = os.getenv('POSTGRES_URL', 'postgres')
+db_pool = DatabasePool(conninfo=DB_INFO)
 
 app = Flask(__name__)
 
@@ -24,17 +29,68 @@ CORS(app, resources={
 
 logger = logging.getLogger(__name__)
 
-# @app.route("/api/dashboard", methods=['POST'])
-# def data():
-#     resultado = dashboard.main()
-#
-#     return jsonify(resultado)
+@dataclass
+class RequestContext:
+    req_data: Any
+    scope: str
+    module: str
+    db_pool: DatabasePool
+
+    @cached_property
+    def controler(self) -> Any:
+        return self._data[0]
+
+    @cached_property
+    def access_id(self) -> str:
+        return self._data[1]
+
+    @cached_property
+    def user(self) -> User:
+        return self._data[2]
+
+    @cached_property
+    def _data(self):
+        controler, access_id, user = handle_header(
+            req_data=self.req_data,
+            scope=self.scope,
+            module=self.module,
+            db_pool=self.db_pool
+        )
+        if not controler:
+            raise AppError(logger_message='Erro ao extrair controler de services')
+        return controler, access_id, user
+
+    def __post_init__(self):
+        filter_modules = ['clients', 'services', 'appointments']
+        if self.module.strip() not in filter_modules:
+            raise BadRequest(logger_message='Módulo inválido')
+
+        filter_scopes = [
+            'read_contacts', 'write_contacts', 'delete_contact',
+            'read_services', 'write_services', 'delete_services',
+            'read_appointments', 'write_appointments', 'delete_appointments',
+        ]
+        if self.scope.strip() not in filter_scopes:
+            raise BadRequest(logger_message='Scope inválido')
+
+        if not self.db_pool:
+            raise AppError(logger_message='Pool de conexões não inicializado')
+
 
 @app.route('/api/clients', methods=['GET'])
 def list_contacts_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_clients.ListClients(req_data, 'read_contacts', 'clients')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
+
+        handler = page_clients.ListClients(context)
         if not handler:
             raise AppError('Erro ao gerar Handler')
 
@@ -42,12 +98,12 @@ def list_contacts_api():
         if not response:
             raise AppError('Erro ao capturar resposta da função get_clients')
 
-        return jsonify(response.get('data')), 200
+        return jsonify(response), 200
 
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 
 # Rota responsável por coletar informações de um único contato
@@ -55,8 +111,19 @@ def list_contacts_api():
 def get_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
 
-        handler = page_clients.ListClients(req_data, 'read_contacts', 'clients')
+        handler = page_clients.GetUniqueClient(context)
+        if not handler:
+            raise AppError('Erro ao gerar Handler')
+
         response = handler.get_unique_client()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
@@ -66,31 +133,53 @@ def get_contact_api():
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 # Rota responsável pela criação de novos clientes
 @app.route('/api/clients/create', methods=['POST'])
 def create_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_clients.InsertNewClient(req_data, 'write_contacts', 'clients')
+        context = RequestContext(
+            req_data=req_data,
+            scope='write_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
 
-        response = handler.insert_contact()
+        handler = page_clients.InsertNewClient(context)
+        if not handler:
+            raise AppError(logger_message='Erro ao gerar Handler')
+
+        response = handler.insert_client()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
-        return jsonify(response.get('data')), 200
+        return jsonify(response), 200
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @app.route('/api/clients', methods=['DELETE'])
 def delete_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='delete_contact',
+            module='clients',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
 
-        handler = page_clients.DeleteClient(req_data, 'delete_contact', 'clients')
+        handler = page_clients.DeleteClient(context)
+        if not handler:
+            raise AppError(logger_message='Erro ao gerar Handler')
+
         response = handler.delete_contact()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
@@ -99,14 +188,25 @@ def delete_contact_api():
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @app.route('/api/clients', methods=['PUT'])
 def EditContactAPI():
     try:
         req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='write_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
 
-        handler = page_clients.EditClient(req_data, 'write_contacts', 'clients')
+        handler = page_clients.EditClient(context)
+        if not handler:
+            raise AppError(logger_message='Erro ao gerar Handler')
+
         response = handler.update_contact()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
@@ -116,34 +216,51 @@ def EditContactAPI():
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
-@app.route('/api/clients/search/<text>')
-def search_contact_api(text):
+@app.route('/api/clients/search')
+def search_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-
-        handler = page_clients.ClientsHandler(
+        context = RequestContext(
             req_data=req_data,
-            text=text
+            scope='read_contacts',
+            module='clients',
+            db_pool=db_pool
         )
-        response = handler.search_contact()
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
+
+        handler = page_clients.ListClients(context)
+        if not handler:
+            raise AppError(logger_message='Erro ao gerar Handler')
+
+        response = handler.search_clients()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
-        return jsonify(response.get('data')), 200
+        return jsonify(response), 200
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @app.route('/api/services', methods=['GET'])
 def list_services_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.ListServices(req_data, 'read_services', 'services')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_services',
+            module='services',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
 
-        response = handler.list_services()
+        handler = page_services.ListServices(context)
+
+        response = handler.list_all_services()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
@@ -151,26 +268,32 @@ def list_services_api():
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @app.route('/api/services/create', methods=['POST'])
 def create_service_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.InsertNewService(req_data, 'write_services', 'services')
+        context = RequestContext(
+            req_data=req_data,
+            scope='write_services',
+            module='services',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
+
+        handler = page_services.InsertNewService(context)
 
         response = handler.insert_service()
         if not response:
-            raise AppError(
-                message='Erro ao capturar resposta do handler',
-                logger_message='Erro ao capturar resposta do handler'
-            )
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
 
         return jsonify(response.get('data')), 200
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @app.route('/api/services/delete', methods=['DELETE'])
 def delete_service_api():
@@ -197,7 +320,18 @@ def delete_service_api():
 def get_unique_service_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.GetUniqueService(req_data, 'read_services', 'services')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
+
+        handler = page_services.GetUniqueService(context)
+        if not handler:
+            raise AppError(logger_message='Erro ao gerar Handler')
 
         response = handler.get_unique_service()
         if not response:
@@ -208,7 +342,7 @@ def get_unique_service_api():
     except Exception as e:
         error = HandleException(e)
         data = error.generate_data()
-        return jsonify(data), error.status
+        return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @app.route('/api/services/edit', methods=['PUT']) 
 def edit_contact_api():

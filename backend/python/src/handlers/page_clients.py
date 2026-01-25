@@ -1,55 +1,42 @@
-from dataclasses import dataclass
-from typing import Any
 import logging
 import uuid
 
 from src.errors.mainErrors import AppError, BadRequest
-from src.models.header import handle_header
+from src.models.request import ControlHandler
 
 logger = logging.getLogger(__name__)
 
-@dataclass
-class ClientsHandler:
-    req_data: Any
-    scope: str
-    module: str
-    client: Any | None = None
-    controler: Any | None = None
-    user: Any | None = None
-    ID: Any | None = None
-
-    def __post_init__(self):
-        self.controler, self.ID = handle_header(self.req_data, self.scope, self.module)
-        if not self.controler:
-            raise AppError(logger_message='Erro ao extrair controlers de services')
-
-        self.user = self.controler.user
-
-class ListClients(ClientsHandler):
+class ListClients(ControlHandler):
     def list_all_clients(self):
         offset = int(self.req_data.params.get('offset', 0))
 
-        clients_list = self.controler.get_all_clients(
-            offset=offset,
-            ID=self.ID
+        clients_list = self.controler.list_all_clients_repo(
+            offset=offset
         )
         return clients_list
 
+    def search_clients(self):
+        text = self.req_data.params.get('text')
+
+        clients = self.controler.search_clients_repo(
+            text=text
+        )
+        return clients
+
+class GetUniqueClient(ControlHandler):
     def get_unique_client(self):
         client_id = self.req_data.params.get('id')
         self.controler.validate_user_from_contact(
-            contactID=client_id,
-            ID=self.ID
+            contactID=client_id
         )
 
-        response = self.controler.get_unique_contact(
-            contactId=client_id,
-            UserID=self.ID
+        response = self.controler.get_unique_contact_repo(
+            client_id=client_id
         )
         return response
 
-class InsertNewClient(ClientsHandler):
-    def insert_contact(self):
+class InsertNewClient(ControlHandler):
+    def insert_client(self):
         body = self.req_data.body
         user = self.user
 
@@ -58,6 +45,7 @@ class InsertNewClient(ClientsHandler):
             "respName": user.Nome,
             "bussinesId": user.BussinesID,
             "contactID": str(uuid.uuid4()),
+            "status": "ativo",
             "nome": body.get('nome'),
             "email": body.get('email'),
             "telefone": body.get('telefone'),
@@ -71,18 +59,17 @@ class InsertNewClient(ClientsHandler):
             "visitas": body.get('visitas'),
         }
 
-        response = self.controler.insert_new_contact(contact_data)
+        response = self.controler.insert_new_contact_repo(contact_data)
         return response
 
-class EditClient(ClientsHandler):
+class EditClient(ControlHandler):
     def update_contact(self):
         client_id = self.req_data.params.get('id')
         if not client_id:
             raise BadRequest(field='Contato')
 
         self.controler.validate_user_from_contact(
-            contactID=client_id,
-            ID=self.ID
+            contactID=client_id
         )
 
         body = self.req_data.body
@@ -103,18 +90,18 @@ class EditClient(ClientsHandler):
             "visitas": body.get('visitas'),
         }
 
-        response = self.controler.update_contact(client_id, data)
+        response = self.controler.update_contact_repo(client_id, data)
         return response
 
-class DeleteClient(ClientsHandler):
+class DeleteClient(ControlHandler):
     def delete_contact(self):
         client_id = self.req_data.params.get('id')
         if not client_id:
-            raise BadRequest(field='Contato')
+            raise BadRequest(field='ID do Contato')
+
         self.controler.validate_user_from_contact(
-            contactID=client_id,
-            ID=self.ID
+            contactID=client_id
         )
 
-        response = self.controler.delete_contact(client_id)
+        response = self.controler.delete_contact_repo(client_id)
         return response

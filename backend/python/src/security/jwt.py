@@ -33,11 +33,11 @@ class AuthServices:
             Nome = payload['Nome']
             Instance = payload['Instance']
             IsConnected = payload['IsConnected']
-            Role =  payload['Role']
+            Role = payload['Role']
 
             permissions = database.RequestPermissionsDB(ID)
 
-            Usuario = User(ID, BussinesID, Nome, Instance, IsConnected, Role, permissions)
+            Usuario = User(ID, Nome, BussinesID, Role, Instance, IsConnected, permissions)
             return Usuario
 
         except Exception as e:

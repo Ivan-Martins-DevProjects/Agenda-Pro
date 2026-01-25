@@ -1,12 +1,14 @@
+from functools import cached_property
 import logging
 from dataclasses import dataclass
 from typing import Any
 
 from src.errors.mainErrors import AppError
-from src.models.clients import ClientsServices
+from src.internal.main_database import DatabasePool
+from src.models.clients import ClientsRepository
 from src.models.header_main import AuthHeader
 from src.models.appointments import AppointmentsControl
-from src.models.services import ServicesControl
+from src.models.services import ServicesRepository
 
 logger = logging.getLogger(__name__)
 
@@ -14,21 +16,24 @@ logger = logging.getLogger(__name__)
 class Header:
     req_data: Any
     scope: str
+    db_pool: DatabasePool
     controler: Any | None = None
-    user: Any | None = None
-    ID: Any | None = None
     
-    def __post_init__(self):
-        Auth = AuthHeader(self.req_data, self.scope)
+    @cached_property
+    def _auth(self) -> Any:
+        return AuthHeader(self.req_data, self.scope)
 
-        self.user = Auth.check_token()
-        self.ID = Auth.has_permission()
+    @cached_property
+    def user(self) -> Any:
+        return self._auth.check_token()
+
+    @cached_property
+    def access_id(self) -> str:
+        return self._auth.has_permission()
 
 @dataclass
 class AppointmentsHeader(Header):
     def __post_init__(self):
-        super().__post_init__()
-
         self.controler = AppointmentsControl(self.user)
         if not self.controler:
             raise AppError(logger_message="Erro ao gerar AppointmentsControl")
@@ -36,17 +41,22 @@ class AppointmentsHeader(Header):
 @dataclass
 class ServicesHeader(Header):
     def __post_init__(self):
-        super().__post_init__()
-
-        self.controler = ServicesControl(self.user)
+        self.controler = ServicesRepository(
+            db_pool=self.db_pool,
+            role=self.user.Role,
+            access_id=self.access_id
+        )
         if not self.controler:
             raise AppError(logger_message="Erro ao gerar AppointmentsControl")
 
 @dataclass
 class ClientsHeader(Header):
     def __post_init__(self):
-        super().__post_init__()
+        self.controler = ClientsRepository(
+            db_pool=self.db_pool,
+            role=self.user.Role,
+            access_id=self.access_id,
+        )
 
-        self.controler = ClientsServices(self.user)
         if not self.controler:
             raise AppError(logger_message="Erro ao gerar AppointmentsControl")

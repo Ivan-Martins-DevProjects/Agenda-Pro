@@ -201,7 +201,8 @@ async function NewContactAPI(event) {
       return
     } else if (!response.ok) {
       modal.close()
-      throw new Error('Verifique se digitou corretamente')
+      ErrorModal(content.message, content.code)
+      throw new Error(content)
     }
 
     // Sucesso na criação do cliente
@@ -212,10 +213,7 @@ async function NewContactAPI(event) {
     return
 
   } catch (error) {
-    // Exibe modal de erro em caso de falha
-    modal.close()
-    ErrorModal(error, 'Erro ao criar usuário')
-    return
+    console.log(error)
   }
 }
 
@@ -981,7 +979,7 @@ function RenderModalContact(data, id) {
 async function SearchClientAPI(input) {
   try {
     // Requisição à API para buscar clientes pelo termo fornecido
-    const response = await fetch(`${api_url}/api/clients/search/${input}`, {
+    const response = await fetch(`${api_url}/api/clients/search?text=${input}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

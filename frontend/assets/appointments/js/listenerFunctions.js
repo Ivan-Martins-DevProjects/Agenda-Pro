@@ -100,6 +100,7 @@ export async function DeleteAppointmentListener(event) {
 export async function UpdateAppointmentStatus(event) {
   const id = event.target.dataset.id
   const rawStatus = event.target.textContent
+
   let status
   switch (rawStatus) {
     case 'Confirmar':
