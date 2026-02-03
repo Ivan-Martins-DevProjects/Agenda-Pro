@@ -6,7 +6,7 @@ import LoadServices from '../../services/js/services.js'
 const btnDashboard = document.getElementById('page-dashboard')
 
 // URL base da API utilizada para requisições
-export const api_url = 'http://localhost:8585'
+export const api_url = 'http://192.168.18.188:8585'
 
 // Seleciona todos os links do menu lateral
 const menuLinks = document.querySelectorAll('.menu-link')

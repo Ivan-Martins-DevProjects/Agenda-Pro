@@ -9,7 +9,7 @@ const menuLinks = document.querySelectorAll('.menu-link')
 // Seleciona o container principal onde o conteúdo dinâmico será inserido
 const container = document.getElementById('content-container');
 // URL base para o frontend, usada para redirecionamentos
-export const FrontendURL = 'http://localhost:7000'
+export const FrontendURL = 'http://192.168.18.188:7000'
 // Seleciona o modal de edição e adicção de contatos
 const modal = document.getElementById('modal-cliente');
 

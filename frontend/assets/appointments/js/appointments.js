@@ -1,6 +1,6 @@
 import { api_url, token } from "../../index/js/index.js"
 import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "../../clients/js/clientes.js"
-import { enterEditMode, exitEditMode, isEditing } from "./detailAppointments.js"
+import { cancelEdit, enterEditMode, exitEditMode, isEditing } from "./detailAppointments.js"
 import * as Listeners from "./listenerFunctions.js"
 import { AppointmentsAPI } from "./requests.js"
 import ErrorModal from "../../index/js/index.js"
@@ -128,9 +128,8 @@ export async function ListNextPageAppointments(start, offset, last) {
   RenderAppointments(appointments)
   LoadAppointmentsListeners()
 
-  const pages = document.querySelector('.pagination-clients')
   const MaxPage = Math.ceil(response.total / 10)
-  // CreatePagination(start, MaxPage)
+  CreatePagination(start, MaxPage)
   nextPage(offset, last)
   return
 }
@@ -290,8 +289,9 @@ export function RenderAppointments(appointments, total) {
   // Verifique se os cards já estão presentes dentro do container
   const existingCards = container.querySelectorAll('.appointment-container');
   if (existingCards.length > 0) {
-    UpdateAppointmentCards(existingCards, appointments);
-    return;
+    existingCards.forEach(item => {
+      item.remove()
+    })
   }
 
   // Caso contrário, continue com o fluxo normal de renderização
@@ -603,14 +603,6 @@ function DetailModalListeners() {
     func: CloseDetailModal
   })
 
-  const editBtn = detailModal.querySelector('.appointment-detail-edit')
-  editBtn.addEventListener('click', enterEditMode)
-  detailListeners.push({
-    var: '.appointment-detail-edit',
-    type: 'click',
-    func: enterEditMode
-  })
-
   const excludeBtn = detailModal.querySelector('.appointment-detail-exclude')
   excludeBtn.addEventListener('click', Listeners.DeleteAppointmentListener)
   detailListeners.push({
@@ -626,6 +618,28 @@ function DetailModalListeners() {
     type: 'click',
     func: CloseDetailModal
   })
+
+  function EditButton(event) {
+    if (event.target.textContent == 'Editar') {
+      if (!isEditing) {
+        enterEditMode()
+      } else {
+        return
+      }
+    } else if (event.target.textContent == 'Salvar') {
+      console.log('oi')
+      const response = Listeners.UpdateAppointment(event)
+      return response
+    }
+  }
+
+  const editBtn = detailModal.querySelector('.appointment-detail-edit')
+  editBtn.addEventListener('click', EditButton)
+  detailListeners.push({
+    var: '.appointment-detail-edit',
+    type: 'click',
+    func: EditButton
+  });
 
 }
 

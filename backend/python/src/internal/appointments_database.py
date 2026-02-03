@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from psycopg import sql
 from psycopg.rows import dict_row
 
@@ -6,12 +7,15 @@ from src.errors.mainErrors import AppError, BadRequest
 from src.internal.main_database import Repository
 from src.errors.databaseErrors import databaseErrors
 
+logger = logging.getLogger(__name__)
 
 class ListAppointmentsRepository(Repository):
     def list_all_appointments_db(self, offset, id):
         try:
             with self.db_pool.get_connection() as conn:
                 with conn.cursor(row_factory=dict_row) as cursor:
+                    offset = offset * 10
+
                     query = sql.SQL("""
                     SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
                     FROM appointments

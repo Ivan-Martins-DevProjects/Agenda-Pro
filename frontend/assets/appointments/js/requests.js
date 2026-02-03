@@ -44,7 +44,7 @@ export async function Request(endpoint, method, params) {
 
 export async function UpdateStatusAPI(id, status) {
   try {
-    const request = await fetch(`${api_url}/api/appointments/status?id=${id}&status=${status}`, {
+    const request = await fetch(`${api_url}/api/appointments/update/status?id=${id}&status=${status}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

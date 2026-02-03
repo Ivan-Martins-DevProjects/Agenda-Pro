@@ -418,8 +418,28 @@ def delete_appointment():
         return handle_main_errors(e)
 
 
-@app.route('/api/appointments/status', methods=['PUT'])
+@app.route('/api/appointments/update/status', methods=['PUT'])
 def update_status_appointment():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_appointments',
+            module='appointments',
+            db_pool=db_pool
+        )
+        handler = page_appointments.UpdateAppointment(context)
+
+        response = handler.update_status()
+        if not response:
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
+
+        return jsonify(response), 200
+    except Exception as e:
+        return handle_main_errors(e)
+
+@app.route('/api/appointments/upda', methods=['PUT'])
+def update_info_appointment():
     try:
         req_data = RequestBuilder.from_flask(request)
         context = RequestContext(

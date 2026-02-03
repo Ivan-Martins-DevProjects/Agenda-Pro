@@ -1,5 +1,6 @@
 import { CloseModalRemoveListeners } from "../../clients/js/clientes.js";
 import { appointmentsListeners, detailListeners, LoadAppointmentsPage, RenderSavedService, RenderServicesListNewAppointment } from "./appointments.js";
+import { EditAppointmentAPI, LoadEditData } from "./detailAppointments.js";
 import { Request, UpdateStatusAPI } from "./requests.js";
 let timer
 
@@ -124,3 +125,14 @@ export async function UpdateAppointmentStatus(event) {
   CloseModalRemoveListeners(undefined, appointmentsListeners)
   LoadAppointmentsPage()
 }
+
+export async function UpdateAppointment(event) {
+  const resp = LoadEditData(event)
+  const id = resp[0]
+  const status = resp[1]
+  const data = resp[2]
+
+  const response = await EditAppointmentAPI(data, id, status)
+  return response
+}
+

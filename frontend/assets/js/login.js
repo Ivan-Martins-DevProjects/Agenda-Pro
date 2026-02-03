@@ -1,4 +1,4 @@
-    const apiUrl = "http://localhost:8181"
+    const apiUrl = "http://192.168.18.188:8181"
     // Login
      document.getElementById('login-form').addEventListener('submit', async (event) => {
     event.preventDefault();
