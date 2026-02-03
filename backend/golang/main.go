@@ -17,12 +17,12 @@ func main() {
 	mux.HandleFunc("/api/dashboard", endpoint.IndexHandler)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://127.0.0.1:7000", "http://localhost:7000", "http://0.0.0.0:7000"},
-		AllowedMethods: []string{"POST", "GET"},
-		AllowedHeaders: []string{"*"},
+		AllowedOrigins:   []string{"http://127.0.0.1:7000", "http://localhost:7000", "http://0.0.0.0:7000", "http://192.168.18.188:7000"},
+		AllowedMethods:   []string{"POST", "GET"},
+		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		MaxAge: 12,
-		Debug: false,
+		MaxAge:           12,
+		Debug:            false,
 	})
 
 	handler := c.Handler(mux)

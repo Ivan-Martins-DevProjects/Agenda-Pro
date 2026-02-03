@@ -3,12 +3,29 @@ import logging
 
 from dotenv import load_dotenv
 
-from src.errors.mainErrors import BadRequest
-from src.internal import database
+from src.errors.mainErrors import AppError, BadRequest
+from src.internal import appointments_database as database
+from src.internal.main_database import DatabasePool
 
 
 logger = logging.getLogger(__name__)
 load_dotenv()
+
+@dataclass
+class AppointmentsControl:
+    db_pool: DatabasePool
+    role: str
+    access_id: str 
+
+    def __post_init__(self):
+        if not self.db_pool:
+            raise AppError(logger_message='Pool de conexões não inicializado')
+        if not self.role:
+            raise AppError(logger_message='Role não recebida')
+
+    @property
+    def params(self) -> tuple:
+        return self.role, self.db_pool
 
 @dataclass
 class Appointments:
@@ -21,134 +38,67 @@ class Appointments:
     time_end: str
     status: str
 
-class AppointmentsControl:
-    def __init__(self, User) -> None:
-        self.user = User
-        self.repo = AppointmentsRepository()
-
-    def list_all_appointments(self, offset):
-        appointments = self.repo.list_appointments (
+class AppointmentsRepository(AppointmentsControl):
+    def list_all_appointments_repo(self, offset):
+        repo = database.ListAppointmentsRepository(
+            params=self.params
+        )
+        response = repo.list_all_appointments_db(
             offset=offset,
-            ID=self.user.true_id(),
-            role=self.user.Role
-        )
-        return appointments
-
-    def list_filter_appointments(self, offset, filter):
-        allowed_status = {
-            'pendente': 'status',
-            'confirmado': 'status',
-            'cancelado': 'status'
-        }
-
-        allowed_dates = {
-            'hoje': ('day', 'date'),
-            'semana': ('week', 'date'),
-            'mes': ('month', 'date'),
-        }
-
-        if filter in allowed_status:
-            internal_value = allowed_status[filter]
-            appointments = self.repo.list_filter_appointments_repo(
-                offset=offset,
-                id=self.user.true_id(),
-                field_type=internal_value,
-                field=filter,
-                role=self.user.Role
-            )
-            return appointments
-
-        elif filter in allowed_dates:
-            internal_field = allowed_dates[filter][0]
-            internal_value = allowed_dates[filter][1]
-            appointments = self.repo.list_filter_time_appointments_repo(
-                offset=offset,
-                id=self.user.true_id(),
-                field_type=internal_field,
-                field=internal_value,
-                role=self.user.Role
-            )
-            return appointments
-
-        else:
-            raise BadRequest(field='Fitlro')
-
-    def get_unique_appointment(self, appointment_id):
-        response = self.repo.get_unique_appointment_repo(
-            appointment_id=appointment_id,
-            id=self.user.true_id(),
-            role=self.user.Role
+            id=self.access_id,
         )
         return response
 
-    def delete_appointment(self, appointment_id):
-        response = self.repo.delete_appointment_repo(
-            appointment_id=appointment_id,
-            id=self.user.true_id(),
-            role=self.user.Role
+    def list_filter_appointments_repo(self, offset, field_type, field):
+        repo = database.ListAppointmentsRepository(
+            params=self.params
         )
-        return response
-
-    def update_appointment_status(self, appointment_id, status):
-        response = self.repo.update_appointment_status_repo(
-            appointment_id=appointment_id,
-            status=status,
-            id=self.user.true_id(),
-            role=self.user.Role
-        )
-
-        return response
-
-class AppointmentsRepository:
-    def list_appointments(self, offset, ID, role):
-        response = database.list_all_appointments_db(
+        response = repo.list_filter_appointments_db(
             offset=offset,
-            id=ID,
-            role=role
-        )
-        return response
-
-    def list_filter_appointments_repo(self, offset, id, field_type, field, role):
-        response = database.list_filter_appointments_db(
-            offset=offset,
-            id=id,
+            id=self.access_id,
             field_type=field_type,
             field=field,
-            role=role
         )
         return response
 
-    def list_filter_time_appointments_repo(self, offset, id, field_type, field, role):
-        response = database.list_filter_time_appointments_db(
+    def list_filter_time_appointments_repo(self, offset, date_value):
+        repo = database.ListAppointmentsRepository(
+            params=self.params
+        )
+        response = repo.list_filter_time_appointments_db(
             offset=offset,
-            id=id,
-            field_type=field_type,
-            field=field,
-            role=role
+            id=self.access_id,
+            date_value=date_value
         )
         return response
 
-    def get_unique_appointment_repo(self, appointment_id, id, role):
-        response = database.get_unique_appointment_db(
+    def get_unique_appointment_repo(self, appointment_id):
+        repo = database.GetUniqueAppointmentRepository(
+            params=self.params
+        )
+        response = repo.get_unique_appointment_db(
             appointment_id=appointment_id,
-            user_id=id,
-            role=role
+            user_id=self.access_id,
         )
         return response
 
-    def delete_appointment_repo(self, appointment_id, id, role):
-        response = database.delete_appointment_db(
+    def delete_appointment_repo(self, appointment_id):
+        repo = database.DeleteAppointmentRepository(
+            params=self.params
+        )
+        response = repo.delete_appointment_db(
             appointment_id=appointment_id,
-            id=id,
-            role=role
+            id=self.access_id,
         )
         return response
     
-    def update_appointment_status_repo(self, appointment_id, status, id, role):
-        response = database.update_appointment_status_db(
+    def update_appointment_status_repo(self, appointment_id, status):
+        repo = database.UpdateAppointmentRepository(
+            params=self.params
+        )
+        response = repo.update_appointment_status_db(
             appointment_id=appointment_id,
             status=status,
-            id=id,
-            role=role
+            id=self.access_id,
         )
         return response

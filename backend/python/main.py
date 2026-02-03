@@ -25,9 +25,14 @@ app = Flask(__name__)
 
 # Configuração de cors da aplicação
 CORS(app, resources={
-    r"/api/*": {"origins": ["http://0.0.0.0:7000", "http://localhost:7000", "http://127.0.0.1:7000"]} })
+    r"/api/*": {"origins": ["http://0.0.0.0:7000", "http://localhost:7000", "http://127.0.0.1:7000", "http://192.168.18.188:7000"]} })
 
 logger = logging.getLogger(__name__)
+
+def handle_main_errors(error):
+    error = HandleException(error)
+    data = error.generate_data()
+    return jsonify(data or 'Erro interno do servidor'), error.status or 500
 
 @dataclass
 class RequestContext:
@@ -101,9 +106,7 @@ def list_contacts_api():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 
 # Rota responsável por coletar informações de um único contato
@@ -131,9 +134,7 @@ def get_contact_api():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 # Rota responsável pela criação de novos clientes
 @app.route('/api/clients/create', methods=['POST'])
@@ -159,9 +160,7 @@ def create_contact_api():
 
         return jsonify(response), 200
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/clients', methods=['DELETE'])
 def delete_contact_api():
@@ -186,9 +185,7 @@ def delete_contact_api():
         
         return jsonify(response), 200
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/clients', methods=['PUT'])
 def EditContactAPI():
@@ -214,9 +211,7 @@ def EditContactAPI():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/clients/search')
 def search_contact_api():
@@ -241,9 +236,7 @@ def search_contact_api():
 
         return jsonify(response), 200
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/services', methods=['GET'])
 def list_services_api():
@@ -266,9 +259,7 @@ def list_services_api():
 
         return jsonify(response.get('data')), 200
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/services/create', methods=['POST'])
 def create_service_api():
@@ -291,9 +282,7 @@ def create_service_api():
 
         return jsonify(response.get('data')), 200
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/services/delete', methods=['DELETE'])
 def delete_service_api():
@@ -311,9 +300,7 @@ def delete_service_api():
         return '', 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data), error.status
+        return handle_main_errors(e)
 
 
 @app.route('/api/services/unique', methods=['GET']) 
@@ -340,15 +327,19 @@ def get_unique_service_api():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data or 'Erro interno do servidor'), error.status or 500
+        return handle_main_errors(e)
 
 @app.route('/api/services/edit', methods=['PUT']) 
 def edit_contact_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.EditService(req_data, 'write_services', 'services')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        handler = page_services.EditService(context)
 
         response = handler.edit_service()
         if not response:
@@ -357,15 +348,19 @@ def edit_contact_api():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data), error.status
+        return handle_main_errors(e)
 
 @app.route('/api/appointments', methods=['GET'])
 def list_appointments():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_appointments.ListAppointments(req_data, 'read_appointments', 'appointments')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_appointments',
+            module='appointments',
+            db_pool=db_pool
+        )
+        handler = page_appointments.ListAppointments(context)
 
         if not req_data.params.get('filterType'):
             response = handler.list_all_appointments()
@@ -378,15 +373,19 @@ def list_appointments():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data), error.status
+        return handle_main_errors(e)
 
 @app.route('/api/appointments/unique', methods=['GET'])
 def get_unique_appointment():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_appointments.GetUniqueAppointment(req_data, 'read_appointments', 'appointments')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_appointments',
+            module='appointments',
+            db_pool=db_pool
+        )
+        handler = page_appointments.GetUniqueAppointment(context)
 
         response = handler.get_unique_appointment()
         if not response:
@@ -395,15 +394,19 @@ def get_unique_appointment():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data), error.status
+        return handle_main_errors(e)
 
 @app.route('/api/appointments', methods=['DELETE'])
 def delete_appointment():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_appointments.DeleteAppointment(req_data, 'read_appointments', 'appointments')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_appointments',
+            module='appointments',
+            db_pool=db_pool
+        )
+        handler = page_appointments.DeleteAppointment(context)
 
         response = handler.delete_appointment()
         if not response:
@@ -412,16 +415,20 @@ def delete_appointment():
         return jsonify(response), 200
 
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data), error.status
+        return handle_main_errors(e)
 
 
 @app.route('/api/appointments/status', methods=['PUT'])
 def update_status_appointment():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_appointments.UpdateAppointment(req_data, 'write_appointments', 'appointments')
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_appointments',
+            module='appointments',
+            db_pool=db_pool
+        )
+        handler = page_appointments.UpdateAppointment(context)
 
         response = handler.update_status()
         if not response:
@@ -429,6 +436,4 @@ def update_status_appointment():
 
         return jsonify(response), 200
     except Exception as e:
-        error = HandleException(e)
-        data = error.generate_data()
-        return jsonify(data), error.status
+        return handle_main_errors(e)

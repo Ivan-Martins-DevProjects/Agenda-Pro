@@ -14,13 +14,13 @@ class AuthHeader:
     user: Any | None = None
     AccessID: Any | None = None
 
-    def check_token(self):
+    def check_token(self, db_pool):
         token = self.req_data.headers.get('Authorization')
         if not token:
             raise UnauthorizedSession('Sessão não encontrada')
 
         check = AuthServices(token)
-        self.user = check.Autenticar()
+        self.user = check.Autenticar(db_pool)
         if not self.user:
             raise AppError(logger_message='Erro ao extrair classe User do token')
 

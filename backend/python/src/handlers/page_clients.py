@@ -1,7 +1,7 @@
 import logging
 import uuid
 
-from src.errors.mainErrors import AppError, BadRequest
+from src.errors.mainErrors import BadRequest
 from src.models.request import ControlHandler
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ from src.errors.mainErrors import AppError
 from src.internal.main_database import DatabasePool
 from src.models.clients import ClientsRepository
 from src.models.header_main import AuthHeader
-from src.models.appointments import AppointmentsControl
+from src.models.appointments import AppointmentsControl, AppointmentsRepository
 from src.models.services import ServicesRepository
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class Header:
 
     @cached_property
     def user(self) -> Any:
-        return self._auth.check_token()
+        return self._auth.check_token(self.db_pool)
 
     @cached_property
     def access_id(self) -> str:
@@ -34,7 +34,11 @@ class Header:
 @dataclass
 class AppointmentsHeader(Header):
     def __post_init__(self):
-        self.controler = AppointmentsControl(self.user)
+        self.controler = AppointmentsRepository(
+            db_pool=self.db_pool,
+            role=self.user.Role,
+            access_id=self.access_id
+        )
         if not self.controler:
             raise AppError(logger_message="Erro ao gerar AppointmentsControl")
 
