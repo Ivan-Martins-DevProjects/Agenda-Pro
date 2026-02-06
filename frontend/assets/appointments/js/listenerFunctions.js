@@ -1,5 +1,5 @@
 import { CloseModalRemoveListeners } from "../../clients/js/clientes.js";
-import { appointmentsListeners, detailListeners, LoadAppointmentsPage, RenderSavedService, RenderServicesListNewAppointment } from "./appointments.js";
+import { appointmentsListeners, detailListeners, LoadAppointmentsPage, LoadNewAppointmentListeners, RenderSavedService, RenderServicesListNewAppointment } from "./appointments.js";
 import { EditAppointmentAPI, LoadEditData } from "./detailAppointments.js";
 import { Request, UpdateStatusAPI } from "./requests.js";
 let timer
@@ -33,16 +33,18 @@ export function ItemsDropbox(event) {
   LoadAppointmentsPage(filter, filterType)
 }
 
-export function ServiceInputListener(event) {
-  const conteudo = event.target.value
+export function ServiceInputListener() {
   clearTimeout(timer)
-
   const data = [
     {
-      'name': 'Coloração'
+      'name': 'Coloração',
+      'duration': 30,
+      'price': 50
     },
     {
-      'name': 'Corte'
+      'name': 'Corte',
+      'duration': 40,
+      'price': 80
     }
   ]
 
@@ -68,18 +70,37 @@ export function CloseServiceList() {
 }
 
 export function SaveServiceInModal(event) {
-  const element = event.target.closest('.service-option')
+  const element = event.target.closest('div')
   const span = element.querySelector('span')
 
-  RenderSavedService(span.textContent)
+  const name = span.textContent
+  const price = span.dataset.price
+  const duration = span.dataset.duration
+
+  const data = {
+    name: name,
+    price: price,
+    duration: duration
+  }
+
+  RenderSavedService(data)
 }
 
 export function OpenNewServiceModal() {
   const modal = document.getElementById('bookingDialog');
   modal.showModal()
 
-  NewAppointmentListeners()
+  LoadNewAppointmentListeners()
 }
+
+export function GetNewAppointmentData() {
+  const modal = document.getElementById('bookingForm')
+
+  const formData = new FormData(modal)
+  const dados = Object.fromEntries(formData.entries())
+  return dados
+}
+
 export async function DeleteAppointmentListener(event) {
   const id = event.target.dataset.id
   const modal = document.querySelector('.appointment-detail-modal')
@@ -126,13 +147,14 @@ export async function UpdateAppointmentStatus(event) {
   LoadAppointmentsPage()
 }
 
-export async function UpdateAppointment(event) {
-  const resp = LoadEditData(event)
+export async function UpdateAppointment(event, price) {
+  const resp = LoadEditData(event, price)
   const id = resp[0]
-  const status = resp[1]
-  const data = resp[2]
+  const data = resp[1]
 
-  const response = await EditAppointmentAPI(data, id, status)
-  return response
+  await EditAppointmentAPI(data, id)
+  CloseModalRemoveListeners(modal, detailListeners)
+  CloseModalRemoveListeners(undefined, appointmentsListeners)
+  LoadAppointmentsPage()
 }
 

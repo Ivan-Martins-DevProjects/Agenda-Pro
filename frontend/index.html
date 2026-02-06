@@ -1,555 +1,578 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda PRO</title>
-    <link rel="stylesheet" href="assets/index/css/main.css">
-    <link rel="stylesheet" href="assets/clients/css/clientes.css">
-    <link rel="stylesheet" href="assets/services/css/services.css">
-    <link rel="stylesheet" href="assets/appointments/css/appointments.css">
-    <link rel="stylesheet" href="assets/clients/css/cadastroCliente.css">
-    <link rel="stylesheet" href="assets/appointments/css/modalAppointments.css">
-    <link rel="stylesheet" href="assets/appointments/css/detailAppointments.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda PRO</title>
+  <link rel="stylesheet" href="assets/index/css/main.css">
+  <link rel="stylesheet" href="assets/clients/css/clientes.css">
+  <link rel="stylesheet" href="assets/services/css/services.css">
+  <link rel="stylesheet" href="assets/appointments/css/appointments.css">
+  <link rel="stylesheet" href="assets/clients/css/cadastroCliente.css">
+  <link rel="stylesheet" href="assets/appointments/css/modalAppointments.css">
+  <link rel="stylesheet" href="assets/appointments/css/detailAppointments.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
-    <header class="top-bar">
-        <!-- 1. Adicione este botão de Menu -->
-        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <div class="app">
-            <div class="app-icon"></div>
-            <div class="app-name">Agenda Pro</div>
-        </div>
-        <div class="search-bar">
-            <i class="fas fa-search" style="margin-right: 10px;"></i>
-            <input id="search-bar" type="text" placeholder="Pesquise aqui..."/>
-        </div>
-        <div class="user-dropdown" id="userDropdown">
-            <div class="user-info">
-                <i class="fas fa-user-circle fa-2x" style="margin-right: 20px;"></i>
-                <div class="user-info-text">
-                    <span class="user-name">Ivan Martins</span>
-                    <span class="user-role">Administrador</span>
-                </div>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <div class="dropdown-menu">
-                <ul>
-                    <li><a href="#">Informações Pessoais</a></li>
-                    <li><a href="#">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </header>
-
-    <div class="main-wraper">
-        <div class="sidebar-container">
-            <nav class="side-menu">
-                <div class="side-name">
-                    <h4>Menu</h4>
-                </div>
-                <ul>
-                    <li><a href="#" class="menu-link active" id="page-dashboard"><i class="fas fa-home" style="margin-right: 10px;"></i>Home</a></li>
-                    <li><a href="#" class="menu-link" id="page-clientes"><i class="fas fa-user" style="margin-right: 10px;"></i>Clientes</a></li>
-                    <li><a href="#" class="menu-link" id="page-services"><i class="fas fa-briefcase" style="margin-right: 10px;"></i>Serviços</a></li>
-                    <li><a href="#" class="menu-link" id="page-appointments"><i class="fas fa-calendar" style="margin-right: 10px;"></i>Agendamentos</a></li>
-                    <li><a href="#" class="menu-link" id="page-chat"><i class="fas fa-comments" style="margin-right: 10px;"></i>Chat</a></li>
-                    <li><a href="#" class="menu-link" id="page-config"><i class="fas fa-gear" style="margin-right: 10px;"></i>Configurações</a></li>
-                </ul>
-            </nav>
-        </div>
-
-        <main class="content" id="content-container"></main>
+  <header class="top-bar">
+    <!-- 1. Adicione este botão de Menu -->
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="app">
+      <div class="app-icon"></div>
+      <div class="app-name">Agenda Pro</div>
     </div>
-            <!-- 🧩 Template de Cliente -->
-            <template id="cliente-template">
-                <div class="clients-page-header">
-                    <div class="clients-page-title">
-                        <i class="fas fa-users fa-3x"></i>
-                        <div>Meus Clientes</div>
-                    </div>
-                    <div class="autocomplete-container">
-                            <input
-                            type="text"
-                            class="search-input"
-                            placeholder="Pesquisar cliente..."
-                            id="input-client-field">
-                    </div>
-                    <div class="input-client-dropdown" id="input-client-dropdown"></div>
-                    <div>
-                        <button class="btn-new-contact" id="new-contact">
-                            <i class="fas fa-plus"></i>
-                            Adicionar Cliente
-                        </button>
-                    </div>
-                </div>
+    <div class="search-bar">
+      <i class="fas fa-search" style="margin-right: 10px;"></i>
+      <input id="search-bar" type="text" placeholder="Pesquise aqui..." />
+    </div>
+    <div class="user-dropdown" id="userDropdown">
+      <div class="user-info">
+        <i class="fas fa-user-circle fa-2x" style="margin-right: 20px;"></i>
+        <div class="user-info-text">
+          <span class="user-name">Ivan Martins</span>
+          <span class="user-role">Administrador</span>
+        </div>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+      <div class="dropdown-menu">
+        <ul>
+          <li><a href="#">Informações Pessoais</a></li>
+          <li><a href="#">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
 
-                <table id="client-table" class="client-table">
-                    <thead>
-                        <tr>
-                            <th>NOME</th>
-                            <th>EMAIL</th>
-                            <th>TELEFONE</th>
-                            <th>STATUS</th>
-                            <th>ÚLTIMO CONTATO</th>
-                            <th>RESPONSÁVEL</th>
-                            <th>AÇÕES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="client-info", style="z-index: 1000;">
-                                    <div class="client-avatar">JS</div>
-                                    <span style="font-weight: 550;" class="cliente-nome" data-client-id=""></span>
-                                </div>
-                            </td>
-                            <td class="cliente-email"></td>
-                            <td class="cliente-numero"></td>
-                            <td><span class="status active"></span></td>
-                            <td class="cliente-contato"></td>
-                            <td class="cliente-responsavel"></td>
-                            <td class="actions">
-                                <button class="edit-contact" id="edit-contact">
-                                    <i class="fas fa-pen"></i>Editar
-                                </button>
-                                <button class="exclude-contact" id="exclude-contact">
-                                    <i class="fas fa-trash"></i>Excluir
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </template>
+  <div class="main-wraper">
+    <div class="sidebar-container">
+      <nav class="side-menu">
+        <div class="side-name">
+          <h4>Menu</h4>
+        </div>
+        <ul>
+          <li><a href="#" class="menu-link active" id="page-dashboard"><i class="fas fa-home"
+                style="margin-right: 10px;"></i>Home</a></li>
+          <li><a href="#" class="menu-link" id="page-clientes"><i class="fas fa-user"
+                style="margin-right: 10px;"></i>Clientes</a></li>
+          <li><a href="#" class="menu-link" id="page-services"><i class="fas fa-briefcase"
+                style="margin-right: 10px;"></i>Serviços</a></li>
+          <li><a href="#" class="menu-link" id="page-appointments"><i class="fas fa-calendar"
+                style="margin-right: 10px;"></i>Agendamentos</a></li>
+          <li><a href="#" class="menu-link" id="page-chat"><i class="fas fa-comments"
+                style="margin-right: 10px;"></i>Chat</a></li>
+          <li><a href="#" class="menu-link" id="page-config"><i class="fas fa-gear"
+                style="margin-right: 10px;"></i>Configurações</a></li>
+        </ul>
+      </nav>
+    </div>
 
-        <template class="appointments-template">
-            <div class="appointments-header">
-                <div class="appointments-title">
-                    <i class="fas fa-calendar fa-2x" style="color: #1582BD;"></i>
-                    <h2>Meus Agendamentos</h2>
-                </div>
+    <main class="content" id="content-container"></main>
+  </div>
+  <!-- 🧩 Template de Cliente -->
+  <template id="cliente-template">
+    <div class="clients-page-header">
+      <div class="clients-page-title">
+        <i class="fas fa-users fa-3x"></i>
+        <div>Meus Clientes</div>
+      </div>
+      <div class="autocomplete-container">
+        <input type="text" class="search-input" placeholder="Pesquisar cliente..." id="input-client-field">
+      </div>
+      <div class="input-client-dropdown" id="input-client-dropdown"></div>
+      <div>
+        <button class="btn-new-contact" id="new-contact">
+          <i class="fas fa-plus"></i>
+          Adicionar Cliente
+        </button>
+      </div>
+    </div>
 
-                <div class="appointments-header-actions">
-                    <div class="appointments-google">
-                        <button class="google-btn">
-                            <i class="fab fa-google" style="margin-right: 5px;"></i>
-                            Sincronizar Agenda
-                        </button>
-                    </div>
-                    <div class="appointments-header-btn">
-                        <button>+ Novo Agendamento</button>
-                    </div>
-                </div>
+    <table id="client-table" class="client-table">
+      <thead>
+        <tr>
+          <th>NOME</th>
+          <th>EMAIL</th>
+          <th>TELEFONE</th>
+          <th>STATUS</th>
+          <th>ÚLTIMO CONTATO</th>
+          <th>RESPONSÁVEL</th>
+          <th>AÇÕES</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="client-info" , style="z-index: 1000;">
+              <div class="client-avatar">JS</div>
+              <span style="font-weight: 550;" class="cliente-nome" data-client-id=""></span>
+            </div>
+          </td>
+          <td class="cliente-email"></td>
+          <td class="cliente-numero"></td>
+          <td><span class="status active"></span></td>
+          <td class="cliente-contato"></td>
+          <td class="cliente-responsavel"></td>
+          <td class="actions">
+            <button class="edit-contact" id="edit-contact">
+              <i class="fas fa-pen"></i>Editar
+            </button>
+            <button class="exclude-contact" id="exclude-contact">
+              <i class="fas fa-trash"></i>Excluir
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </template>
+
+  <template class="appointments-template">
+    <div class="appointments-header">
+      <div class="appointments-title">
+        <i class="fas fa-calendar fa-2x" style="color: #1582BD;"></i>
+        <h2>Meus Agendamentos</h2>
+      </div>
+
+      <div class="appointments-header-actions">
+        <div class="appointments-google">
+          <button class="google-btn">
+            <i class="fab fa-google" style="margin-right: 5px;"></i>
+            Sincronizar Agenda
+          </button>
+        </div>
+        <div class="appointments-header-btn">
+          <button>+ Novo Agendamento</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="appointments-subheader">
+      <div class="appointments-search-bar">
+        <i class="fas fa-search"></i>
+        <input id="appointments-search-bar" type="text" placeholder="Pesquisar agendamento..." />
+      </div>
+      <div class="custom-filter">
+        <div class="filter-trigger">
+          <i class="fas fa-filter"></i>
+          <span class="selected-text">Nenhum</span>
+          <i class="fas fa-chevron-down arrow-icon"></i>
+        </div>
+        <div class="filter-options">
+          <div class="filter-option" data-value="" data-type="status">Nenhum</div>
+          <div class="filter-option" data-value="pendente" data-type="status">
+            <span class="status-dot" style="background: #f59e0b;"></span> Pendentes
+          </div>
+          <div class="filter-option" data-value="confirmado" data-type="status">
+            <span class="status-dot" style="background: #10b981;"></span> Confirmados
+          </div>
+          <div class="filter-option" data-value="cancelado" data-type="status">
+            <span class="status-dot" style="background: #ef4444;"></span> Cancelados
+          </div>
+          <div class="filter-option" data-value="hoje" data-type="date">Hoje</div>
+          <div class="filter-option" data-value="semana" data-type="date">Esta semana</div>
+          <div class="filter-option" data-value="mes" data-type="date">Este Mês</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="appointments-body">
+      <div class="appointment-container">
+        <div class="appointment-container-header">
+          <div class="appointment-container-title">
+            <h3>Coloração</h3>
+          </div>
+          <div class="appointment-container-status">
+            <span>Confirmado</span>
+          </div>
+        </div>
+
+        <div class="appointment-container-info">
+          <div class="appointment-client-info">
+            <div class="appointment-client-name">
+              <i class="fas fa-user"></i>
+              <div class="appointment-client">Example</div>
+            </div>
+            <div class="appointment-resp">Resp: Manu Oliveira</div>
+          </div>
+          <div class="appointment-date-info">
+            <div class="appointment-date">12 Out</div>
+            <div class="appointment-hour">12:00</div>
+          </div>
+        </div>
+
+        <div class="appointment-price-info">
+          <div class="appointment-price">R$ 50,00</div>
+          <div class="appointment-service-duration">
+            <i class="fas fa-clock" style="margin-right: 5px; color: #ccc;"></i>
+            <span>120 min</span>
+          </div>
+        </div>
+
+        <div class="appointment-container-footer">
+          <button class="appointment-footer-detail">Detalhes</button>
+          <div class="appointment-container-footer-status">
+            <button class="appointment-footer-confirmado">Confirmar</button>
+            <button class="appointment-footer-pendente">Aguardar</button>
+            <button class="appointment-footer-cancelado">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <dialog class="new-service-modal">
+    <div class="new-service-header">
+      <div>
+        <i class="fa fa-users fa-6x"></i>
+      </div>
+      <div class="new-service-title">
+        <h2>Cadastrar Novo Serviço</h2>
+      </div>
+    </div>
+
+    <div class="new-service-body">
+      <form id="new-service-form">
+        <div class="new-service-group-section">
+          <h4>Título e Descrição</h4>
+          <div class="new-service-form-row">
+            <div class="new-service-form-group-title">
+              <input class="new-service-input-title" placeholder="Título" type="text" id="service-title">
+              <input class="new-service-input-description" placeholder="Descrição" type="text"
+                id="service-description" />
+            </div>
+          </div>
+        </div>
+        <div class="new-service-group-section">
+          <h4>Preço e Duração</h4>
+          <div class="new-service-form-row">
+            <div class="new-service-form-group-price">
+              <input class="new-service-input-price" placeholder="Preço" type="number" id="service-price" />
+              <input class="new-service-input-duration" placeholder="Duração" type="number" id="service-duration" />
+            </div>
+          </div>
+        </div>
+        <div class="new-service-btns">
+          <button class="new-service-confirm">Confirmar</button>
+          <button class="new-service-exit">Sair</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="new-service-modal">
+    <div class="header-new-service">
+      <h2>Cadastrar novo Serviço</h2>
+    </div>
+    <div new-service-body>
+      <form class="new-service-form">
+        <div class="new-service-group-section">
+          <h4></h4>
+        </div>
+      </form>
+    </div>
+  </dialog>
+  <!-- Modal de mensagem de erro -->
+  <dialog id="error-modal-template">
+    <div class="modal-box">
+      <button class="close-modal-btn">&times;</button>
+      <div class="modal-icon"><i class="fa fa-exclamation-circle" style="color: red;"></i></div>
+      <div class="modal-title">
+        <p id="modal-code">Erro ao Autenticar</p>
+      </div>
+      <div class="modal-message">
+        <p id="modal-message"></p>
+      </div>
+      <div class="error-buttons">
+        <!-- <button class="btn-confirm-exclude">Confirmar</button> -->
+        <button class="btn-cancel-exclude">Cancelar</button>
+      </div>
+    </div>
+  </dialog>
+
+
+  <!-- Modal de Cadastro de clientes -->
+  <dialog class="modal-cliente" id="modal-cliente">
+    <div class="modal-header"></div>
+    <div>
+      <i class="fa fa-users fa-6x" style="margin-left: 12rem; margin-top: 2rem;"></i>
+    </div>
+    <div class="modal-title">
+      <h2 id="modal-title">Cadastro de clientes</h2>
+    </div>
+
+    <div class="modal-body">
+      <form id="customerForm">
+        <div class="form-group-section">
+          <h4 style="color: #1582bd;">Informações Pessoais</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <input placeholder="Nome Completo" type="text" id="nome">
+            </div>
+            <div class="form-group">
+              <input placeholder="E-mail" type="email" id="email" name="email">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <input placeholder="Telefone" type="tel" id="telefone">
+            </div>
+            <div class="form-group">
+              <input placeholder="CPF" type="text" id="cpf">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group-section">
+          <h4 style="color: #1582bd;">Endereço</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <input placeholder="Rua" type="text" id="rua">
+            </div>
+            <div class="form-group">
+              <input placeholder="Número" type="text" id="numero">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <input placeholder="Bairro" type="text" id="bairro">
+            </div>
+            <div class="form-group">
+              <input placeholder="Cidade" type="text" id="cidade">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group-section">
+          <h4 style="color: #1582bd;">Atividade</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <input placeholder="Valor gasto" type="text" id="gasto">
+            </div>
+            <div class="form-group">
+              <input placeholder="Visitas" type="text" id="visitas">
             </div>
 
-            <div class="appointments-subheader">
-                 <div class="appointments-search-bar">
-                    <i class="fas fa-search"></i>
-                    <input id="appointments-search-bar" type="text" placeholder="Pesquisar agendamento..."/>
-                </div>
-                <div class="custom-filter">
-                    <div class="filter-trigger">
-                        <i class="fas fa-filter"></i>
-                        <span class="selected-text">Nenhum</span>
-                        <i class="fas fa-chevron-down arrow-icon"></i>
-                    </div>
-                    <div class="filter-options">
-                        <div class="filter-option" data-value="" data-type="status">Nenhum</div>
-                        <div class="filter-option" data-value="pendente" data-type="status">
-                            <span class="status-dot" style="background: #f59e0b;"></span> Pendentes
-                        </div>
-                        <div class="filter-option" data-value="confirmado" data-type="status">
-                            <span class="status-dot" style="background: #10b981;"></span> Confirmados
-                        </div>
-                        <div class="filter-option" data-value="cancelado" data-type="status">
-                            <span class="status-dot" style="background: #ef4444;"></span> Cancelados
-                        </div>
-                        <div class="filter-option" data-value="hoje" data-type="date">Hoje</div>
-                        <div class="filter-option" data-value="semana" data-type="date">Esta semana</div>
-                        <div class="filter-option" data-value="mes" data-type="date">Este Mês</div>
-                    </div>
-                </div>
+          </div>
+        </div>
+
+        <div class="form-group-section">
+          <h4 style="color: #1582bd;">Observações</h4>
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <input placeholder="Observações" type="text" id="obs">
             </div>
+          </div>
+        </div>
 
-            <div class="appointments-body">
-                <div class="appointment-container">
-                    <div class="appointment-container-header">
-                        <div class="appointment-container-title">
-                            <h3>Coloração</h3>
-                        </div>
-                        <div class="appointment-container-status">
-                            <span>Confirmado</span>
-                        </div>
-                    </div>
+        <div class="button">
+          <button class="btn-register">Registrar</button>
+          <button class="btn-exit">Sair</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 
-                    <div class="appointment-container-info">
-                        <div class="appointment-client-info">
-                            <div class="appointment-client-name">
-                                <i class="fas fa-user"></i>
-                                <div class="appointment-client">Example</div>
-                            </div>
-                            <div class="appointment-resp">Resp: Manu Oliveira</div>
-                        </div>
-                        <div class="appointment-date-info">
-                            <div class="appointment-date">12 Out</div>
-                            <div class="appointment-hour">12:00</div>
-                        </div>
-                    </div>
+  <!-- Modal de cadastro de agendamentos -->
+  <dialog class="appointment-modal-container" id="bookingDialog">
+    <div class="appointment-modal-body">
+      <!-- Lado Esquerdo: Calendário -->
+      <div class="appointment-calendar-section">
+        <div class="appointment-calendar-header">
+          <h2 id="currentMonthYear">Outubro 2023</h2>
+          <div class="appointment-nav-buttons">
+            <button class="appointment-nav-btn" id="prevMonth" aria-label="Mês anterior">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <button class="appointment-nav-btn" id="nextMonth" aria-label="Próximo mês">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-                    <div class="appointment-price-info">
-                        <div class="appointment-price">R$ 50,00</div>
-                        <div class="appointment-service-duration">
-                            <i class="fas fa-clock" style="margin-right: 5px; color: #ccc;"></i>
-                            <span>120 min</span>
-                        </div>
-                    </div>
+        <div class="appointment-calendar-grid">
+          <div class="appointment-day-label">D</div>
+          <div class="appointment-day-label">S</div>
+          <div class="appointment-day-label">T</div>
+          <div class="appointment-day-label">Q</div>
+          <div class="appointment-day-label">Q</div>
+          <div class="appointment-day-label">S</div>
+          <div class="appointment-day-label">S</div>
+        </div>
+        <div class="appointment-calendar-grid" id="calendarDays">
+          <!-- Dias serão gerados via JS -->
+        </div>
+      </div>
 
-                    <div class="appointment-container-footer">
-                        <button class="appointment-footer-detail">Detalhes</button>
-                        <div class="appointment-container-footer-status">
-                            <button class="appointment-footer-confirmado">Confirmar</button>
-                            <button class="appointment-footer-pendente">Aguardar</button>
-                            <button class="appointment-footer-cancelado">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-
-            <dialog class="new-service-modal">
-                <div class="new-service-header">
-                    <div>
-                        <i class="fa fa-users fa-6x"></i>
-                    </div>
-                    <div class="new-service-title">
-                        <h2>Cadastrar Novo Serviço</h2>
-                    </div>
-                </div>
-
-                <div class="new-service-body">
-                    <form id="new-service-form">
-                        <div class="new-service-group-section">
-                            <h4>Título e Descrição</h4>
-                            <div class="new-service-form-row">
-                                <div class="new-service-form-group-title">
-                                    <input class="new-service-input-title" placeholder="Título" type="text" id="service-title">
-                                    <input class="new-service-input-description" placeholder="Descrição" type="text"  id="service-description"/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="new-service-group-section">
-                            <h4>Preço e Duração</h4>
-                            <div class="new-service-form-row">
-                                <div class="new-service-form-group-price">
-                                    <input class="new-service-input-price" placeholder="Preço" type="number" id="service-price"/>
-                                    <input class="new-service-input-duration" placeholder="Duração" type="number" id="service-duration"/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="new-service-btns">
-                            <button class="new-service-confirm">Confirmar</button>
-                            <button class="new-service-exit">Sair</button>
-                        </div>
-                    </form>
-                </div>
-            </dialog>
-
-            <dialog id="new-service-modal">
-                <div class="header-new-service">
-                    <h2>Cadastrar novo Serviço</h2>
-                </div>
-                <div new-service-body>
-                    <form class="new-service-form">
-                        <div class="new-service-group-section">
-                            <h4></h4>
-                        </div>
-                    </form>
-                </div>
-            </dialog>
-            <!-- Modal de mensagem de erro -->
-            <dialog id="error-modal-template">
-                    <div class="modal-box">
-                        <button class="close-modal-btn">&times;</button>
-                        <div class="modal-icon"><i class="fa fa-exclamation-circle" style="color: red;"></i></div>
-                        <div class="modal-title">
-                            <p id="modal-code">Erro ao Autenticar</p>
-                        </div>
-                        <div class="modal-message">
-                            <p id="modal-message"></p>
-                        </div>
-                        <div class="error-buttons">
-                            <!-- <button class="btn-confirm-exclude">Confirmar</button> -->
-                            <button class="btn-cancel-exclude">Cancelar</button>
-                        </div>
-                    </div>
-            </dialog>
-
-
-    <!-- Modal de Cadastro de clientes -->
-    <dialog class="modal-cliente" id="modal-cliente">
-        <div class="modal-header"></div>
+      <!-- Lado Direito: Detalhes e Formulário -->
+      <div class="appointment-details-section">
         <div>
-            <i class="fa fa-users fa-6x" style="margin-left: 12rem; margin-top: 2rem;"></i>
-        </div>
-        <div class="modal-title">
-            <h2 id="modal-title">Cadastro de clientes</h2>
-        </div>
+          <div class="appointment-details-header">
+            <h3>Novo Agendamento</h3>
+            <p>Preencha os dados para confirmar.</p>
+          </div>
 
-        <div class="modal-body">
-            <form id="customerForm">
-                <div class="form-group-section">
-                    <h4 style="color: #1582bd;">Informações Pessoais</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input placeholder="Nome Completo" type="text" id="nome">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="E-mail" type="email" id="email" name="email">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input placeholder="Telefone" type="tel" id="telefone">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="CPF" type="text" id="cpf">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group-section">
-                    <h4 style="color: #1582bd;">Endereço</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input placeholder="Rua" type="text" id="rua">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="Número" type="text" id="numero">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input placeholder="Bairro" type="text" id="bairro">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="Cidade" type="text" id="cidade">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group-section">
-                    <h4 style="color: #1582bd;">Atividade</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input placeholder="Valor gasto" type="text" id="gasto">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="Visitas" type="text" id="visitas">
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="form-group-section">
-                    <h4 style="color: #1582bd;">Observações</h4>
-                    <div class="form-row">
-                        <div class="form-group" style="width: 100%;">
-                            <input placeholder="Observações" type="text" id="obs">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="button">
-                    <button class="btn-register">Registrar</button>
-                    <button class="btn-exit">Sair</button>
-                </div>
-            </form>
-        </div>
-    </dialog>
-
-    <!-- Modal de cadastro de agendamentos -->
-    <dialog class="appointment-modal-container" id="bookingDialog">
-        <div class="appointment-modal-body">
-            <!-- Lado Esquerdo: Calendário -->
-            <div class="appointment-calendar-section">
-                <div class="appointment-calendar-header">
-                    <h2 id="currentMonthYear">Outubro 2023</h2>
-                    <div class="appointment-nav-buttons">
-                        <button class="appointment-nav-btn" id="prevMonth" aria-label="Mês anterior">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                        </button>
-                        <button class="appointment-nav-btn" id="nextMonth" aria-label="Próximo mês">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="appointment-calendar-grid">
-                    <div class="appointment-day-label">D</div>
-                    <div class="appointment-day-label">S</div>
-                    <div class="appointment-day-label">T</div>
-                    <div class="appointment-day-label">Q</div>
-                    <div class="appointment-day-label">Q</div>
-                    <div class="appointment-day-label">S</div>
-                    <div class="appointment-day-label">S</div>
-                </div>
-                <div class="appointment-calendar-grid" id="calendarDays">
-                    <!-- Dias serão gerados via JS -->
-                </div>
+          <form id="bookingForm">
+            <div class="appointment-form-group">
+              <label for="contactName">Nome do Contato</label>
+              <input type="text" id="contactName" class="appointment-form-control" placeholder="Ex: João Silva">
             </div>
 
-            <!-- Lado Direito: Detalhes e Formulário -->
-            <div class="appointment-details-section">
-                <div>
-                    <div class="appointment-details-header">
-                        <h3>Novo Agendamento</h3>
-                        <p>Preencha os dados para confirmar.</p>
-                    </div>
-
-                    <form id="bookingForm">
-                        <div class="appointment-form-group">
-                            <label for="contactName">Nome do Contato</label>
-                            <input type="text" id="contactName" class="appointment-form-control" placeholder="Ex: João Silva">
-                        </div>
-
-                        <div class="appointment-form-group">
-                            <div class="appointment-form-group-service">
-                                <label for="serviceSelect">Serviço</label>
-                                <input type="text" id="serviceSelect" class="appointment-form-control" placeholder="Selecione um serviço"/>
-                                <div class="service-list"></div>
-                            </div>
-                            <div class="list-selected-services"></div>
-                            <div style="margin-top: 15px;">
-                                <label for="ServiceSelect">Observações</label>
-                                <input type="text" id="description" class="appointment-form-control" placeholder="Detalhes..."/>
-                            </div>
-                        </div>
-
-                        <!-- Linha para Data e Hora -->
-                        <div class="appointment-form-row">
-                            <div class="appointment-form-group">
-                                <label for="dateDisplay">Data</label>
-                                <input type="text" id="dateDisplay" class="appointment-form-control" placeholder="Selecione no calendário" readonly>
-                            </div>
-                            <div class="appointment-form-group">
-                                <label for="timeInput">Horário</label>
-                                <input type="time" id="timeInput" class="appointment-form-control">
-                            </div>
-                        </div>
-
-                        <!-- Seção de Valor Esperado (Backend vai preencher) -->
-                        <div class="appointment-form-group">
-                            <label>Valor Esperado</label>
-                            <div class="appointment-price-section">
-                                <span class="appointment-price-label">Total</span>
-                                <!-- Campo hidden para enviar ao backend, e um span para exibir -->
-                                <input type="hidden" id="priceValue" name="price" value="0">
-                                <div class="appointment-price-value">
-                                    <span>R$</span> <span id="displayPriceText">0,00</span>
-                                </div>
-                            </div>
-                            <small style="color: var(--text-muted); font-size: 0.75rem;">O valor será calculado pelo sistema.</small>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="appointment-action-buttons">
-                    <button type="button" class="appointment-btn appointment-btn-outline" id="cancelBtn">Cancelar</button>
-                    <button type="submit" form="bookingForm" class="appointment-btn appointment-btn-primary" id="confirmBtn">Confirmar</button>
-                </div>
+            <div class="appointment-form-group">
+              <div class="appointment-form-group-service">
+                <label for="serviceSelect">Serviço</label>
+                <input type="text" id="serviceSelect" class="appointment-form-control"
+                  placeholder="Selecione um serviço" />
+                <div class="service-list"></div>
+              </div>
+              <div class="list-selected-services"></div>
+              <div style="margin-top: 15px;">
+                <label for="ServiceSelect">Observações</label>
+                <input type="text" id="description" class="appointment-form-control" placeholder="Detalhes..." />
+              </div>
             </div>
+
+            <!-- Linha para Data e Hora -->
+            <div class="appointment-form-row">
+              <div class="appointment-form-group">
+                <label for="dateDisplay">Data</label>
+                <input type="text" id="dateDisplay" class="appointment-form-control"
+                  placeholder="Selecione no calendário" readonly>
+              </div>
+              <div class="appointment-form-group">
+                <label for="timeInput">Horário</label>
+                <input type="time" id="timeInput" class="appointment-form-control" step="60">
+              </div>
+              <div class="appointment-form-group">
+                <label>Duração(Min)</label>
+                <input type="text" id="duration" class="appointment-form-control" value="0" readonly>
+              </div>
+            </div>
+
+            <!-- Seção de Valor Esperado (Backend vai preencher) -->
+            <div class="appointment-form-group">
+              <label>Valor Esperado</label>
+              <div class="appointment-price-section">
+                <span class="appointment-price-label">Total</span>
+                <!-- Campo hidden para enviar ao backend, e um span para exibir -->
+                <input type="hidden" id="priceValue" name="price" value="0">
+                <div class="appointment-price-value">
+                  <span id="displayPriceText">R$0,00</span>
+                </div>
+              </div>
+              <small style="color: var(--text-muted); font-size: 0.75rem;">O valor será calculado pelo sistema.</small>
+            </div>
+          </form>
         </div>
-    </dialog>
 
-    <dialog class="appointment-detail-modal">
-        <div class="appointment-detail-container">
-            <div class="appointment-detail-header">
-                <div class="detail-header-title">
-                    <h2>Detalhes do Agendamento</h2>
-                </div>
-            </div>
-
-            <div class="appointment-detail-body">
-                <div class="detail-row" id="appointment-detail-name">
-                    <div class="detail-label">Cliente:</div>
-                    <span class="detail-value" >Ivan Martins</span>
-                    <input type="text" class="detail-input" value="Ivan Martins" disabled>
-                </div>
-
-                <div class="detail-row" id="appointment-detail-service">
-                    <div class="detail-label">Serviço:</div>
-                    <span class="detail-value">Coloração</span>
-                    <input id="service" type="text" class="detail-input" value="Coloração">
-                </div>
-
-                <div class="detail-row" id="appointment-detail-date">
-                    <div class="detail-label">Data:</div>
-                    <span class="detail-value">12 de Outubro, 2023</span>
-                    <input id="date" type="date" class="detail-input" value="2023-10-12">
-                </div>
-
-                <div class="detail-row" id="appointment-detail-hour">
-                    <div class="detail-label">Hora:</div>
-                    <span class="detail-value">12:00</span>
-                    <input id="hour" type="time" class="detail-input" value="12:00">
-                </div>
-
-                <div class="detail-row" id="appointment-detail-price">
-                    <div class="detail-label">Preço:</div>
-                    <span class="detail-value">R$50,00</span>
-                    <input id="price" type="text" class="detail-input" value="50,00">
-                </div>
-
-                <div class="detail-row" id="appointment-detail-status">
-                    <div class="detail-label">Status:</div>
-                    <span class="detail-value">Confirmado</span>
-                    <select class="detail-select" id="status">
-                        <option value="confirmado" selected>Confirmado</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
-                </div>
-
-                <div class="detail-row" style="align-items: flex-start;" id="appointment-detail-obs">
-                    <div class="detail-label">Obs:</div>
-                    <span class="detail-value">Prefere procedimento sem amônia</span>
-                    <textarea class="detail-textarea">Prefere procedimento sem amônia</textarea>
-                </div>
-            </div>
-
-            <div class="appointment-detail-footer">
-                <button class="appointment-detail-close">Fechar</button>
-                <button class="appointment-detail-edit">Editar</button>
-                <button class="appointment-detail-exclude">Excluir</button>
-            </div>
+        <div class="appointment-action-buttons">
+          <button type="button" class="appointment-btn appointment-btn-outline" id="cancelBtn">Cancelar</button>
+          <button type="submit" form="bookingForm" class="appointment-btn appointment-btn-primary"
+            id="confirmBtn">Confirmar</button>
         </div>
-    </dialog>
+      </div>
+    </div>
+  </dialog>
 
-    <!-- Overlay para escurecer o fundo quando o menu abre -->
-<div class="overlay" id="overlay"></div>
-    <script type="module" src="assets/index/js/index.js"></script>
-    <script type="module" src="assets/clients/js/clientes.js"></script>
-    <script type="module" src="assets/services/js/services.js"></script>
-    <script type="module" src="assets/appointments/js/modalAppointments.js"></script>
-    <script charset="utf-8">
+  <dialog class="appointment-detail-modal">
+    <div class="appointment-detail-container">
+      <div class="appointment-detail-header">
+        <div class="detail-header-title">
+          <h2>Detalhes do Agendamento</h2>
+        </div>
+      </div>
+
+      <div class="appointment-detail-body">
+        <div class="detail-row" id="appointment-detail-name">
+          <div class="detail-label">Cliente:</div>
+          <span class="detail-value">Ivan Martins</span>
+          <input type="text" class="detail-input" value="Ivan Martins" disabled>
+        </div>
+
+        <div class="detail-row" id="appointment-detail-service">
+          <div class="detail-label">Serviço:</div>
+          <span class="detail-value">Coloração</span>
+          <input id="service" type="text" class="detail-input" value="Coloração">
+        </div>
+
+        <div class="detail-row" id="appointment-detail-date">
+          <div class="detail-label">Data:</div>
+          <span class="detail-value">12 de Outubro, 2023</span>
+          <input id="date" type="date" class="detail-input" value="2023-10-12">
+        </div>
+
+        <div class="detail-row" id="appointment-detail-hour">
+          <div class="detail-label">Hora:</div>
+          <span class="detail-value">12:00</span>
+          <input id="hour" type="time" class="detail-input" value="12:00">
+        </div>
+
+        <div class="detail-row" id="appointment-detail-duration">
+          <div class="detail-label">Duração:</div>
+          <span class="detail-value">30 min</span>
+          <input id="duration" type="text" class="detail-input" value="00:30">
+        </div>
+
+        <div class="detail-row" id="appointment-detail-price">
+          <div class="detail-label">Preço:</div>
+          <span class="detail-value">R$50,00</span>
+          <input id="price" type="text" class="detail-input" value="50,00">
+        </div>
+
+        <div class="detail-row" id="appointment-detail-status">
+          <div class="detail-label">Status:</div>
+          <span class="detail-value">Confirmado</span>
+          <select class="detail-select" id="status">
+            <option value="confirmado" selected>Confirmado</option>
+            <option value="pendente">Pendente</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <div class="detail-row" style="align-items: flex-start;" id="appointment-detail-obs">
+          <div class="detail-label">Obs:</div>
+          <span class="detail-value">Prefere procedimento sem amônia</span>
+          <textarea class="detail-textarea">Prefere procedimento sem amônia</textarea>
+        </div>
+      </div>
+
+      <div class="appointment-detail-footer">
+        <button class="appointment-detail-close">Fechar</button>
+        <button class="appointment-detail-edit">Editar</button>
+        <button class="appointment-detail-exclude">Excluir</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Overlay para escurecer o fundo quando o menu abre -->
+  <div class="overlay" id="overlay"></div>
+  <script type="module" src="assets/index/js/index.js"></script>
+  <script type="module" src="assets/clients/js/clientes.js"></script>
+  <script type="module" src="assets/services/js/services.js"></script>
+  <script type="module" src="assets/appointments/js/modalAppointments.js"></script>
+  <script charset="utf-8">
     const menuToggle = document.getElementById('menuToggle');
     const sideMenu = document.querySelector('.side-menu');
     const overlay = document.getElementById('overlay');
 
     function toggleMenu() {
-        sideMenu.classList.toggle('open');
-        overlay.classList.toggle('active');
-        menuToggle.classList.toggle('active'); // Anima ícone
+      sideMenu.classList.toggle('open');
+      overlay.classList.toggle('active');
+      menuToggle.classList.toggle('active'); // Anima ícone
     }
 
     menuToggle.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', toggleMenu);
-    </script>
+  </script>
 </body>
+
 </html>

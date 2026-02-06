@@ -11,6 +11,7 @@ export const appointmentsListeners = []
 export const detailListeners = []
 export const newAppointmentListeners = []
 
+let oldPrice
 export async function LoadAppointmentsPage(filter, filterType) {
   let response
   if (filter) {
@@ -35,6 +36,26 @@ export async function LoadAppointmentsPage(filter, filterType) {
   }
 
   LoadAppointmentsListeners()
+}
+
+export function LoadNewAppointmentListeners() {
+  const modal = document.querySelector('.appointment-modal-container')
+  if (!modal) { return }
+
+  modal.addEventListener('click', () => {
+    const list = document.querySelectorAll('.service-option')
+    if (list) {
+      list.forEach(item => {
+        item.remove()
+      })
+    }
+  })
+
+  const confirmBtn = modal.querySelector('#confirmBtn')
+  confirmBtn.addEventListener('click', Listeners.GetNewAppointmentData)
+
+  const services = modal.querySelector('#serviceSelect')
+  services.addEventListener('input', Listeners.ServiceInputListener)
 }
 
 function LoadAppointmentsListeners() {
@@ -483,6 +504,7 @@ function RenderDetailModal(info) {
     service: '#appointment-detail-service',
     date: '#appointment-detail-date',
     hour: '#appointment-detail-hour',
+    duration: '#appointment-detail-duration',
     price: '#appointment-detail-price',
     status: '#appointment-detail-status',
     obs: '#appointment-detail-obs'
@@ -514,6 +536,11 @@ function RenderDetailModal(info) {
 
         case 'date':
           input.value = info['raw_date']
+          break
+
+        case 'duration':
+          span.textContent = info[key] + ' min'
+          input.value = info[key] + ' min'
           break
 
         default:
@@ -569,6 +596,8 @@ export function RenderServicesListNewAppointment(data) {
 
     const span = document.createElement('span')
     span.textContent = item.name
+    span.dataset.price = item.price
+    span.dataset.duration = item.duration
     div.appendChild(span)
 
     const button = document.createElement('button')
@@ -580,17 +609,67 @@ export function RenderServicesListNewAppointment(data) {
   })
 }
 
-export function RenderSavedService(name) {
+export function RenderSavedService(data) {
   const listSelectedServices = document.querySelector('.list-selected-services')
+  listSelectedServices.style.display = 'flex'
 
   const div = document.createElement('div')
   const span = document.createElement('span')
-  span.textContent = name
+  span.textContent = data.name
+  span.dataset.price = data.price
+  span.dataset.duration = data.duration
   div.appendChild(span)
+
   const button = document.createElement('button')
   button.textContent = 'x'
+  button.addEventListener('click', RemoveServiceFromList)
   div.appendChild(button)
 
+  function RemoveServiceFromList(event) {
+    const target = event.target.closest('div')
+    const span = target.querySelector('span')
+    const price = span.dataset.price
+    const duration = span.dataset.duration
+
+    const fieldPrice = document.querySelector('#displayPriceText')
+    const cleanText = fieldPrice.textContent.replace(',', '.').replace(/[^\d.]/g, '');
+    const currentPrice = parseFloat(cleanText) || 0;
+    const priceToRem = parseFloat(price) || 0;
+
+    const sumPrice = currentPrice - priceToRem;
+    fieldPrice.textContent = sumPrice.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+
+    const fieldDuration = document.querySelector('#duration')
+    const cleanDuration = fieldDuration.value.replace(',', '.').replace(/[^\d.]/g, '')
+    const sub = parseInt(cleanDuration) - parseInt(duration)
+    fieldDuration.value = `${sub} min`
+
+    if (target) { target.remove() }
+
+    const servicesOptions = document.querySelector('.list-selected-services')
+    if (servicesOptions.childElementCount <= 0) {
+      servicesOptions.style.display = 'None'
+    }
+
+  }
+
+  const duration = document.querySelector('#duration')
+  const soma = parseInt(duration.value) + parseInt(data.duration)
+  duration.value = `${soma} min`
+
+  const price = document.querySelector('#displayPriceText')
+  const cleanText = price.textContent.replace(',', '.').replace(/[^\d.]/g, '');
+  const currentPrice = parseFloat(cleanText) || 0;
+  const priceToAdd = parseFloat(data.price) || 0;
+
+  const sumPrice = currentPrice + priceToAdd;
+  price.textContent = sumPrice.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
   listSelectedServices.appendChild(div)
   listSelectedServices.style.display = 'flex'
 }
@@ -622,13 +701,13 @@ function DetailModalListeners() {
   function EditButton(event) {
     if (event.target.textContent == 'Editar') {
       if (!isEditing) {
+        oldPrice = document.getElementById('price').value
         enterEditMode()
       } else {
         return
       }
     } else if (event.target.textContent == 'Salvar') {
-      console.log('oi')
-      const response = Listeners.UpdateAppointment(event)
+      const response = Listeners.UpdateAppointment(event, oldPrice)
       return response
     }
   }

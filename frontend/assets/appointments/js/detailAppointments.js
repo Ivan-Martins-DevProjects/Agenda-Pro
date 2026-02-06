@@ -5,8 +5,8 @@ const btnEdit = document.querySelector('.appointment-detail-edit');
 
 export let isEditing = false;
 
-export async function EditAppointmentAPI(data, id, status) {
-  const resp = await fetch(`${api_url}/api/appointments/update?id=${id}&status=${status}`, {
+export async function EditAppointmentAPI(data, id) {
+  const resp = await fetch(`${api_url}/api/appointments/update?id=${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -20,8 +20,10 @@ export async function EditAppointmentAPI(data, id, status) {
   if (!resp.ok && resp.status == 401) {
     alert('Acesso não autorizado')
     window.location.replace(`${FrontendURL}/login.html`)
+    return
   } else if (!resp.ok) {
     ErrorModal(response.message, response.code)
+    return
   }
 
   alert('Agendamento atualizado com sucesso')
@@ -29,26 +31,34 @@ export async function EditAppointmentAPI(data, id, status) {
   return
 }
 
-export function LoadEditData(event) {
+export function LoadEditData(event, oldPrice) {
   const appointmentId = event.target.dataset.id
   const service = document.getElementById('service')
   const date = document.getElementById('date')
   const hour = document.getElementById('hour')
   const price = document.getElementById('price')
-  const rawstatus = document.getElementById('status')
+  const status = document.getElementById('status')
+  const duration = document.getElementById('duration')
   const obs = document.querySelector('.detail-textarea')
 
-  const status = rawstatus.value
-
-  const data = {
-    service: service.value,
-    date: date.value,
-    hour: hour.value,
-    price: price.value,
-    obs: obs.value
+  let finalPrice
+  if (oldPrice == price.value) {
+    finalPrice = price.value.replace(/[^\d.]/g, '')
+  } else {
+    finalPrice = price.value.replace(/[^\d.]/g, '') * 100
   }
 
-  return [appointmentId, status, data]
+  const data = {
+    service_name: service.value,
+    date: date.value,
+    time_begin: hour.value,
+    price: finalPrice,
+    obs: obs.value,
+    status: status.value,
+    duration: duration.value.replace(/[^\d.]/g, '')
+  }
+
+  return [appointmentId, data]
 }
 
 export function enterEditMode() {
