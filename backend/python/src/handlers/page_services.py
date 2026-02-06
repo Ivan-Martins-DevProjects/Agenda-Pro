@@ -61,7 +61,7 @@ class InsertNewServicebak(ControlHandler):
                 logger_message='Payload incorreto ou vazio'
              )
 
-        insert = self.controler.insert_new_service_control(data)
+        insert = self.controler.insert_new_service_repo(data)
         if not insert:
             raise AppError(logger_message='Nenhuma informação recebida da função insert_new_service', status=500)
 

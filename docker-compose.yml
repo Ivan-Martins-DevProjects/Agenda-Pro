@@ -4,6 +4,9 @@ services:
     depends_on:
       - backend-login
     build: ./frontend
+    environment:
+      - API_URL=http://localhost:${PYTHON_API_PORT}
+      - LOGIN_URL=http://localhost:${GO_API_PORT}
     ports:
       - 7000:80
     networks:

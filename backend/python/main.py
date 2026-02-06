@@ -18,7 +18,7 @@ from src.validation.logging_conf import SetupLogging
 SetupLogging()
 logger = logging.getLogger(__name__)
 
-DB_INFO = os.getenv('POSTGRES_URL', 'postgres')
+DB_INFO = os.environ.get('POSTGRES_URL', 'postgres')
 db_pool = DatabasePool(conninfo=DB_INFO)
 
 app = Flask(__name__)
@@ -438,7 +438,7 @@ def update_status_appointment():
     except Exception as e:
         return handle_main_errors(e)
 
-@app.route('/api/appointments/upda', methods=['PUT'])
+@app.route('/api/appointments/update', methods=['PUT'])
 def update_info_appointment():
     try:
         req_data = RequestBuilder.from_flask(request)
@@ -450,7 +450,7 @@ def update_info_appointment():
         )
         handler = page_appointments.UpdateAppointment(context)
 
-        response = handler.update_status()
+        response = handler.update_info()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 

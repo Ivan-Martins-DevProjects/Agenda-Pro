@@ -86,10 +86,24 @@ class UpdateAppointment(ControlHandler):
         appointment_id = self.req_data.params.get('id')
         status = self.req_data.params.get('status')
         if not appointment_id or not status:
-            raise BadRequest(field='ID')
+            raise BadRequest
 
         response = self.controler.update_appointment_status_repo(
             appointment_id=appointment_id,
             status=status
+        )
+        return response
+
+    def update_info(self):
+        data = self.req_data.body
+        appointment_id = self.req_data.params.get('id')
+        if not appointment_id:
+            raise BadRequest(field='appointment_id')
+        if not data:
+            raise BadRequest(field=f'data: {data}')
+
+        response = self.controler.update_appointment_info_repo(
+            data=data,
+            appointment_id=appointment_id
         )
         return response

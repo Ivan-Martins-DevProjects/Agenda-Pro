@@ -181,7 +181,8 @@ class GetUniqueAppointmentRepository(Repository):
             with self.db_pool.get_connection() as conn:
                 with conn.cursor(row_factory=dict_row) as cursor:
                     query = sql.SQL("""
-                    SELECT id, client_name, user_name, service_name, date, time_begin, status, price, status, obs
+                    SELECT id, client_name, user_name, service_name, date, time_begin,
+                    status, price, status, obs, duration
                     FROM appointments
                     WHERE {0} = %s
                     AND id = %s
@@ -206,7 +207,8 @@ class GetUniqueAppointmentRepository(Repository):
                         'hour': formated_time,
                         'price': int(result['price']) / 100,
                         'status': result['status'].title(),
-                        'obs': result['obs']
+                        'obs': result['obs'],
+                        'duration': result['duration']
                     }
 
                     return data
@@ -249,5 +251,33 @@ class UpdateAppointmentRepository(Repository):
                     response = 'Status do agendamento atualizado com sucesso'
                     return response
 
+        except Exception as e:
+            raise databaseErrors(e)
+
+    def update_appointment_info_db(self, data, appointment_id):
+        try:
+            with self.db_pool.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                    UPDATE appointments SET service_name = %s, date = %s, time_begin = %s, price = %s,
+                    obs = %s, status = %s, duration = %s
+                    WHERE id = %s
+                    RETURNING id
+                    """
+
+                    filter_fields = [
+                        'date', 'time_begin', 'status', 'service_name',
+                        'price', 'obs', 'duration'
+                    ]
+
+                    input = tuple(v for k, v in data.items() if k in filter_fields)
+
+                    cursor.execute(query, (*input, appointment_id))
+                    updated = cursor.fetchone()
+                    if not updated:
+                        raise AppError(message='Agendamento não encontrado', status=404)
+                    conn.commit()
+
+                    return 'Agenamento atualizado com sucesso!'
         except Exception as e:
             raise databaseErrors(e)

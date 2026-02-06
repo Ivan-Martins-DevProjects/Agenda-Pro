@@ -560,6 +560,10 @@
   <script type="module" src="assets/services/js/services.js"></script>
   <script type="module" src="assets/appointments/js/modalAppointments.js"></script>
   <script charset="utf-8">
+    window.env = {
+      API_URL: '__API_URL_PLACEHOLDER__',
+    }
+
     const menuToggle = document.getElementById('menuToggle');
     const sideMenu = document.querySelector('.side-menu');
     const overlay = document.getElementById('overlay');

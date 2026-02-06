@@ -15,7 +15,7 @@ load_dotenv()
 class AuthServices:
     def __init__(self, JWT) -> None:
         self.token = JWT
-        self.secret = os.getenv("JWT_KEY")
+        self.secret = os.environ.get("JWT_KEY")
 
     def Autenticar(self, db_pool):
         if not self.secret:

@@ -10,9 +10,7 @@ import (
 	"time"
 
 	"github.com/Agenda-Pro/internal/structs"
-	"github.com/joho/godotenv"
 	_ "github.com/jackc/pgx/v5/stdlib"
-
 )
 
 type Repository struct {
@@ -24,14 +22,9 @@ var (
 )
 
 func GetPool() (*sql.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, structs.CreateError(500, "Erro ao carregar as variáveis de ambiente")
-	}
-
 	postgres := os.Getenv("POSTGRES_URL")
 	if postgres == "" {
-		return nil, fmt.Errorf("variáveis de conexão ao banco de dados nulas: %v", err)
+		return nil, fmt.Errorf("URL Postgres não encontrada")
 	}
 	db, err := sql.Open("pgx", postgres)
 	if err != nil {
@@ -52,7 +45,7 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
-func (r *Repository) CheckLogin(ctx context.Context ,email, password string) (*structs.TokenJwt, error) {
+func (r *Repository) CheckLogin(ctx context.Context, email, password string) (*structs.TokenJwt, error) {
 	query := "SELECT id, role, instance, isConnected, bussiness, nome FROM users WHERE email = $1 AND password = $2"
 
 	var id, role, name, instance, bussines string
@@ -71,12 +64,12 @@ func (r *Repository) CheckLogin(ctx context.Context ,email, password string) (*s
 		return nil, erro
 	}
 
-	data := structs.TokenJwt {
-		ID: id,
-		BussinesID: bussines,
-		Nome: name,
-		Role: role,
-		Instance: instance,
+	data := structs.TokenJwt{
+		ID:          id,
+		BussinesID:  bussines,
+		Nome:        name,
+		Role:        role,
+		Instance:    instance,
 		IsConnected: isConnected,
 	}
 

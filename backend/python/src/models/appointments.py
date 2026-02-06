@@ -102,3 +102,13 @@ class AppointmentsRepository(AppointmentsControl):
             id=self.access_id,
         )
         return response
+
+    def update_appointment_info_repo(self, data, appointment_id):
+        repo = database.UpdateAppointmentRepository(
+            params=self.params
+        )
+        response = repo.update_appointment_info_db(
+            data=data,
+            appointment_id=appointment_id
+        )
+        return response

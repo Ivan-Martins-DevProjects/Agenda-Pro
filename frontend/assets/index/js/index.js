@@ -1,12 +1,9 @@
-import { LoadAppointmentsPage, RenderAppointments } from '../../appointments/js/appointments.js'
+import { LoadAppointmentsPage } from '../../appointments/js/appointments.js'
 import { carregarClientes, CloseModalRemoveListeners } from '../../clients/js/clientes.js'
 import LoadServices from '../../services/js/services.js'
 
-// Obtém referência ao botão do Dashboard no menu lateral
-const btnDashboard = document.getElementById('page-dashboard')
-
 // URL base da API utilizada para requisições
-export const api_url = 'http://192.168.18.188:8585'
+export const api_url = window.env.API_URL
 
 // Seleciona todos os links do menu lateral
 const menuLinks = document.querySelectorAll('.menu-link')
@@ -16,19 +13,6 @@ var container = document.getElementById('content-container');
 
 // Obtém o token de acesso armazenado na sessão
 export const token = sessionStorage.getItem('access-token')
-
-const servicesList = [
-  { id: 1, name: 'Corte Degradê', description: 'Corte moderno com degrade na lateral e posterior, finalizado com loção pós-barba.', price: 40.00, duration: 30 },
-  { id: 2, name: 'Barba Completa', description: 'Alinhamento, navalha, toalha quente e tônicos para uma barba impecável.', price: 30.00, duration: 25 },
-  { id: 3, name: 'Pacote Executivo', description: 'Corte + Barba + Máscara facial relaxante. O tratamento completo para o cavalheiro.', price: 80.00, duration: 60 },
-  { id: 4, name: 'Sombrancelha', description: 'Design e alinhamento de sobrancelha com pinça ou navalha.', price: 15.00, duration: 10 }
-]
-
-
-// Executa a função PageDashboard assim que o DOM estiver totalmente carregado
-// window.addEventListener('DOMContentLoaded', () => {
-//   PageDashboard('page-dashboard')
-// })
 
 // Seleciona o menu lateral e adiciona um listener de clique para todos os itens
 const sideMenu = document.querySelector('.side-menu')
