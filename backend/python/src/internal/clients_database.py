@@ -20,6 +20,7 @@ def IfNull(valor, default='N/A'):
 
 class ListClientsRepository(Repository):
     def get_clients_db(self, id, offset):
+        offset = int(offset) * 10
         try:
             with self.db_pool.get_connection() as conn:
                 with conn.cursor() as cursor:
@@ -28,7 +29,7 @@ class ListClientsRepository(Repository):
                     WHERE {field} = %s LIMIT %s OFFSET %s""").format(field=self.role_column)
                     count = sql.SQL("SELECT COUNT(*) AS total FROM contacts WHERE {field} = %s").format(field=self.role_column)
 
-                    cursor.execute(query, (id, 10, int(offset)))
+                    cursor.execute(query, (id, 10, offset))
                     results = cursor.fetchall()
 
                     clientes: list[dict] = []
@@ -88,6 +89,23 @@ class ListClientsRepository(Repository):
                     AND search ILIKE '%%' || %s || '%%';""").format(field=self.role_column)
 
                     cursor.execute(query, (user_id, text))
+                    result = cursor.fetchall()
+
+                    return result
+
+        except Exception as e:
+            raise databaseErrors(e)
+
+    def list_clients_by_name_db(self, user_id, name):
+        try:
+            with self.db_pool.get_connection() as conn:
+                with conn.cursor(row_factory=dict_row) as cursor:
+                    query = sql.SQL("""
+                    SELECT clientid, nome FROM contacts WHERE {field} = %s
+                    AND nome ILIKE '%%' || %s || '%%';
+                    """).format(field=self.role_column)
+
+                    cursor.execute(query, (user_id, name))
                     result = cursor.fetchall()
 
                     return result

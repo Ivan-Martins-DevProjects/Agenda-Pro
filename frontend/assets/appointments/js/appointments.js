@@ -38,24 +38,26 @@ export async function LoadAppointmentsPage(filter, filterType) {
   LoadAppointmentsListeners()
 }
 
-export function LoadNewAppointmentListeners() {
+export function LoadNewAppointmentListeners(edit) {
   const modal = document.querySelector('.appointment-modal-container')
   if (!modal) { return }
 
   modal.addEventListener('click', () => {
-    const list = document.querySelectorAll('.service-option')
-    if (list) {
-      list.forEach(item => {
-        item.remove()
-      })
-    }
+    Listeners.CloseNamesList()
+    Listeners.CloseServiceList()
   })
-
-  const confirmBtn = modal.querySelector('#confirmBtn')
-  confirmBtn.addEventListener('click', Listeners.GetNewAppointmentData)
 
   const services = modal.querySelector('#serviceSelect')
   services.addEventListener('input', Listeners.ServiceInputListener)
+
+  const names = modal.querySelector('#contactName')
+  names.addEventListener('input', Listeners.NamesInputListener)
+
+  if (!edit) {
+    const confirmBtn = modal.querySelector('#confirmBtn')
+    confirmBtn.addEventListener('click', Listeners.CreateNewAppointment)
+  }
+
 }
 
 function LoadAppointmentsListeners() {
@@ -202,21 +204,19 @@ export function RenderAppointmentsBody(appointments) {
     const template = document.querySelector('.appointments-template').content.cloneNode(true)
     const header = template.querySelector('.appointments-header')
     const subheader = template.querySelector('.appointments-subheader')
-    const appointment = template.querySelector('.appointment-container')
     header.remove()
     subheader.remove()
 
     const container = document.querySelector('.content')
     container.appendChild(template)
     cardTemplate = document.querySelector('.appointment-container')
-    console.log(cardTemplate);
   }
   // Cria os cards
   appointments.forEach(item => {
     const card = cardTemplate.cloneNode(true);
 
     // Título e cliente
-    card.querySelector('.appointment-container-title h3').textContent = item.service_name;
+    card.querySelector('.appointment-container-title h3').textContent = item.services.name;
     card.querySelector('.appointment-client').textContent = item.client_name;
 
     // Responsável
@@ -258,6 +258,20 @@ export function RenderAppointmentsBody(appointments) {
     const dia = String(dateObj.getDate()).padStart(2, '0');
     const mes = mesesAbreviados[dateObj.getMonth()];
     card.querySelector('.appointment-date').textContent = `${dia} ${mes}`;
+
+    const priceField = card.querySelector('.appointment-price')
+    if (priceField) {
+      const price = item.price / 100
+      priceField.textContent = `R$ ${price},00`
+    }
+
+    const durationField = card.querySelector('.appointment-service-duration')
+    if (durationField) {
+      const span = durationField.querySelector('span')
+      if (span) {
+        span.textContent = `${item.duration} min`
+      }
+    }
 
     // Botões
     const detailBtn = card.querySelector('.appointment-footer-detail');
@@ -341,7 +355,7 @@ export function RenderAppointments(appointments, total) {
 
   appointments.forEach(item => {
     const card = cardTemplate.cloneNode(true);
-    card.querySelector('.appointment-container-title h3').textContent = item.service_name;
+    card.querySelector('.appointment-container-title h3').textContent = item.services.name;
     card.querySelector('.appointment-client').textContent = item.client_name;
 
     const resp = card.querySelector('.appointment-resp');
@@ -389,15 +403,50 @@ export function RenderAppointments(appointments, total) {
     const dataFormatada = `${diaFinal} ${mesesAbreviados[indiceMes]}`;
     card.querySelector('.appointment-date').textContent = dataFormatada;
 
+    const priceField = card.querySelector('.appointment-price')
+    if (priceField) {
+      const price = item.price / 100
+      priceField.textContent = `R$ ${price},00`
+    }
+
+    const durationField = card.querySelector('.appointment-service-duration')
+    if (durationField) {
+      const span = durationField.querySelector('span')
+      if (span) {
+        span.textContent = `${item.duration} min`
+      }
+    }
+
     const detailBtn = card.querySelector('.appointment-footer-detail');
     detailBtn.dataset.id = item.id;
     detailBtn.addEventListener('click', OpenDetailsModal);
 
-    const cancelBtn = card.querySelector('.appointment-footer-cancel');
-    if (cancelBtn) {
-      cancelBtn.dataset.id = item.id;
-    }
+    const confirmado = card.querySelector('.appointment-footer-confirmado')
+    confirmado.dataset.id = item.id
+    confirmado.addEventListener('click', Listeners.UpdateAppointmentStatus)
+    appointmentsListeners.push({
+      var: '.appointment-footer-confirmado',
+      type: 'click',
+      func: Listeners.UpdateAppointmentStatus
+    })
 
+    const pendente = card.querySelector('.appointment-footer-pendente')
+    pendente.dataset.id = item.id
+    pendente.addEventListener('click', Listeners.UpdateAppointmentStatus)
+    appointmentsListeners.push({
+      var: '.appointment-footer-pendente',
+      type: 'click',
+      func: Listeners.UpdateAppointmentStatus
+    })
+
+    const cancelado = card.querySelector('.appointment-footer-cancelado')
+    cancelado.dataset.id = item.id
+    cancelado.addEventListener('click', Listeners.UpdateAppointmentStatus)
+    appointmentsListeners.push({
+      var: '.appointment-footer-cancelado',
+      type: 'click',
+      func: Listeners.UpdateAppointmentStatus
+    })
     body.appendChild(card);
   });
 
@@ -556,17 +605,70 @@ async function OpenDetailsModal(event) {
   if (isEditing) {
     return
   }
+
   const id = event.target.dataset.id
   const response = await RequestUniqueAppointment(id)
-  RenderDetailModal(response)
-
-  const editBtn = detailModal.querySelector('.appointment-detail-edit')
-  editBtn.dataset.id = id
-
-  const excludeBtn = detailModal.querySelector('.appointment-detail-exclude')
-  excludeBtn.dataset.id = id
-  DetailModalListeners()
+  RenderAppointmentDetails(response, id)
 }
+
+function RenderAppointmentDetails(data, id) {
+  const fields = {
+    name: '#contactName',
+    date: '#dateDisplay',
+    hour: '#timeInput',
+    duration: '#duration',
+    obs: '#description'
+  }
+
+  const modal = document.getElementById('bookingDialog')
+  for (const [key, value] of Object.entries(fields)) {
+    const element = modal.querySelector(value)
+    const content = element.value
+    if (content === undefined) {
+      element.textContent = ''
+    } else {
+      element.value = ''
+    }
+
+
+    const text = data[key]
+    if (content === undefined) {
+      element.textContent = text
+    } else {
+      element.value = text
+    }
+  }
+
+  RemoveServiceFromList()
+
+  const confirmBtn = modal.querySelector('#confirmBtn')
+  confirmBtn.dataset.id = id
+  confirmBtn.addEventListener('click', Listeners.UpdateAppointment)
+
+  const services = data.service
+  services.forEach(item => {
+    RenderSavedService(item)
+  })
+
+  modal.showModal()
+  LoadNewAppointmentListeners(true)
+}
+
+// async function OpenDetailsModal(event) {
+//   if (isEditing) {
+//     return
+//   }
+//   const id = event.target.dataset.id
+//   const response = await RequestUniqueAppointment(id)
+//   RenderDetailModal(response)
+//
+//   const editBtn = detailModal.querySelector('.appointment-detail-edit')
+//   editBtn.dataset.id = id
+//
+//   const excludeBtn = detailModal.querySelector('.appointment-detail-exclude')
+//   excludeBtn.dataset.id = id
+//   DetailModalListeners()
+// }
 
 function CloseDetailModal() {
   if (isEditing) {
@@ -588,6 +690,27 @@ function RemoveDetailListeners() {
   })
   detailListeners.length = 0
 }
+
+export function RenderNameListNewAppointment(data) {
+  const nameList = document.querySelector('.name-list')
+  data.forEach(item => {
+    const div = document.createElement('div')
+    div.className = 'name-option'
+
+    const span = document.createElement('span')
+    span.textContent = item.nome
+    span.dataset.id = item.clientid
+    div.appendChild(span)
+
+    const button = document.createElement('button')
+    button.addEventListener('click', Listeners.SaveNameInModal)
+    button.textContent = '+'
+    div.appendChild(button)
+
+    nameList.appendChild(div)
+  })
+}
+
 export function RenderServicesListNewAppointment(data) {
   const service = document.querySelector('.service-list')
   data.forEach(item => {
@@ -595,8 +718,9 @@ export function RenderServicesListNewAppointment(data) {
     div.className = 'service-option'
 
     const span = document.createElement('span')
-    span.textContent = item.name
-    span.dataset.price = item.price
+    span.textContent = item.title
+    span.dataset.id = item.id
+    span.dataset.price = parseInt(item.price) / 100
     span.dataset.duration = item.duration
     div.appendChild(span)
 
@@ -615,7 +739,9 @@ export function RenderSavedService(data) {
 
   const div = document.createElement('div')
   const span = document.createElement('span')
+  span.className = 'service-selected-option'
   span.textContent = data.name
+  span.dataset.id = data.id
   span.dataset.price = data.price
   span.dataset.duration = data.duration
   div.appendChild(span)
@@ -625,36 +751,6 @@ export function RenderSavedService(data) {
   button.addEventListener('click', RemoveServiceFromList)
   div.appendChild(button)
 
-  function RemoveServiceFromList(event) {
-    const target = event.target.closest('div')
-    const span = target.querySelector('span')
-    const price = span.dataset.price
-    const duration = span.dataset.duration
-
-    const fieldPrice = document.querySelector('#displayPriceText')
-    const cleanText = fieldPrice.textContent.replace(',', '.').replace(/[^\d.]/g, '');
-    const currentPrice = parseFloat(cleanText) || 0;
-    const priceToRem = parseFloat(price) || 0;
-
-    const sumPrice = currentPrice - priceToRem;
-    fieldPrice.textContent = sumPrice.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    });
-
-    const fieldDuration = document.querySelector('#duration')
-    const cleanDuration = fieldDuration.value.replace(',', '.').replace(/[^\d.]/g, '')
-    const sub = parseInt(cleanDuration) - parseInt(duration)
-    fieldDuration.value = `${sub} min`
-
-    if (target) { target.remove() }
-
-    const servicesOptions = document.querySelector('.list-selected-services')
-    if (servicesOptions.childElementCount <= 0) {
-      servicesOptions.style.display = 'None'
-    }
-
-  }
 
   const duration = document.querySelector('#duration')
   const soma = parseInt(duration.value) + parseInt(data.duration)
@@ -672,6 +768,49 @@ export function RenderSavedService(data) {
   });
   listSelectedServices.appendChild(div)
   listSelectedServices.style.display = 'flex'
+}
+
+export function RemoveServiceFromList(event) {
+  const target = event
+    ? event.target
+    : document.querySelector('.service-selected-option');
+
+  if (!target) return;
+
+  const mainDiv = target.closest('.service-item-container') || target.closest('div');
+  const span = mainDiv.querySelector('span[data-price]');
+
+  if (!span) return;
+
+  const priceToRem = parseFloat(span.dataset.price) || 0;
+  const durationToRem = parseInt(span.dataset.duration) || 0;
+
+  const fieldPrice = document.querySelector('#displayPriceText');
+  const currentPriceText = fieldPrice.textContent.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+  const currentPrice = parseFloat(currentPriceText) || 0;
+
+  let sumPrice = currentPrice - priceToRem;
+  if (sumPrice < 0) sumPrice = 0;
+
+  fieldPrice.textContent = sumPrice.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
+  const fieldDuration = document.querySelector('#duration');
+  const currentDuration = parseInt(fieldDuration.value) || 0;
+
+  let subDuration = currentDuration - durationToRem;
+  if (subDuration < 0) subDuration = 0;
+
+  fieldDuration.value = `${subDuration} min`;
+
+  mainDiv.remove();
+
+  const servicesOptions = document.querySelector('.list-selected-services');
+  if (servicesOptions && servicesOptions.childElementCount <= 0) {
+    servicesOptions.style.display = 'none';
+  }
 }
 
 function DetailModalListeners() {

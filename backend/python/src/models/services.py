@@ -39,6 +39,8 @@ class Services:
                 message='Descrição não pode ter menos que 10 caracteres'
             )
 
+        self.price = int(self.price) * 100
+
 @dataclass
 class ServicesControl:
     db_pool: DatabasePool
@@ -66,6 +68,16 @@ class ServicesRepository(ServicesControl):
         )
         return response
 
+    def list_options_services_repo(self, name):
+        repo = database.ListServicesRepository(
+            params=self.params
+        )
+        response = repo.list_options_services_db(
+            name=name,
+            id=self.access_id
+        )
+        return response
+
     def get_unique_service_repo(self, service_id):
         repo = database.GetService(
             params=self.params
@@ -82,6 +94,26 @@ class ServicesRepository(ServicesControl):
         )
         response = repo.insert_service_db(
             service=service
+        )
+        return response
+
+    def delete_service_repo(self, service_id):
+        repo = database.DeleteService(
+            params=self.params
+        )
+        response = repo.delete_service_db(
+            service_id=service_id,
+            id=self.access_id
+        )
+        return response
+
+    def edit_service_repo(self, service: Services):
+        repo = database.EditService(
+            params=self.params
+        )
+        response = repo.edit_service_db(
+            service=service,
+            userId=self.access_id
         )
         return response
 

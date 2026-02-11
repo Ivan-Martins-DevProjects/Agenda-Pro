@@ -3,8 +3,9 @@ from functools import cached_property
 import logging
 import os
 from typing import Any
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
+import google_auth_oauthlib.flow
 
 from src.errors.mainErrors import AppError, BadRequest, HandleException
 from src.internal.main_database import DatabasePool
@@ -136,6 +137,26 @@ def get_contact_api():
     except Exception as e:
         return handle_main_errors(e)
 
+@app.route('/api/clients/options', methods=['GET'])
+def search_client_by_name():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_contacts',
+            module='clients',
+            db_pool=db_pool
+        )
+        handler = page_appointments.ListAppointments(context)
+
+        response = handler.list_clients_by_name()
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        return handle_main_errors(e)
+
+
 # Rota responsável pela criação de novos clientes
 @app.route('/api/clients/create', methods=['POST'])
 def create_contact_api():
@@ -261,6 +282,27 @@ def list_services_api():
     except Exception as e:
         return handle_main_errors(e)
 
+@app.route('/api/services/options', methods=['GET'])
+def list_options_services_api():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='read_services',
+            module='services',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
+
+        handler = page_services.ListServices(context)
+
+        response = handler.list_services_options()
+
+        return jsonify(response), 200
+    except Exception as e:
+        return handle_main_errors(e)
+
 @app.route('/api/services/create', methods=['POST'])
 def create_service_api():
     try:
@@ -288,7 +330,15 @@ def create_service_api():
 def delete_service_api():
     try:
         req_data = RequestBuilder.from_flask(request)
-        handler = page_services.DeleteService(req_data, 'delete_services', 'services')
+        context = RequestContext(
+            req_data=req_data,
+            scope='delete_services',
+            module='services',
+            db_pool=db_pool
+        )
+        if not context:
+            raise AppError(logger_message='Erro ao gerar RequestContext')
+        handler = page_services.DeleteService(context)
 
         response = handler.delete_service()
         if not response:
@@ -297,7 +347,7 @@ def delete_service_api():
                 logger_message='handler delete_service não retornou nenhuma resposta'
             )
 
-        return '', 200
+        return "", 200
 
     except Exception as e:
         return handle_main_errors(e)
@@ -309,8 +359,8 @@ def get_unique_service_api():
         req_data = RequestBuilder.from_flask(request)
         context = RequestContext(
             req_data=req_data,
-            scope='read_contacts',
-            module='clients',
+            scope='read_services',
+            module='services',
             db_pool=db_pool
         )
         if not context:
@@ -335,8 +385,8 @@ def edit_contact_api():
         req_data = RequestBuilder.from_flask(request)
         context = RequestContext(
             req_data=req_data,
-            scope='read_contacts',
-            module='clients',
+            scope='write_services',
+            module='services',
             db_pool=db_pool
         )
         handler = page_services.EditService(context)
@@ -375,6 +425,7 @@ def list_appointments():
     except Exception as e:
         return handle_main_errors(e)
 
+
 @app.route('/api/appointments/unique', methods=['GET'])
 def get_unique_appointment():
     try:
@@ -388,6 +439,28 @@ def get_unique_appointment():
         handler = page_appointments.GetUniqueAppointment(context)
 
         response = handler.get_unique_appointment()
+        if not response:
+            raise AppError(logger_message='Erro ao capturar resposta do handler')
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        return handle_main_errors(e)
+
+
+@app.route('/api/appointments/create', methods=['POST'])
+def insert_new_appointment():
+    try:
+        req_data = RequestBuilder.from_flask(request)
+        context = RequestContext(
+            req_data=req_data,
+            scope='write_appointments',
+            module='appointments',
+            db_pool=db_pool
+        )
+        handler = page_appointments.CreateAppointment(context)
+
+        response = handler.insert_new_appointment()
         if not response:
             raise AppError(logger_message='Erro ao capturar resposta do handler')
 
@@ -457,3 +530,48 @@ def update_info_appointment():
         return jsonify(response), 200
     except Exception as e:
         return handle_main_errors(e)
+
+@app.route('/auth/google')
+def auth_google():
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        'client_secret.json',
+        scopes=[
+            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/calendar.events'
+        ])
+
+    flow.redirect_uri = 'http://localhost:8585/callback'
+    authorized_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='consent'
+    )
+    logger.debug(f'State = {state}')
+
+    return redirect(authorized_url)
+
+@app.route('/callback')
+def oauth2callback():
+    logger.info(Flask.request.url)
+
+#     state = Flask.session['state']
+#     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+#         'client_secret.json',
+#         scopes=[
+#             'https://www.googleapis.com/auth/calendar',
+#             'https://www.googleapis.com/auth/calendar.events'
+#         ],
+#         state=state)
+#     flow.redirect_uri = Flask.url_for('oauth2callback', _external=True)
+#
+#     authorization_response = Flask.request.url
+#     flow.fetch_token(authorization_response=authorization_response)
+#
+# # Store the credentials in browser session storage, but for security: client_id, client_secret,
+# # and token_uri are instead stored only on the backend server.
+#     credentials = flow.credentials
+#     Flask.session['credentials'] = {
+#         'token': credentials.token,
+#         'refresh_token': credentials.refresh_token,
+#         'granted_scopes': credentials.granted_scopes}
+

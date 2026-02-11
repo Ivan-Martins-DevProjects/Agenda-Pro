@@ -31,32 +31,44 @@ export async function EditAppointmentAPI(data, id) {
   return
 }
 
-export function LoadEditData(event, oldPrice) {
-  const appointmentId = event.target.dataset.id
-  const service = document.getElementById('service')
-  const date = document.getElementById('date')
-  const hour = document.getElementById('hour')
-  const price = document.getElementById('price')
-  const status = document.getElementById('status')
-  const duration = document.getElementById('duration')
-  const obs = document.querySelector('.detail-textarea')
+export function LoadEditData(event) {
+  const modal = document.getElementById('bookingDialog')
 
+  const appointmentId = event.target.dataset.id
+  const date = modal.querySelector('#dateDisplay')
+  const hour = modal.querySelector('#timeInput')
+  const price = modal.querySelector('#displayPriceText')
+  const duration = modal.querySelector('#duration')
+  const obs = modal.querySelector('#description')
+
+  const priceValue = price.textContent
   let finalPrice
-  if (oldPrice == price.value) {
-    finalPrice = price.value.replace(/[^\d.]/g, '')
-  } else {
-    finalPrice = price.value.replace(/[^\d.]/g, '') * 100
+  if (priceValue) {
+    finalPrice = priceValue.replace(/[^\d.]/g, '')
   }
 
+  const serviceData = []
+  const servicesList = modal.querySelectorAll('.service-selected-option')
+  servicesList.forEach(item => {
+    const data = {
+      duration: item.dataset.duration,
+      price: item.dataset.price,
+      id: item.dataset.id,
+      name: item.textContent
+    }
+
+    serviceData.push(data)
+  })
+
   const data = {
-    service_name: service.value,
+    services: serviceData,
     date: date.value,
     time_begin: hour.value,
     price: finalPrice,
     obs: obs.value,
-    status: status.value,
     duration: duration.value.replace(/[^\d.]/g, '')
   }
+  console.log(data)
 
   return [appointmentId, data]
 }

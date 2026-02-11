@@ -56,6 +56,16 @@ class ClientsRepository(ClientsControl):
         )
         return response
 
+    def list_clients_by_name_repo(self, name):
+        repo = database.ListClientsRepository(
+            params=self.params
+        )
+        response = repo.list_clients_by_name_db(
+            user_id=self.access_id,
+            name=name
+        )
+        return response
+
     def search_clients_repo(self, text):
         repo = database.ListClientsRepository(
             params=self.params

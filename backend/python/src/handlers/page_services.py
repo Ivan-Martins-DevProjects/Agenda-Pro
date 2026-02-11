@@ -22,13 +22,20 @@ class ListServices(ControlHandler):
 
         return services_list
 
+    def list_services_options(self):
+        name = self.req_data.params.get('name')
+        services = self.controler.list_options_services_repo(
+            name=name
+        )
+        return services
+
 class GetUniqueService(ControlHandler):
     def get_unique_service(self):
         id = self.req_data.params.get('id')
         if not id:
             raise BadRequest(field='ID')
         response = self.controler.get_unique_service_repo(
-            serviceId=id,
+            service_id=id,
         )
         if not response:
             raise AppError(logger_message='Nenhum informação recebida de get_unique_service')
@@ -46,22 +53,7 @@ class InsertNewService(ControlHandler):
         data['id'] = uuid.uuid4()
 
         service = Services(**data)
-        insert = self.controler.insert_new_service_control(service)
-        if not insert:
-            raise AppError(logger_message='Nenhuma informação recebida da função insert_new_service', status=500)
-
-        return insert
-
-class InsertNewServicebak(ControlHandler):
-    def insert_service(self):
-        data = self.req_data.body
-        if not data:
-            raise BadRequest(
-                field='Payload',
-                logger_message='Payload incorreto ou vazio'
-             )
-
-        insert = self.controler.insert_new_service_repo(data)
+        insert = self.controler.insert_new_service_repo(service)
         if not insert:
             raise AppError(logger_message='Nenhuma informação recebida da função insert_new_service', status=500)
 
@@ -76,7 +68,7 @@ class DeleteService(ControlHandler):
                 logger_message='Service ID não encontrado'
             )
 
-        delete = self.controler.delete_service_control(id)
+        delete = self.controler.delete_service_repo(id)
         return delete
 
 class EditService(ControlHandler):
@@ -95,9 +87,13 @@ class EditService(ControlHandler):
                 logger_message=f'Payload incorreto ou vazio: {body}'
             )
 
-        response = self.controler.edit_service_control(
-            serviceId=id,
-            data=body
+        body['userId'] = self.user.ID
+        body['bussinesId'] = self.user.BussinesID
+        body['respName'] = self.user.Nome
+        service = Services(id=id, **body)
+
+        response = self.controler.edit_service_repo(
+            service=service
         )
         if not response:
             raise AppError(logger_message='Nenhum informação recebida de get_unique_service')

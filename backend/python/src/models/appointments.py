@@ -1,15 +1,18 @@
 from dataclasses import dataclass
+from datetime import datetime
 import logging
+import re
+import json
 
-from dotenv import load_dotenv
+from typing import Any
 
+from src.errors.appointmentErrors import AppointmentPastDate
 from src.errors.mainErrors import AppError, BadRequest
 from src.internal import appointments_database as database
 from src.internal.main_database import DatabasePool
 
 
 logger = logging.getLogger(__name__)
-load_dotenv()
 
 @dataclass
 class AppointmentsControl:
@@ -29,14 +32,46 @@ class AppointmentsControl:
 
 @dataclass
 class Appointments:
-    id: str
-    service: str
-    clientId: str
+    id: Any
     userId: str
-    date: str
-    time_begin: str
-    time_end: str
+    clientId: str
+    date: Any
+    hour: Any
     status: str
+    businessId: str
+    clientName: str
+    userName: str
+    price: Any
+    description: str
+    duration: Any
+    services: Any
+
+    def __post_init__(self):
+        if len(self.services) <= 0:
+            raise BadRequest(message='Nenhum serviço fornecido')
+
+        # Validar se não foi recebido uma data no passado
+        format = "%d/%m/%Y %H:%M"
+        appointmentDate = datetime.strptime(f'{self.date} {self.hour}', format)
+        now = datetime.now()
+        if appointmentDate < now:
+            raise AppointmentPastDate
+
+        # Converte string data em formato date
+        self.date = datetime.strptime(self.date, '%d/%m/%Y')
+
+        # Converte string de hour para formato hour
+        self.hour = datetime.strptime(self.hour, '%H:%M').time()
+
+        # Remove caracteres de preço
+        self.price = int(self.price.replace("R$", "").split(",")[0].strip()) * 100
+
+        # Remove qualquer caractere que não seja número
+        self.duration = int(re.sub(r'[a-zA-Z]', '', self.duration))
+
+        self.services = json.dumps(self.services)
+
+
 
 class AppointmentsRepository(AppointmentsControl):
     def list_all_appointments_repo(self, offset):
@@ -58,6 +93,20 @@ class AppointmentsRepository(AppointmentsControl):
             id=self.access_id,
             field_type=field_type,
             field=field,
+        )
+        return response
+
+    def insert_new_appointment_repo(self, appointment: Appointments):
+        repo = database.ListAppointmentsRepository(
+            params=self.params
+        )
+        repo.check_if_appointment_already_exists(appointment.date, appointment.hour)
+
+        repo = database.InsertNewAppointmentRepository(
+            params=self.params
+        )
+        response = repo.insert_new_appointment_db(
+            appointment=appointment
         )
         return response
 

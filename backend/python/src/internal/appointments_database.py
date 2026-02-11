@@ -3,6 +3,7 @@ import logging
 from psycopg import sql
 from psycopg.rows import dict_row
 
+from src.errors.appointmentErrors import AppointmentAlreadyExists
 from src.errors.mainErrors import AppError, BadRequest
 from src.internal.main_database import Repository
 from src.errors.databaseErrors import databaseErrors
@@ -17,7 +18,7 @@ class ListAppointmentsRepository(Repository):
                     offset = offset * 10
 
                     query = sql.SQL("""
-                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                    SELECT id, client_id, client_name, user_name, services, date, time_begin, status, price, duration
                     FROM appointments
                     WHERE {field} = %s
                     LIMIT %s OFFSET %s
@@ -44,6 +45,7 @@ class ListAppointmentsRepository(Repository):
                     for result in results:
                         result['date'] = result['date'].isoformat()
                         result['time_begin'] = result['time_begin'].isoformat()[:5]
+                        result['services'] = result['services'][0]
                         appointments_list.append(result)
 
                     data = {
@@ -65,7 +67,7 @@ class ListAppointmentsRepository(Repository):
                     field = field.lower()
 
                     query = sql.SQL("""
-                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                    SELECT id, client_id, client_name, user_name, services, date, time_begin, status, price, duration
                     FROM appointments
                     WHERE {0} = %s
                     AND {1} = %s
@@ -95,6 +97,7 @@ class ListAppointmentsRepository(Repository):
                     for result in results:
                         result['date'] = result['date'].isoformat()
                         result['time_begin'] = result['time_begin'].isoformat()[:5]
+                        result['services'] = result['services'][0]
                         appointments_list.append(result)
 
                     data = {
@@ -131,7 +134,7 @@ class ListAppointmentsRepository(Repository):
                                             )
 
                     query = sql.SQL("""
-                    SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                    SELECT id, client_id, client_name, user_name, services, date, time_begin, status, price, duration
                     FROM appointments
                     WHERE {0} = %s
                     AND {1}
@@ -163,6 +166,7 @@ class ListAppointmentsRepository(Repository):
                     for result in results:
                         result['date'] = result['date'].isoformat()
                         result['time_begin'] = result['time_begin'].isoformat()[:5]
+                        result['services'] = result['services'][0]
                         appointments_list.append(result)
 
                     data = {
@@ -175,20 +179,60 @@ class ListAppointmentsRepository(Repository):
         except Exception as e:
             raise databaseErrors(e)
 
+    def check_if_appointment_already_exists(self, date, hour):
+        logger.debug('verificando')
+        try:
+            with self.db_pool.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                    SELECT id FROM appointments WHERE date = %s AND time_begin = %s
+                    """
+
+                    cursor.execute(query, (date, hour))
+                    result = cursor.fetchone()
+                    if result:
+                        raise AppointmentAlreadyExists
+
+                    return None
+
+        except Exception as e:
+            raise databaseErrors(e)
+
+class InsertNewAppointmentRepository(Repository):
+    def insert_new_appointment_db(self, appointment):
+        try:
+            with self.db_pool.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                    INSERT INTO appointments (id, user_id, client_id, date, time_begin, status,
+                    bussines_id, client_name, user_name, price, obs, duration, services) VALUES
+                    ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+                    """
+
+                    values = tuple(appointment.__dict__.values())
+                    cursor.execute(query, values)
+                    result = cursor.fetchone()
+                    if not result:
+                        raise AppError(message='Erro ao registrar novo agendamento')
+
+                    return 'Agendamento registrado com sucesso'
+
+        except Exception as e:
+            raise databaseErrors(e)
+
 class GetUniqueAppointmentRepository(Repository):
     def get_unique_appointment_db(self, appointment_id, user_id):
         try:
             with self.db_pool.get_connection() as conn:
                 with conn.cursor(row_factory=dict_row) as cursor:
                     query = sql.SQL("""
-                    SELECT id, client_name, user_name, service_name, date, time_begin,
+                    SELECT id, client_name, user_name, services, date, time_begin,
                     status, price, status, obs, duration
                     FROM appointments
                     WHERE {0} = %s
                     AND id = %s
                     """).format(self.role_column)
 
-                    # logger.debug(count.as_string(conn))
                     cursor.execute(query, (user_id, appointment_id))
                     result = cursor.fetchone()
                     if not result:
@@ -198,17 +242,18 @@ class GetUniqueAppointmentRepository(Repository):
                     date_obj = datetime.fromisoformat(raw_date)
                     formated_date = date_obj.strftime('%d-%m-%Y')
                     formated_time = result['time_begin'] = result['time_begin'].isoformat()[:5] if result['time_begin'] else None
+                    price = f"R$ {result['price'] / 100:.2f}".replace('.', ',')
 
                     data = {
                         'name': result['client_name'],
-                        'service': result['service_name'],
+                        'service': result['services'],
                         'raw_date': raw_date,
                         'date': formated_date,
                         'hour': formated_time,
-                        'price': int(result['price']) / 100,
+                        'price': price,
                         'status': result['status'].title(),
                         'obs': result['obs'],
-                        'duration': result['duration']
+                        'duration': f'{result['duration']} min'
                     }
 
                     return data
@@ -259,14 +304,14 @@ class UpdateAppointmentRepository(Repository):
             with self.db_pool.get_connection() as conn:
                 with conn.cursor() as cursor:
                     query = """
-                    UPDATE appointments SET service_name = %s, date = %s, time_begin = %s, price = %s,
-                    obs = %s, status = %s, duration = %s
+                    UPDATE appointments SET services = %s, date = %s, time_begin = %s, price = %s,
+                    obs = %s, duration = %s
                     WHERE id = %s
                     RETURNING id
                     """
 
                     filter_fields = [
-                        'date', 'time_begin', 'status', 'service_name',
+                        'date', 'time_begin', 'services',
                         'price', 'obs', 'duration'
                     ]
 

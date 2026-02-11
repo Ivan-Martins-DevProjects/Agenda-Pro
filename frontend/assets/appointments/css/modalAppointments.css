@@ -175,15 +175,14 @@
           color: var(--text-main);
         }
 
-        .service-list {
+        .service-list,
+        .name-list {
           display: flex;
           flex-direction: column;
-          border-bottom: 1px solid var(--border);
-          border-right: 1px solid var(--border);
-          border-left: 1px solid var(--border);
         }
 
-        .service-option {
+        .service-option,
+        .name-option {
           z-index: 10;
           display: flex;
           align-items: center;
@@ -195,7 +194,8 @@
           padding: 7px 15px;
         }
 
-        .service-option button {
+        .service-option button,
+        .name-option button {
           border: 1px solid var(--border);
           font-size: 20px;
           font-weight: bold;
@@ -203,7 +203,8 @@
           transition: all 0.2s;
         }
 
-        .service-option button:hover {
+        .service-option button:hover,
+        .name-option button:hover {
           transform: translateY(-5px);
         }
 

@@ -1,15 +1,20 @@
+import logging
 from psycopg import sql
 from psycopg.rows import dict_row
 
 from src.errors.databaseErrors import databaseErrors 
+from src.errors.mainErrors import AppError
 from src.errors.servicesErrors import DuplicateServiceError, ServiceNotFound
 from src.internal.main_database import Repository
 
+logger = logging.getLogger(__name__)
+
 class ListServicesRepository(Repository):
     def list_services_db(self, offset, id):
-        offset = offset - 1
         if offset < 0:
             offset = 0
+
+        offset = offset * 10
 
         try:
             with self.db_pool.get_connection() as conn:
@@ -55,6 +60,23 @@ class ListServicesRepository(Repository):
         except Exception as e:
             raise databaseErrors(e)
 
+    def list_options_services_db(self, name, id):
+        try:
+            with self.db_pool.get_connection() as conn:
+                with conn.cursor(row_factory=dict_row) as cursor:
+                    query =sql.SQL("""SELECT id, title, price, duration
+                    FROM services
+                    WHERE {field} = %s
+                    AND title ILIKE '%%' || %s || '%%';""").format(field=self.role_column)
+                    cursor.execute(query, (id, name))
+                    services = cursor.fetchall()
+                    
+                    return services
+
+        except Exception as e:
+            raise databaseErrors(e)
+
+
 class GetService(Repository):
     def get_unique_service_db(self, service_id, user_id):
         try:
@@ -82,9 +104,6 @@ class InsertNewService(Repository):
         try:
             with self.db_pool.get_connection() as conn:
                 with conn.cursor() as cursor:
-                    Unpackprice = service.price
-                    price = int(Unpackprice * 10)
-
                     query = """
                     INSERT INTO services (id, user_id, bussines_id, title, description, price, duration, resp_name)
                     VALUES (
@@ -94,9 +113,11 @@ class InsertNewService(Repository):
                     RETURNING id
                     """
 
+                    logger.debug(service.price)
+
                     cursor.execute(query, (
-                        service.id, service.bussinesId, service.title, service.description,
-                        price, service.duration, service.respName
+                        service.id, service.userId, service.bussinesId, service.title, service.description,
+                        service.price, service.duration, service.respName
                     ))
 
                     result = cursor.fetchone()
@@ -113,19 +134,54 @@ class InsertNewService(Repository):
         except Exception as e:
             raise databaseErrors(e)
 
-class SetContact(Repository):
-    def delete_service(self, serviceId):
+
+class EditService(Repository):
+    def edit_service_db(self, service, userId):
         try:
             with self.db_pool.get_connection() as conn:
                 with conn.cursor() as cursor:
-                    query = """DELETE FROM services WHERE id = %s"""
+                    query = sql.SQL("""
+                    UPDATE services
+                    SET title = %s,
+                        description = %s,
+                        price = %s,
+                        duration = %s
+                    WHERE id = %s AND {0} = %s
+                    """).format(self.role_column)
 
-                    cursor.execute(query, (serviceId,))
+                    title = service.title
+                    description = service.description
+                    price = service.price 
+                    duration = service.duration
+                    service_id = service.id
+
+                    cursor.execute(query, (title, description, price, duration, service_id, userId))
+                    conn.commit()
+                    confirm = cursor.rowcount
+                    if confirm < 0:
+                        raise AppError(
+                            message='Erro ao registrar alteração no serviço',
+                            logger_message='edit_service_db não alterou nenhuma row'
+                        )
+
+                    return 'Serviço atualizado com sucesso'
+
+        except Exception as e:
+            raise databaseErrors(e)
+
+class DeleteService(Repository):
+    def delete_service_db(self, service_id, id):
+        try:
+            with self.db_pool.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = sql.SQL("DELETE FROM services WHERE id = %s and {0} = %s").format(self.role_column)
+
+                    cursor.execute(query, (service_id, id))
                     conn.commit()
                     if cursor.rowcount <= 0:
-                        raise AppError(message='Erro ao deletar serviço')
+                        raise AppError(message='Você não tem autorização para excluir esse serviço')
 
-                    response = 'Usuário excluído com sucesso'
+                    response = 'Serviço excluído com sucesso'
                     return response
 
         except Exception as e:

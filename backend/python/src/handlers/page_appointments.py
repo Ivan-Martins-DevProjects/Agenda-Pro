@@ -1,6 +1,9 @@
 import logging
+import uuid
+from datetime import datetime
 
 from src.errors.mainErrors import AppError, BadRequest
+from src.models.appointments import Appointments
 from src.models.request import ControlHandler
 
 logger = logging.getLogger(__name__)
@@ -57,6 +60,32 @@ class ListAppointments(ControlHandler):
             raise AppError(logger_message='Nenhum informação recebida de list_filter_appointments')
 
         return appointments_list
+
+    def list_clients_by_name(self):
+        name = self.req_data.params.get('name')
+
+        response = self.controler.list_clients_by_name_repo(
+            name=name
+        )
+        return response
+
+class CreateAppointment(ControlHandler):
+    def insert_new_appointment(self):
+        data = self.req_data.body
+
+        appointment = Appointments(
+            **data,
+            userId=self.user.ID,
+            userName=self.user.Nome,
+            businessId=self.user.BussinesID,
+            status='pendente',
+            id=uuid.uuid4()
+        )
+        response = self.controler.insert_new_appointment_repo(
+            appointment=appointment
+        )
+        return response
+
 
 class GetUniqueAppointment(ControlHandler):
      def get_unique_appointment(self):

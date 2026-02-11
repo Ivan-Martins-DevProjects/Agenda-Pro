@@ -4,6 +4,7 @@
 import { api_url, token } from "../../index/js/index.js"
 import { ActionComplete, FrontendURL, PaginationListener, CreatePagination, nextPage } from "../../clients/js/clientes.js"
 import ErrorModal from "../../index/js/index.js"
+import { LoadAppointmentsPage } from "../../appointments/js/appointments.js"
 
 // ==============================================================================
 // CONSTANTES E VARIÁVEIS GLOBAIS
@@ -46,6 +47,50 @@ async function ListServicesAPI(offset) {
     console.warn(error);
     return
   }
+}
+
+export async function ListNameOptionsCreateAppointment(name) {
+  const response = await fetch(`${api_url}/api/clients/options?name=${name}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token
+    }
+  })
+  const services = await response.json()
+
+  // Tratamento de erros de autenticação
+  if (!response.ok && response.status == 401) {
+    alert('Acesso não autorizado')
+    window.location.replace(`${FrontendURL}/login.html`)
+  } else if (!response.ok) {
+    ErrorModal(services.message, services.code)
+    throw new Error(services.code)
+  }
+
+  return services
+}
+
+export async function ListServiceOptionsCreateAppointment(name) {
+  const response = await fetch(`${api_url}/api/services/options?name=${name}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token
+    }
+  })
+  const services = await response.json()
+
+  // Tratamento de erros de autenticação
+  if (!response.ok && response.status == 401) {
+    alert('Acesso não autorizado')
+    window.location.replace(`${FrontendURL}/login.html`)
+  } else if (!response.ok) {
+    ErrorModal(services.message, services.code)
+    throw new Error(services.code)
+  }
+
+  return services
 }
 
 /**
@@ -95,18 +140,17 @@ async function DeleteServiceAPI(id) {
       headers: { 'Authorization': token }
     })
 
-    resposta = await response.json()
-
     if (response.status === 401) {
       alert('Acesso não autorizado')
       window.location.replace(`${FrontendURL}/login.html`)
       return
     } else if (!response.ok) {
+      resposta = await response.json()
       ErrorModal(resposta.message, resposta.code)
       throw new Error(resposta.code)
     }
 
-    alert('Usuário excluído com sucesso')
+    alert('Serviço excluído com sucesso')
     return
 
   } catch (error) {
@@ -311,6 +355,7 @@ async function EditServiceListener(event) {
   }
 
   EditServiceAPI(data, id)
+  LoadServices()
 }
 
 // ==============================================================================

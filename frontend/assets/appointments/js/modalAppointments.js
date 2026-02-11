@@ -170,43 +170,43 @@ function resetForm() {
 }
 
 // Feedback Visual (Toast)
-function showToast(message, type = 'success') {
-  const toast = document.getElementById('toast');
-  const toastMsg = document.getElementById('toastMessage');
-
-  toast.className = `appointment-toast appointment-${type} appointment-show`;
-  toastMsg.textContent = message;
-
-  setTimeout(() => {
-    toast.classList.remove('appointment-show');
-  }, 3000);
-}
-
-// Submissão do Formulário
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-
-  // Captura de dados para enviar ao Backend
-  const formData = {
-    contact: contactInput.value,
-    serviceId: serviceSelect.value,
-    date: dateDisplay.dataset.dateIso,
-    time: timeInput.value
-  };
-
-  if (!state.selectedDate) {
-    showToast("Selecione uma data no calendário.", "error");
-    return;
-  }
-
-  console.log("Enviando dados para o backend:", formData);
-
-  // Simulação de envio
-  showToast("Agendamento enviado com sucesso!", "success");
-  dialog.close();
-
-  setTimeout(() => {
-    resetForm();
-  }, 500);
-});
+// function showToast(message, type = 'success') {
+//   const toast = document.getElementById('toast');
+//   const toastMsg = document.getElementById('toastMessage');
+//
+//   toast.className = `appointment-toast appointment-${type} appointment-show`;
+//   toastMsg.textContent = message;
+//
+//   setTimeout(() => {
+//     toast.classList.remove('appointment-show');
+//   }, 3000);
+// }
+//
+// // Submissão do Formulário
+// form.addEventListener('submit', (e) => {
+//   e.preventDefault();
+//
+//   // Captura de dados para enviar ao Backend
+//   const formData = {
+//     contact: contactInput.value,
+//     serviceId: serviceSelect.value,
+//     date: dateDisplay.dataset.dateIso,
+//     time: timeInput.value
+//   };
+//
+//   if (!state.selectedDate) {
+//     showToast("Selecione uma data no calendário.", "error");
+//     return;
+//   }
+//
+//   console.log("Enviando dados para o backend:", formData);
+//
+//   // Simulação de envio
+//   showToast("Agendamento enviado com sucesso!", "success");
+//   dialog.close();
+//
+//   setTimeout(() => {
+//     resetForm();
+//   }, 500);
+// });
 
