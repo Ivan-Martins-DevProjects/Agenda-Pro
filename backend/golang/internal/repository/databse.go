@@ -24,7 +24,11 @@ var (
 func GetPool() (*sql.DB, error) {
 	postgres := os.Getenv("POSTGRES_URL")
 	if postgres == "" {
+<<<<<<< HEAD
 		return nil, fmt.Errorf("variáveis de conexão ao banco de dados nulas")
+=======
+		return nil, fmt.Errorf("URL Postgres não encontrada")
+>>>>>>> appointments
 	}
 	db, err := sql.Open("pgx", postgres)
 	if err != nil {

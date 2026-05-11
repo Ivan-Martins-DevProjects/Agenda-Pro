@@ -4,6 +4,7 @@ import os
 
 from dotenv import load_dotenv
 
+from src.internal.main_database import Repository, RoleRepository
 from src.models.clients import User
 from src.errors.authErrors import UnauthorizedSession, jwtErrors
 from src.internal import database
@@ -14,9 +15,9 @@ load_dotenv()
 class AuthServices:
     def __init__(self, JWT) -> None:
         self.token = JWT
-        self.secret = os.getenv("JWT_KEY")
+        self.secret = os.environ.get("JWT_KEY")
 
-    def Autenticar(self):
+    def Autenticar(self, db_pool):
         if not self.secret:
             raise UnauthorizedSession(message='Sessão não encontrada')
         try:
@@ -33,11 +34,13 @@ class AuthServices:
             Nome = payload['Nome']
             Instance = payload['Instance']
             IsConnected = payload['IsConnected']
-            Role =  payload['Role']
+            Role = payload['Role']
 
-            permissions = database.RequestPermissionsDB(ID)
+            params = (Role, db_pool)
+            repo = RoleRepository(params)
+            permissions = repo.get_permissions_by_user_id(ID)
 
-            Usuario = User(ID, BussinesID, Nome, Instance, IsConnected, Role, permissions)
+            Usuario = User(ID, Nome, BussinesID, Role, Instance, IsConnected, permissions)
             return Usuario
 
         except Exception as e:

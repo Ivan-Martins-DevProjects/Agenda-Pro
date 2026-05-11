@@ -6,13 +6,14 @@ from dataclasses import dataclass
 from typing import Optional
 
 from src.errors.mainErrors import AppError, InvalidField
-from src.internal import database
+from src.internal.main_database import DatabasePool
+from src.internal import services_database as database
 
 logger = logging.getLogger(__name__)
 load_dotenv()
 
 @dataclass
-class Services():
+class Services:
     id: str 
     title: str
     description: str
@@ -23,30 +24,105 @@ class Services():
     bussinesId: Optional[str] = None
 
     def __post_init__(self):
-        if not self.title or len(self.title) < 5:
+        if len(self.title) < 5:
             raise InvalidField(field='Título')
-
-        if not self.price or int(self.price) < 0:
+        if int(self.price) < 0:
             raise InvalidField(
                 field='Preço'
             )
-
-        if not self.duration or int(self.duration) < 0:
+        if int(self.duration) < 0:
             raise InvalidField(
                 message='Duração não pode ser menor que 0'
             )
-
-        if not self.description or len(self.description) < 10:
+        if len(self.description) < 10:
             raise InvalidField(
                 message='Descrição não pode ter menos que 10 caracteres'
             )
 
+        self.price = int(self.price) * 100
+
+@dataclass
 class ServicesControl:
+    db_pool: DatabasePool
+    role: str
+    access_id: str
+
+    def __post_init__(self):
+        if not self.db_pool:
+            raise AppError(logger_message='Pool de conexões não inicializado')
+        if not self.role:
+            raise AppError(logger_message='Role não recebida')
+
+    @property
+    def params(self) -> tuple:
+        return self.role, self.db_pool
+
+class ServicesRepository(ServicesControl):
+    def list_all_services_repo(self, offset):
+        repo = database.ListServicesRepository(
+            params=self.params
+        )
+        response = repo.list_services_db(
+            offset=offset,
+            id=self.access_id
+        )
+        return response
+
+    def list_options_services_repo(self, name):
+        repo = database.ListServicesRepository(
+            params=self.params
+        )
+        response = repo.list_options_services_db(
+            name=name,
+            id=self.access_id
+        )
+        return response
+
+    def get_unique_service_repo(self, service_id):
+        repo = database.GetService(
+            params=self.params
+        )
+        response = repo.get_unique_service_db(
+            service_id=service_id,
+            user_id=self.access_id
+        )
+        return response
+
+    def insert_new_service_repo(self, service: Services):
+        repo = database.InsertNewService(
+            params=self.params
+        )
+        response = repo.insert_service_db(
+            service=service
+        )
+        return response
+
+    def delete_service_repo(self, service_id):
+        repo = database.DeleteService(
+            params=self.params
+        )
+        response = repo.delete_service_db(
+            service_id=service_id,
+            id=self.access_id
+        )
+        return response
+
+    def edit_service_repo(self, service: Services):
+        repo = database.EditService(
+            params=self.params
+        )
+        response = repo.edit_service_db(
+            service=service,
+            userId=self.access_id
+        )
+        return response
+
+class ServicesControlbak:
     def __init__(self, User) -> None:
         self.user = User
         self.repo = ServicesRepository()
 
-    def list_all_services(self, offset, ID):
+    def list_all_services_control(self, offset, ID):
         services = self.repo.list_services(
             offset=offset * 10,
             ID=ID,
@@ -54,7 +130,7 @@ class ServicesControl:
         )
         return services
 
-    def insert_new_service(self, data):
+    def insert_new_service_control(self, data):
         data['userId'] = self.user.ID
         data['bussinesId'] = self.user.BussinesID
         data['respName'] = self.user.Nome
@@ -67,11 +143,11 @@ class ServicesControl:
         )
         return response
 
-    def delete_service(self, id):
+    def delete_service_control(self, id):
         response = self.repo.delete_service(id)
         return response
 
-    def get_unique_service(self, serviceId, AccessID):
+    def get_unique_service_control(self, serviceId, AccessID):
         response = self.repo.get_unique_service(
             id=serviceId,
             AccessID=AccessID,
@@ -79,14 +155,14 @@ class ServicesControl:
         )
         return response
 
-    def edit_service(self, serviceId, data):
+    def edit_service_control(self, serviceId, data):
         data['id'] = serviceId
         Services(**data)
 
         response = self.repo.edit_service(data)
         return response
 
-class ServicesRepository:
+class ServicesRepositorybak:
     def list_services(self, offset, ID, Role):
         response = database.list_services_db(
             offset=offset,

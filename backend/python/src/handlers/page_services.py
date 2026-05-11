@@ -1,81 +1,66 @@
 import logging
-
+import uuid
 from dotenv import load_dotenv
 
-from src.models.header import AuthHeader
-from ..errors.mainErrors import AppError, BadRequest
-
-
+from src.errors.mainErrors import AppError, BadRequest
+from src.models.request import ControlHandler
+from src.models.services import Services
 
 logger = logging.getLogger(__name__)
 load_dotenv()
 
-def set_service_header_params(req_data, scope):
-    header = AuthHeader()
-    header.header_handler(req_data, scope)
-    
-    # Controlers deve receber uma instancia da classe User e da classe ServicesRepository
-    controlers = header.header_services_control()
-    return controlers
-
-
-class ServicesHandler:
-    def __init__(self, req_data) -> None:
-        self.req_data = req_data
-
-    def list_services(self):
-        controlers = set_service_header_params(self.req_data, 'read_services')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers')
-
-        servicesControl = controlers.servicesControl
-        AccessID = controlers.AccessID
-        if not servicesControl:
-            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers')
-
+class ListServices(ControlHandler):
+    def list_all_services(self):
         offset = int(self.req_data.params.get('offset'))
         if offset < 0:
             raise BadRequest(logger_message='Offset Inválido')
-        services_list = servicesControl.list_all_services(
+        services_list = self.controler.list_all_services_repo(
             offset=offset,
-            ID=AccessID
         )
         if not services_list:
             raise AppError(logger_message='Nenhum informação recebida de list_all_services')
 
         return services_list
 
+    def list_services_options(self):
+        name = self.req_data.params.get('name')
+        services = self.controler.list_options_services_repo(
+            name=name
+        )
+        return services
+
+class GetUniqueService(ControlHandler):
+    def get_unique_service(self):
+        id = self.req_data.params.get('id')
+        if not id:
+            raise BadRequest(field='ID')
+        response = self.controler.get_unique_service_repo(
+            service_id=id,
+        )
+        if not response:
+            raise AppError(logger_message='Nenhum informação recebida de get_unique_service')
+        return response
+
+class InsertNewService(ControlHandler):
     def insert_service(self):
-        controlers = set_service_header_params(self.req_data, 'write_services')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers', status=500)
-
-        servicesControl = controlers.servicesControl
-        if not servicesControl:
-            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers', status=500)
-
         data = self.req_data.body
         if not data:
-            raise BadRequest(
-                field='Payload',
-                logger_message='Payload incorreto ou vazio'
-             )
+            raise BadRequest(field='Payload')
 
-        insert = servicesControl.insert_new_service(data)
+        data['userId'] = self.user.ID
+        data['bussinesId'] = self.user.BussinesID
+        data['respName'] = self.user.Nome
+        data['id'] = uuid.uuid4()
+
+        service = Services(**data)
+        insert = self.controler.insert_new_service_repo(service)
         if not insert:
             raise AppError(logger_message='Nenhuma informação recebida da função insert_new_service', status=500)
 
         return insert
 
+class DeleteService(ControlHandler):
     def delete_service(self):
-        controlers = set_service_header_params(self.req_data, 'delete_services')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers', status=500)
-
-        servicesControl = controlers.servicesControl
-        if not servicesControl:
-            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers', status=500)
-
         id = self.req_data.params.get('id')
         if not id:
             raise BadRequest(
@@ -83,44 +68,11 @@ class ServicesHandler:
                 logger_message='Service ID não encontrado'
             )
 
-        delete = servicesControl.delete_service(id)
+        delete = self.controler.delete_service_repo(id)
         return delete
 
-
-    def get_unique_service(self):
-        controlers = set_service_header_params(self.req_data, 'read_services')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers', status=500)
-
-        servicesControl = controlers.servicesControl
-        AccessID = controlers.AccessID
-        if not servicesControl:
-            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers', status=500)
-
-        id = self.req_data.params.get('id')
-        if not id:
-            raise BadRequest(
-                field='id',
-                logger_message='Parâmetro ID não encontrado'
-            )
-
-        response = servicesControl.get_unique_service(
-            serviceId=id,
-            AccessID=AccessID
-        )
-        if not response:
-            raise AppError(logger_message='Nenhum informação recebida de get_unique_service')
-        return response
-        
+class EditService(ControlHandler):
     def edit_service(self):
-        controlers = set_service_header_params(self.req_data, 'read_services')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers', status=500)
-
-        servicesControl = controlers.servicesControl
-        if not servicesControl:
-            raise AppError(logger_message='Erro ao extrair instância servicesControl de controlers', status=500)
-
         id = self.req_data.params.get('id')
         if not id:
             raise BadRequest(
@@ -135,9 +87,13 @@ class ServicesHandler:
                 logger_message=f'Payload incorreto ou vazio: {body}'
             )
 
-        response = servicesControl.edit_service(
-            serviceId=id,
-            data=body
+        body['userId'] = self.user.ID
+        body['bussinesId'] = self.user.BussinesID
+        body['respName'] = self.user.Nome
+        service = Services(id=id, **body)
+
+        response = self.controler.edit_service_repo(
+            service=service
         )
         if not response:
             raise AppError(logger_message='Nenhum informação recebida de get_unique_service')

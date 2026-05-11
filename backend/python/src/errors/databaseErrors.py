@@ -1,11 +1,11 @@
-from .mainErrors import AppError, InvalidField
+from .mainErrors import AppError, BadRequest
 
 from psycopg import errors
 import logging
 
 def databaseErrors(e):
     maps = {
-        errors.UniqueViolation:             lambda: InvalidField(message='Usuário já cadastrado'),
+        errors.UniqueViolation:             lambda: BadRequest(message='Usuário já cadastrado'),
         errors.ForeignKeyViolation:         lambda: AppError(logger_message='Chave estrangeira inválida', logger_level=logging.error),
         errors.NotNullViolation:            lambda: AppError(logger_message='Campo obrigatório faltando', logger_level=logging.error),
         errors.NumericValueOutOfRange:      lambda: AppError(logger_message='Valor numérico fora de range', logger_level=logging.error),

@@ -9,7 +9,7 @@ from psycopg_pool import ConnectionPool
 
 from ..errors.databaseErrors import databaseErrors
 from ..errors.clientsErrors import ClientNotFound, DuplicateClientError
-from ..errors.mainErrors import AppError, InvalidField, handle_exception
+from ..errors.mainErrors import AppError, BadRequest, InvalidField
 from ..errors.servicesErrors import DuplicateServiceError, ServiceNotFound
 
 load_dotenv()
@@ -179,11 +179,14 @@ def GetUniqueContact(contactId, id, role):
                 if role == 'admin':
                     query = ''' SELECT c.nome, c.email, c.telefone, c.cpf, c.visitas, c.gasto, c.obs,
                                 a.rua, a.bairro, a.cidade, a.numero FROM contacts c LEFT JOIN contacts_address a
-                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.bussines_id = %s'''
+                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.bussines_id = %s
+                                ORDER BY c.nome COLLATE "pt_BR.utf8" ASC'''
+                                
                 else:
                     query = ''' SELECT c.nome, c.email, c.telefone, c.cpf, c.visitas, c.gasto, c.obs,
                                 a.rua, a.bairro, a.cidade, a.numero FROM contacts c LEFT JOIN contacts_address a
-                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.userid = %s'''
+                                on c.clientid = a.clientId WHERE c.clientid = %s AND c.userid = %s
+                                ORDER BY c.nome COLLATE "pt_BR.utf8" ASC'''
 
                 cursor.execute(query, (contactId, id))
 
@@ -192,10 +195,7 @@ def GetUniqueContact(contactId, id, role):
                 if not result:
                     raise ClientNotFound()
 
-                response = {
-                    'data': result
-                }
-                return response
+                return result
 
     # Registra qualquer erro com a consulta
     except Exception as e:
@@ -298,7 +298,7 @@ def InsertNewContactDB(data):
 
     # Registra qualquer erro com a consulta
     except Exception as e:
-        return handle_exception(e)
+        return databaseErrors(e)
 
 def UpdateContactDB(id, body):
     if not connectionPool:
@@ -337,9 +337,7 @@ def UpdateContactDB(id, body):
                     raise DuplicateClientError()
 
                 conn.commit()
-                return {
-                    'data': 'Usuário cadastrado com sucesso',
-                }
+                return 'Usuário cadastrado com sucesso'
 
     except Exception as e:
         raise databaseErrors(e)
@@ -368,10 +366,7 @@ def DeleteContactDB(id):
                 if cursor.rowcount <= 0:
                     raise AppError(message='Erro ao deletar contato da tabela contatos')
 
-                data = {
-                    'data': 'Usuário excluído com sucesso'
-                }
-                return data
+                return 'Usuário excluído com sucesso'
 
     except Exception as e:
         raise databaseErrors(e)
@@ -467,12 +462,14 @@ def list_services_db(offset, id, role):
                     query ="""SELECT id, name, description, price, duration
                 FROM services
                 WHERE bussines_id = %s LIMIT %s OFFSET %s"""
-                    count = "SELECT COUNT(*) AS total FROM services WHERE bussines_id = %s"
+                    count = "SELECT COUNT (*) AS total FROM services WHERE bussines_id = %s"
                 elif role == 'user':
                     query = """SELECT id, name, description, price, duration
                     FROM services
                     WHERE userid = %s LIMIT %s OFFSET %s"""
-                    count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
+                    count = "SELECT COUNT (*) AS total FROM services WHERE userid = %s"
+                else:
+                    raise AppError(logger_message="Erro ao definir query")
 
                 cursor.execute(query, (id, 10, int(offset)))
                 services = cursor.fetchall()
@@ -507,7 +504,7 @@ def list_services_db(offset, id, role):
                 }
 
     except Exception as e:
-        return databaseErrors(e)
+        raise databaseErrors(e)
 
 def insert_service_db(data):
     if not connectionPool:
@@ -658,6 +655,342 @@ def edit_service_db(data):
                     )
 
                 return 'Serviço editado com sucesso'
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+##################################################################################
+#################### APPOINTMENTS
+##################################################################################
+def list_all_appointments_db(offset, id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+    
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field='Role')
+
+                query = sql.SQL("""
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                FROM appointments
+                WHERE {0} = %s
+                LIMIT %s OFFSET %s
+                """).format(role_column)
+
+                count = sql.SQL("SELECT COUNT(*) AS total FROM appointments WHERE {0} = %s").format(role_column)
+
+                cursor.execute(query, (id, 10, int(offset)))
+                results = cursor.fetchall()
+                if not results:
+                    return {
+                    'total': 0,
+                    'appointments': []
+                    }
+
+                cursor.execute(count, (id,))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                appointments_list = []
+                for result in results:
+                    result['date'] = result['date'].isoformat()
+                    result['time_begin'] = result['time_begin'].isoformat()[:5]
+                    appointments_list.append(result)
+
+                data = {
+                    'appointments': appointments_list,
+                    'total': total
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+def list_filter_appointments_db(offset, id, field_type, field, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+    
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                column_name = sql.SQL(field_type)
+
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field='Role')
+
+                query = sql.SQL("""
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                FROM appointments
+                WHERE {0} = %s
+                AND {1} = %s
+                LIMIT %s OFFSET %s
+                """).format(role_column, column_name)
+
+                count = sql.SQL(
+               "SELECT COUNT(*) AS total FROM appointments WHERE {0} = %s AND {1} = %s"
+                ).format(role_column, column_name)
+
+                cursor.execute(query, (id, field.lower(), 10, int(offset)))
+                results = cursor.fetchall()
+                if not results:
+                    return {
+                    'total': 0,
+                    'appointments': []
+                    }
+
+                cursor.execute(count, (id, field.lower()))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                appointments_list = []
+                for result in results:
+                    result['date'] = result['date'].isoformat()
+                    result['time_begin'] = result['time_begin'].isoformat()[:5]
+                    appointments_list.append(result)
+
+                data = {
+                    'appointments': appointments_list,
+                    'total': total
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+def list_filter_time_appointments_db(offset, id, field_type, field, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                interval = sql.SQL(field_type)
+
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                if field_type == 'day':
+                    where_value = sql.SQL("""
+                                          date >= date_trunc({type_field}, CURRENT_DATE)
+                                          AND date < date_trunc({type_field}, CURRENT_DATE) + INTERVAL '1 {interval}'
+                                          """).format(
+                                              type_field=field_type,
+                                              interval=interval
+                                          )
+                else:
+                    where_value = sql.SQL("""
+                                          date >= date_trunc({type_field}, CURRENT_DATE)
+                                          AND date < date_trunc({type_field}, CURRENT_DATE) + INTERVAL '1 {interval}'
+                                          """).format(
+                                              type_field=field_type,
+                                              interval=interval
+                                          )
+
+                query = sql.SQL("""
+                SELECT id, client_id, client_name, user_name, service_name, date, time_begin, status, price, duration
+                FROM appointments
+                WHERE {0} = %s
+                AND {1}
+                ORDER BY date, time_begin
+                LIMIT %s OFFSET %s
+                """).format(role_column, where_value)
+
+                count = sql.SQL(
+               "SELECT COUNT(*) AS total FROM appointments WHERE {0} = %s AND {1}"
+                ).format(role_column, where_value)
+
+                # logger.debug(count.as_string(conn))
+                cursor.execute(query, (id, 10, int(offset)))
+                results = cursor.fetchall()
+                if not results:
+                    return {
+                    'total': 0,
+                    'appointments': []
+                    }
+
+                cursor.execute(count, (id,))
+                count_query = cursor.fetchone()
+                if not count_query:
+                    total = 0
+                else:
+                    total = count_query['total']
+
+                appointments_list = []
+                for result in results:
+                    result['date'] = result['date'].isoformat()
+                    result['time_begin'] = result['time_begin'].isoformat()[:5]
+                    appointments_list.append(result)
+
+                data = {
+                    'appointments': appointments_list,
+                    'total': total
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+def get_unique_appointment_db(appointment_id, user_id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor(row_factory=dict_row) as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                query = sql.SQL("""
+                SELECT id, client_name, user_name, service_name, date, time_begin, status, price, status, obs
+                FROM appointments
+                WHERE {0} = %s
+                AND id = %s
+                """).format(role_column)
+
+                # logger.debug(count.as_string(conn))
+                cursor.execute(query, (user_id, appointment_id))
+                result = cursor.fetchone()
+                if not result:
+                    raise BadRequest(message='Nao foi possivel concluir a operaçao')
+
+                raw_date = result['date'] = result['date'].isoformat()
+                date_obj = datetime.fromisoformat(raw_date)
+                formated_date = date_obj.strftime('%d-%m-%Y')
+                formated_time = result['time_begin'] = result['time_begin'].isoformat()[:5] if result['time_begin'] else None
+
+                data = {
+                    'name': result['client_name'],
+                    'service': result['service_name'],
+                    'raw_date': raw_date,
+                    'date': formated_date,
+                    'hour': formated_time,
+                    'price': int(result['price']) / 100,
+                    'status': result['status'].title(),
+                    'obs': result['obs']
+                }
+
+                return data
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+def delete_appointment_db(appointment_id, id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                query = sql.SQL("DELETE FROM appointments WHERE id = %s and {0} = %s").format(role_column)
+
+                cursor.execute(query, (appointment_id, id))
+                conn.commit()
+                if cursor.rowcount <= 0:
+                    raise AppError(message='Erro ao deletar usuário')
+
+                response = 'Usuário excluído com sucesso'
+                return response
+
+    except Exception as e:
+        raise databaseErrors(e)
+
+
+def update_appointment_status_db(appointment_id, status, id, role):
+    if not connectionPool:
+        raise AppError(
+            status=500,
+            logger_message='Pool de conexões não inicializado'
+        )
+
+    conn = None
+    cursor = None
+
+    try:
+        with connectionPool.connection() as conn:
+            with conn.cursor() as cursor:
+                if role == 'admin':
+                    role_column = sql.SQL('bussines_id')
+                elif role == 'user':
+                    role_column = sql.SQL('user_id')
+                else:
+                    raise BadRequest(field=role)
+
+                query = sql.SQL("UPDATE appointments SET status = %s WHERE id = %s and {0} = %s RETURNING id").format(role_column)
+
+                cursor.execute(query, (status, appointment_id, id))
+                updated = cursor.fetchone()
+                logger.debug(updated)
+                if not updated:
+                    raise AppError(message='Agendamento não encontrado', status=404)
+
+                conn.commit()
+
+                response = 'Status do agendamento atualizado com sucesso'
+                return response
 
     except Exception as e:
         raise databaseErrors(e)

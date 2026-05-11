@@ -1,93 +1,51 @@
 import logging
 import uuid
 
-
-from src.errors.mainErrors import AppError
-from src.models.header import AuthHeader
+from src.errors.mainErrors import BadRequest
+from src.models.request import ControlHandler
 
 logger = logging.getLogger(__name__)
 
-
-def set_clients_header_params(req_data, scope):
-            header = AuthHeader()
-            header.header_handler(req_data, scope)
-            
-            controlers = header.header_client_services()
-            return controlers
-
-
-class ClientsHandler:
-    def __init__(
-        self,
-        req_data,
-        clientID = None,
-        text = None
-    ) -> None:
-        self.req_data = req_data
-        self.clientID = clientID
-        self.text = text
-
-    def list_contacts(self):
-        controlers = set_clients_header_params(self.req_data, 'read_contacts')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers')
-
-        clientsServices = controlers.clientsServices
-        AccessID = controlers.AccessID
-        if not clientsServices:
-            raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
-
+class ListClients(ControlHandler):
+    def list_all_clients(self):
         offset = int(self.req_data.params.get('offset', 0))
 
-        clients_list = clientsServices.get_all_clients(
-            offset=offset,
-            ID=AccessID
+        clients_list = self.controler.list_all_clients_repo(
+            offset=offset
         )
         return clients_list
-        
 
-    def get_contact(self):
-        controlers = set_clients_header_params(self.req_data, 'read_contacts')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers')
+    def search_clients(self):
+        text = self.req_data.params.get('text')
 
-        clientsServices = controlers.clientsServices
-        AccessID = controlers.AccessID
-        if not clientsServices:
-            raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
+        clients = self.controler.search_clients_repo(
+            text=text
+        )
+        return clients
 
-        clientsServices.validate_user_from_contact(
-            contactID=self.clientID,
-            ID=AccessID
+class GetUniqueClient(ControlHandler):
+    def get_unique_client(self):
+        client_id = self.req_data.params.get('id')
+        self.controler.validate_user_from_contact(
+            contactID=client_id
         )
 
-        response = clientsServices.get_unique_contact(
-            contactId=self.clientID,
-            UserID=AccessID
+        response = self.controler.get_unique_contact_repo(
+            client_id=client_id
         )
         return response
 
-           
-
-    def insert_contact(self):
-        controlers = set_clients_header_params(self.req_data, 'write_contacts')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers')
-
-        clientsServices = controlers.clientsServices
-        if not clientsServices:
-            raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
-
-        user = clientsServices.user
-        if not user:
-            raise AppError(logger_message='Erro ao extrair instância user de clientsServices')
-
+class InsertNewClient(ControlHandler):
+    def insert_client(self):
         body = self.req_data.body
+        user = self.user
+
         contact_data = {
             "userid": str(user.ID),
             "respName": user.Nome,
             "bussinesId": user.BussinesID,
             "contactID": str(uuid.uuid4()),
+            "status": "ativo",
             "nome": body.get('nome'),
             "email": body.get('email'),
             "telefone": body.get('telefone'),
@@ -101,82 +59,49 @@ class ClientsHandler:
             "visitas": body.get('visitas'),
         }
 
-        response = clientsServices.insert_new_contact(contact_data)
+        response = self.controler.insert_new_contact_repo(contact_data)
         return response
 
-
+class EditClient(ControlHandler):
     def update_contact(self):
-            controlers = set_clients_header_params(self.req_data, 'write_contacts')
-            if not controlers:
-                raise AppError(logger_message='Erro ao definir controlers')
+        client_id = self.req_data.params.get('id')
+        if not client_id:
+            raise BadRequest(field='Contato')
 
-            clientsServices = controlers.clientsServices
-            AccessID = controlers.AccessID
-            if not clientsServices:
-                raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
-            
-            user = clientsServices.user
-            if not user:
-                raise AppError(logger_message='Erro ao extrair instância user de clientsServices')
+        self.controler.validate_user_from_contact(
+            contactID=client_id
+        )
 
-            clientsServices.validate_user_from_contact(
-                contactID=self.clientID,
-                ID=AccessID
-            )
+        body = self.req_data.body
+        user = self.user
+        data = {
+            "userid": str(user.ID),
+            "bussinesId": user.BussinesID,
+            "nome": body.get('nome'),
+            "email": body.get('email'),
+            "telefone": body.get('telefone'),
+            "obs": body.get('obs'),
+            "cpf": body.get('cpf'),
+            "rua": body.get('rua'),
+            "numero": body.get('numero'),
+            "bairro": body.get('bairro'),
+            "cidade": body.get('cidade'),
+            "gasto": body.get('gasto'),
+            "visitas": body.get('visitas'),
+        }
 
-            body = self.req_data.body
-            data = {
-                "userid": str(user.ID),
-                "bussinesId": user.BussinesID,
-                "nome": body.get('nome'),
-                "email": body.get('email'),
-                "telefone": body.get('telefone'),
-                "obs": body.get('obs'),
-                "cpf": body.get('cpf'),
-                "rua": body.get('rua'),
-                "numero": body.get('numero'),
-                "bairro": body.get('bairro'),
-                "cidade": body.get('cidade'),
-                "gasto": body.get('gasto'),
-                "visitas": body.get('visitas'),
-            }
+        response = self.controler.update_contact_repo(client_id, data)
+        return response
 
-            response = clientsServices.update_contact(self.clientID, data)
-            return response
-
-
+class DeleteClient(ControlHandler):
     def delete_contact(self):
-        controlers = set_clients_header_params(self.req_data, 'delete_contact')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers')
+        client_id = self.req_data.params.get('id')
+        if not client_id:
+            raise BadRequest(field='ID do Contato')
 
-        clientsServices = controlers.clientsServices
-        AccessID = controlers.AccessID
-        if not clientsServices:
-            raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
-
-        clientsServices.validate_user_from_contact(
-            contactID=self.clientID,
-            ID=AccessID
+        self.controler.validate_user_from_contact(
+            contactID=client_id
         )
 
-        response = clientsServices.delete_contact(self.clientID)
+        response = self.controler.delete_contact_repo(client_id)
         return response
-
-
-    def search_contact(self):
-        controlers = set_clients_header_params(self.req_data, 'read_contacts')
-        if not controlers:
-            raise AppError(logger_message='Erro ao definir controlers')
-
-        clientsServices = controlers.clientsServices
-        AccessID = controlers.AccessID
-        if not clientsServices:
-            raise AppError(logger_message='Erro ao extrair instância clientsServices de controlers')
-
-        response = clientsServices.search_contact(
-            id=AccessID,
-            text=self.text
-        )
-        return response
-

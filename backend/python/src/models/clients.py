@@ -2,85 +2,136 @@ import logging
 
 from dotenv import load_dotenv
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any
 from pydantic import BaseModel, EmailStr, field_validator
 
 from src.errors.authErrors import UserNotPermited
-from src.errors.mainErrors import InvalidField
+from src.errors.clientsErrors import InaccessibleClient
+from src.errors.mainErrors import AppError, InvalidField
 from src.internal import database
+from src.internal import clients_database as database
+from src.internal.main_database import DatabasePool
 from src.validation.checkTypes import isNumber
 
 logger = logging.getLogger(__name__)
 load_dotenv()
 
-class ServiceLayer:
-    def set_response(self, data):
-        if data['status'] == 'error':
-            logger.error(data['message'])
-            return data
 
-        return data
+@dataclass
+class ClientsControl:
+    db_pool: DatabasePool
+    role: str
+    access_id: str 
 
-    def validate_user(self, contactID, userID, role):
-        response = database.GetUniqueContact(contactID, userID, role)
-        return response
+    def __post_init__(self):
+        if not self.db_pool:
+            raise AppError(logger_message='Pool de conexões não inicializado')
+        if not self.role:
+            raise AppError(logger_message='Role não recebida')
 
+    @property
+    def params(self) -> tuple:
+        return self.role, self.db_pool
 
-class ClientsRepository:
-    def ListClients(self, offset, ID, Role):
-        # Busca os clientes referentes a role do usuário no banco de dados
-        clientes = database.GetClients(ID, Role, offset)
-        return clientes
-
-
-    def GetContact(self, ClientID, ID, Role):
-        response = database.GetUniqueContact(
-            contactId=ClientID,
-            id=ID,
-            role=Role
+class ClientsRepository(ClientsControl):
+    def validate_user_from_contact(self, contactID):
+        repo = database.GetContact(
+            params=self.params
         )
+        response = repo.get_unique_contact_db(
+            contactId=contactID,
+            id=self.access_id
+        )
+        if not response:
+            raise InaccessibleClient()
+        return True
 
-        return response
-
-    def NewContact(self, data):
-        response = database.InsertNewContactDB(data)
-        return response
-
-    def UpdateContact(self, ContactID, data):
-        response = database.UpdateContactDB(ContactID, data)
-        return response
-
-    def DeleteContact(self, id):
-        response = database.DeleteContactDB(id)
-        return response
-
-    def SearchContact(self, id, text, role):
-        response = database.SearchContactDB(
-            id=id,
-            text=text,
-            role=role
+    def list_all_clients_repo(self, offset):
+        repo = database.ListClientsRepository(
+            params=self.params
+        )
+        response = repo.get_clients_db(
+            id=self.access_id,
+            offset=offset
         )
         return response
 
-    def InsertNewContact(self, data):
-        response = database.InsertNewContactDB(data)
+    def list_clients_by_name_repo(self, name):
+        repo = database.ListClientsRepository(
+            params=self.params
+        )
+        response = repo.list_clients_by_name_db(
+            user_id=self.access_id,
+            name=name
+        )
+        return response
+
+    def search_clients_repo(self, text):
+        repo = database.ListClientsRepository(
+            params=self.params
+        )
+        response = repo.search_clients_db(
+            user_id=self.access_id,
+            text=text
+        )
+        return response
+
+    def get_unique_contact_repo(self, client_id):
+        repo = database.GetContact(
+            params=self.params
+        )
+        response = repo.get_unique_contact_db(
+            contactId=client_id,
+            id=self.access_id
+        )
+        return response
+
+    def insert_new_contact_repo(self, data):
+        repo = database.InsertContact(
+            params=self.params
+        )
+        response = repo.insert_new_contact_db(
+            data=data
+        )
+        return response
+
+    def update_contact_repo(self, client_id, data):
+        repo = database.SetContact(
+            params=self.params
+        )
+        response = repo.update_contact_db(
+            id=client_id,
+            body=data
+        )
+        return response
+
+    def delete_contact_repo(self, client_id):
+        repo = database.SetContact(
+            params=self.params
+        )
+        response = repo.delete_contact_db(
+            client_id=client_id
+        )
         return response
 
 
 class Clients(BaseModel):
-    userid: str
-    contactID: Optional[str] = None
+    cpf: str | None = None
     nome: str
-    email: Optional[EmailStr] = None
+    userid: str
     telefone: str
-    cpf: Optional[str] = None
-    rua: Optional[str] = None
-    numero: Optional[int] = 0
-    bairro: Optional[str] = None
-    cidade: Optional[str] = None
-    gasto: Optional[int] = 0
-    visitas: Optional[int] = 0
-    obs: Optional[str] = None
+    contactID: str | None = None
+    email: EmailStr | None = None
+
+    rua: str | None = None
+    numero: int | None = 0
+    bairro: str | None = None
+    cidade: str | None = None
+
+    gasto: int | None = 0
+    visitas: int | None = 0
+
+    obs: str | None = None
 
     @field_validator('telefone')
     @classmethod
@@ -93,12 +144,12 @@ class Clients(BaseModel):
 @dataclass
 class User:
     ID: str
-    BussinesID: str
     Nome: str
-    Instance: Optional[str] = None
-    IsConnected: Optional[str] = None
-    Role: Optional[str] = None
-    Permissions: Optional[dict] = None
+    BussinesID: str
+    Role: Any | None = None
+    Instance: str | None = None
+    IsConnected: str | None = None
+    Permissions: dict | None = None
     
     def true_id(self):
         if self.Role == 'admin':
@@ -111,61 +162,3 @@ class User:
             raise UserNotPermited()
 
         return True
-
-class ClientsServices:
-    def __init__(self, User) -> None:
-        self.user = User
-        self.repo = ClientsRepository()
-        self.services = ServiceLayer()
-
-    def validate_user_from_contact(self, contactID, ID):
-        self.repo.GetContact(
-            ClientID=contactID,
-            ID=ID,
-            Role=self.user.Role
-        )
-
-        return True
-
-    def insert_new_contact(self, data):
-        Clients(**data)
-        response = self.repo.InsertNewContact(data)
-        return response
-
-    def get_all_clients(self, offset, ID):
-        clients = self.repo.ListClients(
-            offset=offset * 10,
-            ID=ID,
-            Role=self.user.Role
-        )
-        return {
-            'data': clients
-        }
-
-    def get_unique_contact(self, contactId, UserID):
-        response = self.repo.GetContact(
-            ClientID=contactId,
-            ID=UserID,
-            Role=self.user.Role
-        )
-        return response
-
-    def update_contact(self, contactID, data):
-        Clients(**data)
-        response = self.repo.UpdateContact(
-            ContactID=contactID,
-            data=data
-        )
-        return response
-
-    def delete_contact(self, contactID):
-        response = self.repo.DeleteContact(id=contactID)
-        return response
-
-    def search_contact(self,id, text):
-        response = self.repo.SearchContact(
-            id=id,
-            text=text,
-            role=self.user.Role
-        )
-        return response
