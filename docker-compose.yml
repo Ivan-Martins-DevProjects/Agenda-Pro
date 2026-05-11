@@ -26,15 +26,6 @@ services:
       - ${GO_API_PORT}:8181
     networks:
       - agendapro
-    develop:
-      watch:
-        - action: sync
-          path: ./backend/golang
-          target: /app
-          ignore:
-            - .env
-        - action: rebuild
-          path: go.sum
 
   backend-app:
     container_name: backend-app

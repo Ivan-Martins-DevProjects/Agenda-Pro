@@ -464,12 +464,12 @@ def list_services_db(offset, id, role):
         with connectionPool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 if role == 'admin':
-                    query ="""SELECT id, title, description, price, duration
+                    query ="""SELECT id, name, description, price, duration
                 FROM services
                 WHERE bussines_id = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE bussines_id = %s"
                 elif role == 'user':
-                    query = """SELECT id, title, description, price, duration
+                    query = """SELECT id, name, description, price, duration
                     FROM services
                     WHERE userid = %s LIMIT %s OFFSET %s"""
                     count = "SELECT COUNT(*) AS total FROM services WHERE userid = %s"
@@ -533,11 +533,11 @@ def insert_service_db(data):
                 duration = data.get('duration')
 
                 query = """
-                INSERT INTO services (id, user_id, bussines_id, title, description, price, duration, resp_name)
+                INSERT INTO services (id, user_id, bussines_id, name, description, price, duration, resp_name)
                 VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s
                 )
-                ON CONFLICT (title) DO NOTHING
+                ON CONFLICT (name) DO NOTHING
                 RETURNING id
                 """
 
@@ -599,12 +599,12 @@ def get_unique_service_db(serviceId, AccessID, role):
             with conn.cursor(row_factory=dict_row) as cursor:
                 if role == 'admin':
                     query = """
-                    SELECT title, description, price, duration FROM services
+                    SELECT name, description, price, duration FROM services
                     WHERE id = %s AND bussines_id = %s
                     """
                 else:
                     query = """
-                    SELECT title, description, price, duration FROM services
+                    SELECT name, description, price, duration FROM services
                     WHERE id = %s AND user_id = %s
                     """
 
@@ -641,7 +641,7 @@ def edit_service_db(data):
 
                 query = """
                 UPDATE services
-                SET title = %s,
+                SET name = %s,
                     description = %s,
                     price = %s,
                     duration = %s
